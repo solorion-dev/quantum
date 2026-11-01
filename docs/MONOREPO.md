@@ -10,7 +10,7 @@
 - **No big-bang migration.** Existing repos stay put; apps fold in opportunistically, one at a time, each fold verified (build green against the pushed artifact) before the next begins.
 - **Monorepo home:** `dsect-net/quantum` — the everything app is the platform's front door, so the repo restructures around it: `apps/` (quantum app first) and `packages/` (shared UI kit, auth, clients).
 
-## Repo inventory & classification (29 repos, audited Oct 15, 2026)
+## Repo inventory & classification (30 repos, audited Nov 1, 2026)
 
 ### Fold into the monorepo (share Quantum's login / design / Tritium home)
 - `quantum` — becomes the monorepo home itself (`apps/quantum`)
@@ -37,6 +37,10 @@
 
 ### Archive candidates (empty stubs, no code, idle since Sept 25, 2026)
 - `tritium` (3 KB stub), `lightspeed` (3 KB stub), `event-horizon` (3 KB stub) — name reservations with no implementation; archiving unclutters every sweep. (Archiving is Scotty's explicit call per repo, not part of the phases below.)
+
+### Not yet classified (owner decision needed)
+- `scotty-stats` — present in the org; not in the Oct 15 audit. Fold / stay / archive is Scotty's call.
+- `quantum-credits` — present in the org; not in the Oct 15 audit. Fold / stay / archive is Scotty's call.
 
 ## Phases (story points, Fibonacci)
 
