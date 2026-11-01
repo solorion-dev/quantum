@@ -98,6 +98,35 @@ export class Registry {
           "coordination-notes": { minTier: 3, requiresApproval: false },
         },
       },
+      {
+        agentId: "bookkeeper",
+        adapter: "inbox",
+        cardSpec: {
+          name: "Bookkeeper",
+          description:
+            "The Quantum Codex librarian: files, lints, indexes and triages the fleet's shared notes and folds memory duplicates. Hosted endpoint: tasks are queued to the Bookkeeper's inbox and worked in session (asynchronous by design — a session-based agent, like Cooper).",
+          providerOrg: "DSECT / Team Quantum",
+          providerUrl: "https://dsect.net",
+          documentationUrl: `${base}/docs`,
+          baseUrl: `${base}/agents/bookkeeper`,
+          oidcDiscoveryUrl: this.config.oidcDiscoveryUrl,
+          streaming: true,
+          pushNotifications: true,
+          skills: [
+            {
+              id: "codex-care",
+              name: "Codex care",
+              description:
+                "Ask the Bookkeeper to file, tidy, lint, index or triage Codex notes (or fold a memory duplicate). Delivered to the Bookkeeper's A2A inbox; results come back as task artifacts.",
+              tags: ["codex", "bookkeeping", "async"],
+              examples: ["File this spill into the Codex under the A2A project."],
+            },
+          ],
+        },
+        skillMeta: {
+          "codex-care": { minTier: 3, requiresApproval: false },
+        },
+      },
     ];
     for (const seed of seeds) {
       const card = buildCard(seed.cardSpec);

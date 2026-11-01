@@ -46,6 +46,7 @@ const ledger = new Ledger(store, config);
 const adapters = new Map();
 adapters.set("qubit", new HermesAdapter(config, tasks));
 adapters.set("cooper", new InboxAdapter(store, tasks, "cooper"));
+adapters.set("bookkeeper", new InboxAdapter(store, tasks, "bookkeeper"));
 const core = new GatewayCore({
   config,
   registry,
