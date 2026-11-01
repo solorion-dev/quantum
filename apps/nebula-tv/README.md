@@ -91,12 +91,14 @@ This app lives in the quantum monorepo under `apps/` per the Oct 15, 2026
 monorepo rule (new Quantum apps start in the monorepo). Two tensions are
 flagged for Scotty's review rather than silently resolved:
 
-1. The Phase 2 monorepo restructure (`apps/` + `packages/`) has not landed
-   yet, so `apps/nebula-tv/` is the first `apps/` resident and is a fully
-   self-contained Gradle build — it is *not* wired into the root
-   TypeScript workspace tooling.
-2. `docs/MONOREPO.md`'s stack-affinity guardrail keeps foreign-runtime
-   projects (e.g. `quantum-launcher`, Kotlin) in their own repos. This app
+1. `apps/` is already populated on main (bank, bounty, breeze-studio,
+   notekeeper, singularity, universal-hub) as self-contained per-app
+   folders with mixed stacks — breeze-studio, for example, is a Python
+   service. `apps/nebula-tv/` follows that same pattern: a fully
+   self-contained Gradle build, not wired into any shared workspace
+   tooling.
+2. `docs/MONOREPO.md`'s stack-affinity guardrail has historically kept
+   Kotlin projects (e.g. `quantum-launcher`) in their own repos. This app
    was placed in the monorepo per the standing "new apps start in the
-   monorepo" instruction; spinning it out later follows the normal
-   spin-out path if Scotty prefers.
+   monorepo" instruction and Scotty's direct request; spinning it out
+   later follows the normal spin-out path if he prefers.
