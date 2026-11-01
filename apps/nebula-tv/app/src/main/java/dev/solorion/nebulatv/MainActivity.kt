@@ -129,6 +129,9 @@ class MainActivity : Activity() {
             // the WebView itself never needs raw file-system access.
             allowFileAccess = false
             setSupportZoom(false)
+            // Identify the TV app to the web UI so it enables TV mode
+            // (10-foot layout + D-pad spatial navigation, TRK-0524).
+            userAgentString = (userAgentString ?: "") + " NebulaTV/0.3"
             // TV pages should render at desktop-like width.
             layoutAlgorithm = WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
         }

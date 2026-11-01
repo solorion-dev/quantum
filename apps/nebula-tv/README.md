@@ -116,3 +116,7 @@ flagged for Scotty's review rather than silently resolved:
    was placed in the monorepo per the standing "new apps start in the
    monorepo" instruction and Scotty's direct request; spinning it out
    later follows the normal spin-out path if he prefers.
+
+## TV mode in the web UI (v0.3.0, TRK-0524)
+
+The app appends a `NebulaTV/0.3` token to the WebView user agent. The Nebula web app (solorion-dev/nebula, `web/src/lib/tv-mode.ts`) detects that token and switches on TV mode: a 10-foot stylesheet (larger type/targets, couch-visible focus) plus a D-pad spatial navigation engine over real DOM focus. The web side also accepts `?tv=1` for testing in a desktop browser. Keep the token in the UA if you refactor settings setup — without it the TV falls back to the desktop UI.
