@@ -1,0 +1,12 @@
+# machine-local
+local.properties
+
+# gradle / android build outputs
+.gradle/
+build/
+app/build/
+*.apk
+
+# manual-build scratch (if used)
+tools/work/
+tools/dist/
