@@ -69,9 +69,23 @@ Built on Tritium with the checked-in Gradle wrapper (AGP 8.5.2 / Kotlin
     (DSECT) login page, loaded over the network from the emulator.
   - `nebula-tv-menu-dialog.png` — the Menu-key environment switcher
     (Production selected by default).
-- Not verified: an actual login (no credentials in the emulator), file
-  upload through the picker, and behavior on physical Google TV
-  hardware. Sideloading onto a real TV is Scotty's step.
+- Also installed and launched on the **real living-room Google TV**
+  (Chromecast with Google TV, USB ADB from Tritium, Nov 1 2026). The
+  app installs and opens, but the page load fails with
+  `net::ERR_CONNECTION_TIMED_OUT` (`screenshots/nebula-tv-realtv-error.png`).
+  Root cause is **not the app**: the TV resolves `nebula.solorion.dev`
+  to 192.168.4.196 and can ping it and reach other LAN/internet hosts,
+  but TCP to Tritium on 443/8196/8198 times out — Tritium's UFW
+  (default deny-incoming) allows 443 only from the docker bridge and
+  full access only via the tailnet; there is no LAN allow. The
+  emulator passed because its traffic is on-host. Fixes, either of
+  which unblocks the unchanged app: (1) connect Tailscale on the TV
+  (the TRK-0499 tailnet path: split-DNS + nginx tailnet listener), or
+  (2) a UFW allow on Tritium, e.g.
+  `ufw allow from 192.168.4.0/24 to any port 443 proto tcp`.
+- Not verified: an actual login (no credentials entered), file upload
+  through the picker, and — pending one of the two fixes above — a
+  successful page load on the physical TV.
 
 ## Known v1 gaps
 
