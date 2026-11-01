@@ -11,6 +11,11 @@ tools, without implementing the A2A wire protocol.
 - **Framing:** standard MCP JSON-RPC (`initialize`, `tools/list`,
   `tools/call`). Tool results are JSON text content (the A2A objects:
   cards, tasks) — parse them as JSON.
+
+- **Access paths:** this facade is served by the gateway itself. The hub MCP
+  (`mcp.dsect.net`) does not proxy these tools yet — connect your MCP client
+  directly to the gateway (tailnet), or use the operator CLI `bin/a2a.js`
+  from Tritium, which calls this facade with dev-issuer tokens.
 - **Relationship to A2A:** the facade is a convenience binding over the
   same gateway core. MCP is the vertical layer (agent ↔ tools); A2A
   remains the horizontal protocol (agent ↔ agent). Nothing the facade
