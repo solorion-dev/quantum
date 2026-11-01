@@ -1,4 +1,4 @@
-# Quantum — DSECT's everything app
+# Quantum — Solorion's everything app
 
 React 19 + Vite + Capacitor mobile shell. Phase 3 scaffold: app shell,
 dark-first theme, connection settings, and the real component kits.
