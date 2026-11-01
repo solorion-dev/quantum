@@ -14,8 +14,8 @@ android {
         // sane v1 floor for a WebView shell.
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     buildTypes {
@@ -36,6 +36,8 @@ android {
     }
 }
 
-// Pure Android-framework WebView shell: no external dependencies in v1.
+// The shell itself is pure Android framework; ZXing core is the one
+// dependency, used only to render the sign-in QR code on the TV.
 dependencies {
+    implementation("com.google.zxing:core:3.5.3")
 }
