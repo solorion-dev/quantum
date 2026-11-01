@@ -14,6 +14,15 @@ Stdlib only, Python 3.10+. Read-only with respect to the repo:
 no checkout, no fetch, no writes. Only read-only git commands are
 used (rev-parse, status, merge-base). Check commands are argv
 arrays from the config file — never shell strings.
+
+v2 (Nov 1, 2026): package.json auto-discovery — when no config
+file is present (and no explicit --config was given), derive a
+default check set from package.json scripts (typecheck, test,
+build, in that order) and say so in the report (config_source=
+"package.json"). A real config file still wins when present.
+--no-auto-discover restores the strict v1 behaviour. If no
+checks can be discovered, the verdict is INCOMPLETE, never
+VERIFIED.
 """
 
 from __future__ import annotations
@@ -42,6 +51,19 @@ VERDICT_EXIT = {
 DEFAULT_TIMEOUT_S = 600
 TAIL_LINES = 40
 TAIL_CHARS = 4000
+
+# v2 auto-discovery: candidate package.json scripts, in fixed order.
+CANDIDATE_SCRIPTS = ["typecheck", "test", "build"]
+
+# Lockfile -> package manager, in priority order (first match wins).
+LOCKFILE_PACKAGE_MANAGERS = [
+    ("pnpm-lock.yaml", "pnpm"),
+    ("yarn.lock", "yarn"),
+    ("package-lock.json", "npm"),
+    ("npm-shrinkwrap.json", "npm"),
+    ("bun.lock", "bun"),
+    ("bun.lockb", "bun"),
+]
 
 
 def _tail(output: str) -> str:
@@ -72,11 +94,74 @@ def _sha_matches(head: str, expect: str) -> bool:
     return head.startswith(expect)
 
 
+def _detect_package_manager(repo: Path, package_data: dict) -> str:
+    """Package manager for discovered checks.
+
+    A lockfile in the repo root wins (see LOCKFILE_PACKAGE_MANAGERS
+    priority order). Else the package.json "packageManager" field
+    (name before "@"). Else npm.
+    """
+    for lockfile, pm in LOCKFILE_PACKAGE_MANAGERS:
+        if (repo / lockfile).exists():
+            return pm
+    pm_field = package_data.get("packageManager")
+    if isinstance(pm_field, str) and pm_field.strip():
+        name = pm_field.strip().split("@", 1)[0].strip()
+        if name:
+            return name
+    return "npm"
+
+
+def _discover_checks(repo: Path):
+    """Derive a check set from <repo>/package.json.
+
+    Returns (checks_cfg, discovered, error). On success error is
+    None, checks_cfg is a list of {"name", "command"} dicts (argv
+    arrays, default timeout) and discovered is the list of script
+    names in CANDIDATE_SCRIPTS order. On failure checks_cfg is
+    None and error names that no config was found and no checks
+    could be discovered.
+    """
+    prefix = (
+        "no config was found (no merge-verify.json) and no checks "
+        "could be discovered from package.json"
+    )
+    pkg_path = repo / "package.json"
+    if not pkg_path.exists():
+        return None, [], f"{prefix}: package.json not found at {pkg_path}"
+    try:
+        raw = pkg_path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+    except Exception as exc:
+        return None, [], f"{prefix}: package.json does not parse: {pkg_path}: {exc}"
+    if not isinstance(data, dict):
+        return None, [], f"{prefix}: package.json is not a JSON object: {pkg_path}"
+    scripts = data.get("scripts")
+    if not isinstance(scripts, dict):
+        scripts = {}
+    discovered: list[str] = []
+    for name in CANDIDATE_SCRIPTS:
+        value = scripts.get(name)
+        if isinstance(value, str) and value.strip() != "":
+            discovered.append(name)
+    if not discovered:
+        return None, [], (
+            f"{prefix}: package.json has no candidate scripts "
+            f"({'/'.join(CANDIDATE_SCRIPTS)}) at {pkg_path}"
+        )
+    pm = _detect_package_manager(repo, data)
+    checks_cfg = [
+        {"name": name, "command": [pm, "run", name]} for name in discovered
+    ]
+    return checks_cfg, discovered, None
+
+
 def run_verification(
     repo_arg: str,
     config_arg: str | None,
     expect_head: str | None,
     expect_ancestor: str | None,
+    auto_discover: bool = True,
 ) -> dict:
     errors: list[str] = []
     checks_results: list[dict] = []
@@ -127,9 +212,12 @@ def run_verification(
     config: dict | None = None
     require_clean = True
     checks_cfg: list = []
+    config_source: str | None = None
+    discovered: list[str] = []
 
     if not validation_failed:
-        if config_arg:
+        explicit_config = bool(config_arg)
+        if explicit_config:
             cp = Path(config_arg).expanduser()
             if not cp.is_absolute():
                 cp = (Path.cwd() / cp)
@@ -138,9 +226,27 @@ def run_verification(
             config_path = repo / "merge-verify.json"
 
         if not config_path.exists():
-            errors.append(f"config not found: {config_path}")
-            validation_failed = True
+            if explicit_config or not auto_discover:
+                # v1 behaviour: explicit --config, or discovery
+                # disabled via --no-auto-discover — a missing
+                # config is INCOMPLETE, never a discovery attempt
+                # for an explicit path.
+                errors.append(f"config not found: {config_path}")
+                validation_failed = True
+            else:
+                # v2: no config file — try package.json discovery.
+                disc_checks, disc_names, disc_error = _discover_checks(repo)
+                if disc_error is not None:
+                    errors.append(disc_error)
+                    validation_failed = True
+                else:
+                    checks_cfg = disc_checks
+                    discovered = disc_names
+                    config_source = "package.json"
+                    # Discovered checks always require a clean tree.
+                    require_clean = True
         else:
+            config_source = "file"
             try:
                 raw = config_path.read_text(encoding="utf-8")
                 config = json.loads(raw)
@@ -194,6 +300,8 @@ def run_verification(
             tree_clean_after=None,
             checks=[],
             errors=errors,
+            config_source=config_source,
+            discovered=discovered,
         )
 
     # --- 2. HEAD / identity checks ------------------------------------
@@ -211,6 +319,8 @@ def run_verification(
                 tree_clean_after=None,
                 checks=[],
                 errors=errors,
+                config_source=config_source,
+                discovered=discovered,
             )
         head = r.stdout.strip()
     except FileNotFoundError:
@@ -225,6 +335,8 @@ def run_verification(
             tree_clean_after=None,
             checks=[],
             errors=errors,
+            config_source=config_source,
+            discovered=discovered,
         )
 
     has_identity_failure = False
@@ -305,6 +417,8 @@ def run_verification(
             tree_clean_after=None,
             checks=[],
             errors=errors,
+            config_source=config_source,
+            discovered=discovered,
         )
 
     # --- 4. Run ALL checks sequentially --------------------------------
@@ -454,10 +568,12 @@ def run_verification(
         tree_clean_after=tree_clean_after,
         checks=checks_results,
         errors=errors,
+        config_source=config_source,
+        discovered=discovered,
     )
 
 
-def _finish(*, verdict, repo, head, expect_head_ok, expect_ancestor_ok, tree_clean_before, tree_clean_after, checks, errors) -> dict:
+def _finish(*, verdict, repo, head, expect_head_ok, expect_ancestor_ok, tree_clean_before, tree_clean_after, checks, errors, config_source=None, discovered=None) -> dict:
     return {
         "verdict": verdict,
         "exit_code": VERDICT_EXIT[verdict],
@@ -469,11 +585,18 @@ def _finish(*, verdict, repo, head, expect_head_ok, expect_ancestor_ok, tree_cle
         "tree_clean_after": tree_clean_after,
         "checks": checks,
         "errors": errors,
+        "config_source": config_source,
+        "discovered": list(discovered) if discovered else [],
     }
 
 
 def _print_human(result: dict) -> None:
     print(f"merge-verify: {result['verdict']}")
+    if result.get("config_source") == "package.json":
+        scripts = ", ".join(result.get("discovered") or [])
+        print(f"config: derived from package.json (scripts: {scripts})")
+    elif result.get("config_source") == "file":
+        print("config: file")
     print(f"  repo: {result['repo']}")
     print(f"  head: {result['head']}")
     if result.get("expect_head_ok") is not None:
@@ -514,6 +637,7 @@ def main(argv=None) -> int:
     parser.add_argument("--config", default=None, help="Path to config JSON (default: <repo>/merge-verify.json)")
     parser.add_argument("--expect-head", default=None, help="Expected HEAD SHA (full or unique prefix >=7 chars)")
     parser.add_argument("--expect-ancestor", default=None, help="SHA that must be an ancestor of HEAD")
+    parser.add_argument("--no-auto-discover", action="store_true", help="Disable package.json auto-discovery (strict v1 behaviour: no config = INCOMPLETE)")
     parser.add_argument("--json", action="store_true", help="Emit one JSON object")
     args = parser.parse_args(argv)
 
@@ -522,6 +646,7 @@ def main(argv=None) -> int:
         config_arg=args.config,
         expect_head=args.expect_head,
         expect_ancestor=args.expect_ancestor,
+        auto_discover=not args.no_auto_discover,
     )
 
     if args.json:
