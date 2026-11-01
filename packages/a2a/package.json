@@ -1,0 +1,1 @@
+{"description":"Shared A2A profile library: Agent Card construction/validation, RFC 8785 canonicalization, JWS card signatures, and a small A2A 1.0 JSON-RPC client.","engines":{"node":">=20"},"exports":{".":"./src/client.js","./card":"./src/card.js","./jcs":"./src/jcs.js","./jws":"./src/jws.js"},"name":"@dsect/a2a","private":true,"type":"module","version":"0.1.0"}
