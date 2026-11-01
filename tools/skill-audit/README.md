@@ -55,6 +55,16 @@ python3 src/skill_audit.py ~/workspace/custom-skills --json > report.json
 No dependencies beyond Python 3.10+ (stdlib only). Repo checks shell out to
 the GitHub CLI (`gh`) when asked; without it, repos report as unverified.
 
+## Diff and watch (added Oct 26, PR #294)
+
+Two companion modules sit next to the scanner for ongoing hygiene:
+
+- **`src/skill_audit_diff.py`** — compares two audit reports (or a baseline vs a fresh run) and classifies every dead reference as `new`, `still-dead`, or `fixed`. Exit codes: `0` clean (no new dead), `1` new dead references found, `2` usage / missing input. Useful in CI or a nightly job to catch regressions without re-alerting on known debt.
+
+- **`src/skill_audit_watch.py`** — baseline watcher. Stores a previous report, re-runs the scanner, and alerts only on *new* dead references (the ones that appeared since the baseline). It does not re-page on the same old findings. Intended for a scheduled check that stays quiet until something actually breaks.
+
+Both are stdlib-only and share the same host-awareness rules as the main scanner. See the modules themselves for flags; typical invocation is `python3 src/skill_audit_diff.py baseline.json fresh.json` or `python3 src/skill_audit_watch.py --baseline baseline.json`.
+
 ## First real run (2026-10-17, the author's fleet)
 
 33 custom skills scanned. Repo check: 7 distinct GitHub repos referenced,
