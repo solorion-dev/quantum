@@ -6,6 +6,7 @@ codes and --json output are exercised exactly as in the field.
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -325,3 +326,298 @@ def test_check_with_cwd_subdir(tmp_path):
     assert data["verdict"] == "VERIFIED", data
     assert proc.returncode == 0
     assert data["checks"][0]["exit_code"] == 0
+
+
+# ---------------------------------------------------------------- v2: package.json auto-discovery
+
+def write_package_json(repo: Path, data, name="package.json"):
+    """Write package.json from a dict, or verbatim if a string."""
+    text = data if isinstance(data, str) else json.dumps(data)
+    (repo / name).write_text(text, encoding="utf-8")
+    return repo / name
+
+
+def write_fake_pm(bin_dir: Path, name: str) -> Path:
+    """Create an executable fake package manager in bin_dir.
+
+    It prints a distinctive marker (``fake-<name> <args>``) and
+    exits 0, so a test can prove which pm the tool selected by
+    looking at the check's output tail — pnpm/yarn are not
+    installed in every environment, and a real npm would also
+    exit 0, so exit code alone cannot prove selection.
+    """
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    exe = bin_dir / name
+    exe.write_text(f"#!/bin/sh\necho \"fake-{name} $*\"\nexit 0\n", encoding="utf-8")
+    exe.chmod(0o755)
+    return bin_dir
+
+
+def run_tool_env(repo: Path, *extra, env_extra_path: Path | None = None, use_json=True):
+    cmd = [sys.executable, str(SCRIPT), "--repo", str(repo)]
+    if use_json:
+        cmd.append("--json")
+    cmd.extend(extra)
+    env = None
+    if env_extra_path is not None:
+        env = os.environ.copy()
+        env["PATH"] = str(env_extra_path) + os.pathsep + env.get("PATH", "")
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    data = None
+    if use_json and result.stdout.strip():
+        try:
+            data = json.loads(result.stdout.strip().splitlines()[-1])
+        except Exception:
+            data = None
+    return result, data
+
+
+def test_discovery_passing_script_verified(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    commit_all(repo, "initial with package.json")
+    proc, data = run_tool(repo)
+    assert data is not None, proc.stdout + proc.stderr
+    assert data["verdict"] == "VERIFIED", data
+    assert proc.returncode == 0
+    assert data["config_source"] == "package.json"
+    assert data["discovered"] == ["test"]
+    assert [c["name"] for c in data["checks"]] == ["test"]
+    assert data["checks"][0]["exit_code"] == 0
+    # require_clean defaults to True for discovered checks
+    assert data["tree_clean_before"] is True
+    assert data["tree_clean_after"] is True
+
+
+def test_discovery_order_and_missing_scripts_skipped(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    # Deliberately scrambled insertion order, no "typecheck",
+    # plus a non-candidate script that must be ignored.
+    write_package_json(repo, {"scripts": {
+        "build": "exit 0",
+        "lint": "exit 0",
+        "test": "exit 0",
+    }})
+    commit_all(repo, "initial with package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "VERIFIED", data
+    assert data["discovered"] == ["test", "build"]
+    assert [c["name"] for c in data["checks"]] == ["test", "build"]
+
+
+def test_discovery_all_candidates_in_fixed_order(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {
+        "build": "exit 0",
+        "test": "exit 0",
+        "typecheck": "exit 0",
+    }})
+    commit_all(repo, "initial with package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "VERIFIED", data
+    assert data["discovered"] == ["typecheck", "test", "build"]
+    assert [c["name"] for c in data["checks"]] == ["typecheck", "test", "build"]
+
+
+def test_discovery_empty_script_value_skipped(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "", "build": "exit 0"}})
+    commit_all(repo, "initial with package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "VERIFIED", data
+    assert data["discovered"] == ["build"]
+
+
+def test_discovery_pnpm_lockfile_selects_pnpm(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    write(repo, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n")
+    commit_all(repo, "initial pnpm repo")
+    bin_dir = write_fake_pm(tmp_path / "fake-bin", "pnpm")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert data["config_source"] == "package.json"
+    assert "fake-pnpm" in data["checks"][0]["tail"]
+    assert "run test" in data["checks"][0]["tail"]
+
+
+def test_discovery_yarn_lockfile_selects_yarn(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    write(repo, "yarn.lock", "# yarn lockfile v1\n")
+    commit_all(repo, "initial yarn repo")
+    bin_dir = write_fake_pm(tmp_path / "fake-bin", "yarn")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert "fake-yarn" in data["checks"][0]["tail"]
+    assert "run test" in data["checks"][0]["tail"]
+
+
+def test_discovery_default_npm_without_lockfile(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    commit_all(repo, "initial npm repo")
+    bin_dir = write_fake_pm(tmp_path / "fake-bin", "npm")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert "fake-npm" in data["checks"][0]["tail"]
+    assert "run test" in data["checks"][0]["tail"]
+
+
+def test_discovery_bun_lockfile_selects_bun(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    write(repo, "bun.lockb", "")
+    commit_all(repo, "initial bun repo")
+    bin_dir = write_fake_pm(tmp_path / "fake-bin", "bun")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert "fake-bun" in data["checks"][0]["tail"]
+
+
+def test_discovery_package_manager_field_fallback(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {
+        "packageManager": "pnpm@9.0.0",
+        "scripts": {"test": "exit 0"},
+    })
+    commit_all(repo, "initial packageManager repo")
+    bin_dir = write_fake_pm(tmp_path / "fake-bin", "pnpm")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert "fake-pnpm" in data["checks"][0]["tail"]
+
+
+def test_discovery_lockfile_wins_over_package_manager_field(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {
+        "packageManager": "pnpm@9.0.0",
+        "scripts": {"test": "exit 0"},
+    })
+    write(repo, "yarn.lock", "# yarn lockfile v1\n")
+    commit_all(repo, "initial lockfile-wins repo")
+    bin_dir = tmp_path / "fake-bin"
+    write_fake_pm(bin_dir, "pnpm")
+    write_fake_pm(bin_dir, "yarn")
+    proc, data = run_tool_env(repo, env_extra_path=bin_dir)
+    assert data["verdict"] == "VERIFIED", data
+    assert "fake-yarn" in data["checks"][0]["tail"]
+    assert "fake-pnpm" not in data["checks"][0]["tail"]
+
+
+def test_config_file_wins_over_package_json(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    # package.json script would fail if it were (wrongly) used
+    write_package_json(repo, {"scripts": {"test": "exit 1"}})
+    write_config(repo, [ok_check("from-config")])
+    commit_all(repo, "initial config + package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "VERIFIED", data
+    assert data["config_source"] == "file"
+    assert data["discovered"] == []
+    assert [c["name"] for c in data["checks"]] == ["from-config"]
+
+
+def test_explicit_config_wins_over_package_json(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 1"}})
+    commit_all(repo, "initial package.json only")
+    external = tmp_path / "external-config.json"
+    external.write_text(
+        json.dumps({"require_clean": True, "checks": [ok_check("external")]}),
+        encoding="utf-8",
+    )
+    proc, data = run_tool(repo, "--config", str(external))
+    assert data["verdict"] == "VERIFIED", data
+    assert data["config_source"] == "file"
+    assert data["discovered"] == []
+    assert [c["name"] for c in data["checks"]] == ["external"]
+
+
+def test_no_auto_discover_incomplete(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    commit_all(repo, "initial with package.json")
+    proc, data = run_tool(repo, "--no-auto-discover")
+    assert data["verdict"] == "INCOMPLETE"
+    assert proc.returncode == 2
+    assert data["config_source"] is None
+    assert data["discovered"] == []
+
+
+def test_no_config_and_no_package_json_incomplete(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    commit_all(repo, "initial")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "INCOMPLETE"
+    assert proc.returncode == 2
+    assert data["config_source"] is None
+    assert data["discovered"] == []
+    assert any(
+        "no config was found" in e and "no checks could be discovered" in e
+        for e in data["errors"]
+    ), data["errors"]
+
+
+def test_invalid_package_json_incomplete(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, "{not valid json")
+    commit_all(repo, "initial bad package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "INCOMPLETE"
+    assert proc.returncode == 2
+    assert data["config_source"] is None
+    assert any("no checks could be discovered" in e for e in data["errors"])
+
+
+def test_package_json_not_an_object_incomplete(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, "[1, 2, 3]")
+    commit_all(repo, "initial array package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "INCOMPLETE"
+    assert proc.returncode == 2
+    assert data["config_source"] is None
+
+
+def test_package_json_no_candidate_scripts_incomplete(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"lint": "exit 0", "format": "exit 0"}})
+    commit_all(repo, "initial no candidates")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "INCOMPLETE"
+    assert proc.returncode == 2
+    assert data["config_source"] is None
+    assert data["discovered"] == []
+    assert any("no checks could be discovered" in e for e in data["errors"])
+
+
+def test_discovered_failing_script_failed(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 1"}})
+    commit_all(repo, "initial failing package.json")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "FAILED", data
+    assert proc.returncode == 1
+    assert data["config_source"] == "package.json"
+    assert data["discovered"] == ["test"]
+    assert data["checks"][0]["exit_code"] not in (0, None)
+
+
+def test_discovery_human_output_line(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_package_json(repo, {"scripts": {"test": "exit 0"}})
+    commit_all(repo, "initial with package.json")
+    proc, _ = run_tool(repo, use_json=False)
+    assert proc.returncode == 0
+    assert "config: derived from package.json (scripts: test)" in proc.stdout
+
+
+def test_config_file_reports_file_source(tmp_path):
+    repo = make_simple_repo(tmp_path)
+    write_config(repo, [ok_check()])
+    commit_all(repo, "initial")
+    proc, data = run_tool(repo)
+    assert data["verdict"] == "VERIFIED"
+    assert data["config_source"] == "file"
+    assert data["discovered"] == []

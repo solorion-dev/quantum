@@ -26,7 +26,7 @@ checks did not pollute the tree they claimed to verify.
 | Step | Why |
 |---|---|
 | Repo is a git work tree | No verdict on a directory that is not the merged tree |
-| Config exists, parses, checks list non-empty | A missing or empty config is not a pass — it is `INCOMPLETE` |
+| Config exists, parses, checks list non-empty — or checks are discovered from `package.json` (v2, see below) | A missing or empty config with no discoverable checks is not a pass — it is `INCOMPLETE` |
 | `HEAD` matches `--expect-head` (full SHA or unique prefix ≥7 chars), when given | You verified the tip you merged, not some other commit that drifted in |
 | `--expect-ancestor` is an ancestor of `HEAD` (`git merge-base --is-ancestor`), when given | The commits you expected to land actually landed |
 | Tree clean before checks (`git status --porcelain` empty, when `require_clean`) | Uncommitted changes mean the tree tested is not the merged tip |
@@ -72,6 +72,60 @@ See `merge-verify.example.json` for a plausible Quantum-app
 config (typecheck via `npx tsc --noEmit`, unit tests, build).
 JSON has no comments, so field explanations live here, not there.
 
+## Auto-discovery from package.json (v2)
+
+When no config file is present, v2 derives a default check set
+from the repo's `package.json` instead of stopping immediately —
+so a JS/TS repo with no `merge-verify.json` still gets its merged
+tree exercised.
+
+**Precedence — a real config always wins:**
+
+1. An explicit `--config PATH` is used as-is. A missing or
+   invalid explicit config is `INCOMPLETE` (exit 2); discovery
+   is never attempted for an explicit path.
+2. Else `<repo>/merge-verify.json`, if it exists, is used as in
+   v1.
+3. Else discovery from `<repo>/package.json` is attempted
+   (unless `--no-auto-discover` was given).
+
+**Discovery order:** candidate scripts are considered in the
+fixed order `typecheck`, `test`, `build`. Only scripts actually
+present in `package.json`'s `"scripts"` (with a non-empty string
+value) become checks; missing, empty, and non-candidate scripts
+(e.g. `lint`) are skipped. Each discovered check is named after
+its script and run as an argv array,
+`[<package-manager>, "run", <script>]`, with the default timeout
+(600s). Discovered checks always run with `require_clean: true`.
+
+**Package-manager detection:** a lockfile in the repo root wins,
+in this priority order — `pnpm-lock.yaml` → pnpm, `yarn.lock` →
+yarn, `package-lock.json` or `npm-shrinkwrap.json` → npm,
+`bun.lock` or `bun.lockb` → bun. With no lockfile, the
+`package.json` `"packageManager"` field is used (the name before
+the `@`, e.g. `"pnpm@9.0.0"` → pnpm). Otherwise the default is
+npm.
+
+**`--no-auto-discover`** restores strict v1 behaviour: no config
+file means `INCOMPLETE`, even if `package.json` has usable
+scripts.
+
+**Transparency:** the result gains two fields. `config_source`
+is `"file"` when a real config file was used, `"package.json"`
+when checks were discovered, and `null` when neither produced a
+check set. `discovered` lists the script names discovered from
+`package.json` (in discovery order), and is `[]` when discovery
+was not used. Human-readable output prints a line such as
+`config: derived from package.json (scripts: typecheck, test)`
+when discovery was used; `--json` output carries both fields.
+
+**The honesty rule:** if `package.json` is missing, unparseable,
+not a JSON object, or has zero candidate scripts, no checks
+could be discovered — the verdict is `INCOMPLETE` (exit 2) with
+an error naming that no config was found and no checks could be
+discovered. Discovery never invents a verdict: no discoverable
+checks is never `VERIFIED`.
+
 ## Verdicts & exit codes
 
 - `VERIFIED` (0) — all identity checks pass, all checks exit 0,
@@ -115,12 +169,18 @@ python3 src/merge_verify.py --repo /path/to/repo \
 # {verdict, exit_code, repo, head, expect_head_ok,
 #  expect_ancestor_ok, tree_clean_before, tree_clean_after,
 #  checks: [{name, exit_code, duration_s, timed_out, tail}],
-#  errors: [...]}
+#  errors: [...], config_source, discovered}
 python3 src/merge_verify.py --repo /path/to/repo --json
 
 # explicit config elsewhere
 python3 src/merge_verify.py --repo /path/to/repo \
   --config /path/to/merge-verify.json
+
+# no merge-verify.json? v2 derives checks from package.json
+# scripts (typecheck, test, build) automatically — or opt out
+# and restore strict v1 behaviour (no config = INCOMPLETE):
+python3 src/merge_verify.py --repo /path/to/repo \
+  --no-auto-discover
 ```
 
 Human-readable output is the default: verdict, head SHA,
@@ -155,7 +215,8 @@ the clean-tree rule exists to catch.
 ## Tests
 
 ```sh
-python3 -m pytest tests/ -q   # 16 tests: good merge VERIFIED,
+python3 -m pytest tests/ -q   # 36 tests (16 v1 + 20 v2):
+                              # good merge VERIFIED,
                               # the Eidolon bad-merge shape
                               # (definition removed, use kept)
                               # FAILED with the failing check named,
@@ -169,5 +230,22 @@ python3 -m pytest tests/ -q   # 16 tests: good merge VERIFIED,
                               # --json shape, non-git dir, and
                               # cwd-subdir checks — all against
                               # real temp git repos with real
-                              # commits and a real merge
+                              # commits and a real merge; the v2
+                              # tests add discovery order and
+                              # missing-script skipping, pnpm /
+                              # yarn / bun lockfile and default
+                              # npm selection (via fake pm
+                              # shims on PATH), the
+                              # packageManager-field fallback,
+                              # lockfile-over-field precedence,
+                              # config-file and explicit
+                              # --config precedence over
+                              # package.json, --no-auto-discover,
+                              # and every no-discovery path
+                              # (missing / invalid / non-object /
+                              # no-candidate package.json) =
+                              # INCOMPLETE, plus discovered
+                              # pass = VERIFIED with
+                              # config_source="package.json" and
+                              # discovered fail = FAILED
 ```
