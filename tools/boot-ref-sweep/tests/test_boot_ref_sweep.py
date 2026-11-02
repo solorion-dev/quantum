@@ -246,3 +246,264 @@ class DecoderSegmentTests(unittest.TestCase):
         searchable, complete = brs.initramfs_searchable_bytes(early + main)
         self.assertTrue(complete)
         self.assertIn(GHOST_BOOT.encode(), searchable)
+
+
+# --- v2: --from-device harvesting ----------------------------------------
+
+OTHER_UUID = "99999999-8888-7777-6666-555544443333"
+SERIAL = "WD-WX21A0001234"
+WWN = "0x50014ee2b5a12345"
+
+
+def lsblk_sample():
+    return {"blockdevices": [
+        {"name": "sda", "type": "disk", "serial": SERIAL, "wwn": WWN,
+         "uuid": None, "partuuid": None, "label": None, "partlabel": None,
+         "children": [
+             {"name": "sda1", "type": "part", "uuid": GHOST_ESP,
+              "partuuid": "aaaa0001-01", "label": None,
+              "partlabel": "EFI System"},
+             {"name": "sda2", "type": "part", "uuid": GHOST_BOOT,
+              "partuuid": "aaaa0001-02", "label": "OLDBOOT",
+              "partlabel": "boot",
+              "children": [
+                  {"name": "dm-0", "type": "crypt", "uuid": OTHER_UUID,
+                   "label": "cryptboot"},
+              ]},
+         ]},
+        {"name": "sdb", "type": "disk", "serial": "OTHER-SERIAL",
+         "children": [
+             {"name": "sdb1", "type": "part",
+              "uuid": "bbbb1111-2222-3333-4444-555566667777"},
+         ]},
+        {"name": "loop0", "type": "loop", "uuid": "LOOPUUID-SKIP",
+         "children": [
+             {"name": "loop0p1", "type": "part", "uuid": "LOOPCHILD-SKIP"},
+         ]},
+    ]}
+
+
+BLKID_SAMPLE = """\
+DEVNAME=/dev/sda1
+UUID=E1C3-D1B2
+PARTUUID=aaaa0001-01
+TYPE=vfat
+PARTLABEL=EFI System
+
+DEVNAME=/dev/sda2
+UUID=037a1434-1111-2222-3333-444455556666
+PARTUUID=aaaa0001-02
+LABEL=OLDBOOT
+TYPE=ext4
+"""
+
+
+def device_file(tmp, payload, name="device.json"):
+    p = os.path.join(tmp, name)
+    with open(p, "w") as fh:
+        fh.write(payload if isinstance(payload, str) else json.dumps(payload))
+    return p
+
+
+def cli_device(root, device_path, extra=()):
+    cmd = [sys.executable, SRC, "--root", root,
+           "--from-device", device_path] + list(extra)
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+
+class HarvestUnitTests(unittest.TestCase):
+    def test_lsblk_nested_children_harvest(self):
+        got = brs.harvest_identifiers(json.dumps(lsblk_sample()))
+        by_value = {h.value: h for h in got}
+        # the crypt child nested under sda2 is harvested too
+        self.assertIn(OTHER_UUID, by_value)
+        self.assertEqual(by_value[OTHER_UUID].source_device, "dm-0")
+        self.assertEqual(by_value[GHOST_BOOT].kind, "uuid")
+        self.assertEqual(by_value[GHOST_BOOT].field, "uuid")
+        self.assertEqual(by_value[GHOST_BOOT].source_device, "sda2")
+        self.assertEqual(by_value["aaaa0001-02"].kind, "uuid")
+        self.assertEqual(by_value["aaaa0001-02"].field, "partuuid")
+        self.assertEqual(by_value["OLDBOOT"].kind, "id")
+        self.assertEqual(by_value["OLDBOOT"].field, "label")
+        self.assertEqual(by_value[SERIAL].kind, "id")
+        self.assertEqual(by_value[SERIAL].field, "serial")
+        self.assertEqual(by_value[SERIAL].source_device, "sda")
+        self.assertEqual(by_value[WWN].field, "wwn")
+        # first-seen order: the disk's own serial precedes partition UUIDs
+        self.assertEqual(got[0].value, SERIAL)
+
+    def test_lsblk_dedupe_case_insensitive_first_seen_wins(self):
+        data = {"blockdevices": [
+            {"name": "sda", "type": "disk", "children": [
+                {"name": "sda1", "type": "part", "uuid": GHOST_ESP},
+                {"name": "sda2", "type": "part",
+                 "uuid": GHOST_ESP.lower(), "label": "Data"},
+                {"name": "sda3", "type": "part", "label": "DATA"},
+            ]}]}
+        got = brs.harvest_identifiers(json.dumps(data))
+        values = [h.value for h in got]
+        self.assertEqual(values.count(GHOST_ESP), 1)
+        self.assertNotIn(GHOST_ESP.lower(), values)
+        self.assertEqual([v for v in values if v.lower() == "data"], ["Data"])
+
+    def test_lsblk_skips_loop_ram_squashfs(self):
+        got = brs.harvest_identifiers(json.dumps(lsblk_sample()))
+        values = [h.value for h in got]
+        self.assertNotIn("LOOPUUID-SKIP", values)
+        self.assertNotIn("LOOPCHILD-SKIP", values)
+        data = {"blockdevices": [
+            {"name": "ram0", "type": "ram", "uuid": "RAM-SKIP"},
+            {"name": "sr0", "type": "squashfs", "uuid": "SQUASH-SKIP"},
+            {"name": "sda", "type": "disk", "uuid": OTHER_UUID},
+        ]}
+        values = [h.value for h in brs.harvest_identifiers(json.dumps(data))]
+        self.assertEqual(values, [OTHER_UUID])
+
+    def test_lsblk_skips_null_empty_whitespace(self):
+        data = {"blockdevices": [
+            {"name": "sda", "type": "disk", "uuid": None, "label": "",
+             "serial": "   ", "children": [
+                 {"name": "sda1", "type": "part", "uuid": OTHER_UUID},
+             ]}]}
+        got = brs.harvest_identifiers(json.dumps(data))
+        self.assertEqual([h.value for h in got], [OTHER_UUID])
+
+    def test_blkid_export_parse(self):
+        got = brs.harvest_identifiers(BLKID_SAMPLE)
+        by_value = {h.value: h for h in got}
+        self.assertEqual(by_value[GHOST_ESP].source_device, "sda1")
+        self.assertEqual(by_value[GHOST_ESP].kind, "uuid")
+        self.assertEqual(by_value["aaaa0001-01"].field, "partuuid")
+        self.assertEqual(by_value["EFI System"].field, "partlabel")
+        self.assertEqual(by_value["EFI System"].kind, "id")
+        self.assertEqual(by_value[GHOST_BOOT].source_device, "sda2")
+        self.assertEqual(by_value["OLDBOOT"].field, "label")
+        # TYPE= is not an identifier and is never harvested
+        self.assertNotIn("vfat", by_value)
+        self.assertNotIn("ext4", by_value)
+
+    def test_device_filter_restricts_to_subtree(self):
+        got = brs.harvest_identifiers(json.dumps(lsblk_sample()),
+                                      device="sdb")
+        values = [h.value for h in got]
+        self.assertIn("bbbb1111-2222-3333-4444-555566667777", values)
+        self.assertIn("OTHER-SERIAL", values)
+        self.assertNotIn(GHOST_BOOT, values)
+        self.assertNotIn(SERIAL, values)
+        # a partition name selects that partition (and its children)
+        got = brs.harvest_identifiers(json.dumps(lsblk_sample()),
+                                      device="sda2")
+        values = [h.value for h in got]
+        self.assertIn(GHOST_BOOT, values)
+        self.assertIn(OTHER_UUID, values)  # nested crypt child
+        self.assertNotIn(GHOST_ESP, values)
+
+    def test_device_filter_blkid(self):
+        got = brs.harvest_identifiers(BLKID_SAMPLE, device="sda2")
+        values = [h.value for h in got]
+        self.assertIn(GHOST_BOOT, values)
+        self.assertNotIn(GHOST_ESP, values)
+
+    def test_unknown_device_raises(self):
+        with self.assertRaises(brs.HarvestError):
+            brs.harvest_identifiers(json.dumps(lsblk_sample()),
+                                    device="nvme9n1")
+        with self.assertRaises(brs.HarvestError):
+            brs.harvest_identifiers(BLKID_SAMPLE, device="sdz1")
+
+
+class FromDeviceCliTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.root = self.tmp
+
+    def test_unknown_device_cli_exit2_no_verdict(self):
+        dev = device_file(self.tmp, lsblk_sample())
+        p = subprocess.run([sys.executable, SRC, "--root", self.root,
+                            "--from-device", dev, "--device", "nvme9n1"],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("unknown device", p.stderr)
+        self.assertNotIn("VERDICT:", p.stdout)
+
+    def test_zero_harvest_is_incomplete_never_clean(self):
+        empty = {"blockdevices": [
+            {"name": "sda", "type": "disk", "uuid": None, "label": "  ",
+             "children": [{"name": "sda1", "type": "part"}]}]}
+        dev = device_file(self.tmp, empty)
+        write(self.root, "etc/fstab",
+              f"UUID={LIVE_BOOT} /boot ext4 defaults 0 2\n")
+        p = cli_device(self.root, dev)
+        self.assertEqual(p.returncode, 2, p.stdout + p.stderr)
+        self.assertIn("VERDICT: INCOMPLETE", p.stdout)
+        self.assertNotIn("VERDICT: CLEAN", p.stdout)
+        data = json.loads(cli_device(self.root, dev,
+                                     extra=("--json",)).stdout)
+        self.assertEqual(data["verdict"], "INCOMPLETE")
+        self.assertEqual(data["harvested"], [])
+
+    def test_merge_explicit_wins_on_dedupe(self):
+        dev = device_file(self.tmp, lsblk_sample())
+        # explicit flag carries the same UUID in a different case
+        p = subprocess.run([sys.executable, SRC, "--root", self.root,
+                            "--from-device", dev,
+                            "--uuid", GHOST_ESP.lower(), "--json"],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        data = json.loads(p.stdout)
+        lowered = [i.lower() for i in data["identifiers"]]
+        self.assertEqual(lowered.count(GHOST_ESP.lower()), 1)
+        # the explicit (lower-case) spelling is the one kept
+        self.assertIn(GHOST_ESP.lower(), data["identifiers"])
+        self.assertNotIn(GHOST_ESP, data["identifiers"])
+        # harvested identifiers are still reported, with provenance
+        harvested = {h["value"]: h for h in data["harvested"]}
+        self.assertEqual(harvested[GHOST_BOOT]["source_device"], "sda2")
+        self.assertEqual(harvested[GHOST_BOOT]["field"], "uuid")
+        self.assertEqual(harvested[SERIAL]["kind"], "id")
+        self.assertEqual(data["identifiers_source"], "explicit+device")
+
+    def test_end_to_end_harvested_id_finds_fstab_reference(self):
+        dev = device_file(self.tmp, lsblk_sample())
+        write(self.root, "etc/fstab",
+              f"UUID={GHOST_BOOT} /boot ext4 defaults 0 2\n")
+        p = cli_device(self.root, dev)
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("VERDICT: BLOCKED", p.stdout)
+        self.assertIn("harvested", p.stdout)
+        self.assertIn(GHOST_BOOT, p.stdout)
+        data = json.loads(cli_device(self.root, dev,
+                                     extra=("--json",)).stdout)
+        self.assertEqual(data["verdict"], "BLOCKED")
+        self.assertTrue(any(h["identifier"] == GHOST_BOOT
+                            for h in data["hits"]))
+
+    def test_end_to_end_blkid_device_file(self):
+        dev = device_file(self.tmp, BLKID_SAMPLE, name="blkid.txt")
+        write(self.root, "etc/fstab",
+              "LABEL=OLDBOOT /boot ext4 defaults 0 2\n")
+        p = cli_device(self.root, dev)
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("VERDICT: BLOCKED", p.stdout)
+
+    def test_from_device_stdin(self):
+        write(self.root, "etc/fstab",
+              f"UUID={GHOST_ESP} /boot/efi vfat defaults 0 2\n")
+        p = subprocess.run([sys.executable, SRC, "--root", self.root,
+                            "--from-device", "-"],
+                           input=json.dumps(lsblk_sample()),
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("VERDICT: BLOCKED", p.stdout)
+
+    def test_device_without_from_device_is_error(self):
+        p = subprocess.run([sys.executable, SRC, "--root", self.root,
+                            "--uuid", GHOST_BOOT, "--device", "sda"],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("--from-device", p.stderr)
+
+    def test_missing_from_device_file_is_error(self):
+        p = cli_device(self.root, os.path.join(self.tmp, "nope.json"))
+        self.assertEqual(p.returncode, 2)
+        self.assertNotIn("VERDICT:", p.stdout)

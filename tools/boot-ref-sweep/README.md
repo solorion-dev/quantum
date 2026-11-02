@@ -27,6 +27,53 @@ Identifiers (`--uuid`, repeatable; `--id` for labels / serials /
 by-id fragments) match case-insensitively — vfat UUIDs print
 upper-case, configs carry either.
 
+## Harvesting identifiers from a device (`--from-device`, v2)
+
+Typing a drive's identifiers by hand is the error-prone step: miss
+one PARTUUID and the sweep clears a drive it should have blocked.
+Instead, capture the device's own inventory and let the tool harvest
+every identifier from it:
+
+```sh
+lsblk -J -o NAME,UUID,PARTUUID,LABEL,PARTLABEL,SERIAL,WWN,TYPE \
+  > /tmp/lsblk.json
+python3 src/boot_ref_sweep.py --root / --from-device /tmp/lsblk.json
+
+# blkid export dumps work too (format is auto-detected):
+blkid -o export > /tmp/blkid.txt
+python3 src/boot_ref_sweep.py --root / --from-device /tmp/blkid.txt
+
+# or pipe either one in on stdin:
+lsblk -J -o NAME,UUID,PARTUUID,LABEL,PARTLABEL,SERIAL,WWN,TYPE \
+  | python3 src/boot_ref_sweep.py --root / --from-device -
+```
+
+Harvest rules:
+
+- lsblk JSON is walked recursively, including nested `children`
+  (partitions, LUKS/crypt mappings, LVM). Nodes of type `loop`,
+  `ram`, or `squashfs` are skipped with their whole subtree.
+- `UUID` / `PARTUUID` harvest as uuid-class; `LABEL` / `PARTLABEL` /
+  `SERIAL` / `WWN` harvest as id-class. Null, empty, and
+  whitespace-only values are skipped; duplicates are dropped
+  case-insensitively, preserving first-seen order.
+- `--device NAME` restricts the harvest to that device's subtree
+  (e.g. `--device sda`, or a partition such as `--device sda2`).
+  An unknown `--device` name is an error: exit 2, no verdict.
+- Harvested identifiers merge with any explicit `--uuid` / `--id`
+  values; on a duplicate the explicit spelling wins.
+- **Zero-harvest rule:** if `--from-device` yields **zero**
+  identifiers, the verdict is `INCOMPLETE` (exit 2) and no sweep is
+  run. An empty identifier set would otherwise "find nothing" on any
+  root and falsely report CLEAN — that must never clear a drive.
+
+Harvested identifiers are reported in both output modes: a
+`harvested (…)` line in human output, and in `--json` a `"harvested"`
+list of `{value, kind, source_device, field}` objects plus an
+`"identifiers_source"` field (`"device"`, `"explicit"`, or
+`"explicit+device"`). When `--from-device` is absent, output is
+exactly as in v1.
+
 ## Verdicts & exit codes
 
 - `CLEAN` (0) — no references anywhere scanned.
@@ -35,7 +82,8 @@ upper-case, configs carry either.
 - `BLOCKED` (1) — a **live** surface references the drive. Do not
   remove/wipe until fixed and re-swept.
 - `INCOMPLETE` (2) — a surface could not be verified (e.g. an
-  initramfs whose compression no decoder could open). Removal is
+  initramfs whose compression no decoder could open), or a
+  `--from-device` harvest yielded zero identifiers. Removal is
   **not** cleared; an unscanned image is never reported as clean.
 
 ## Usage
@@ -55,11 +103,18 @@ for zstd images.
 ## Tests
 
 ```sh
-python3 -m pytest tests/ -q   # 22 tests: every surface, the gzip-hook
+python3 -m pytest tests/ -q   # 38 tests: every surface, the gzip-hook
                               # outage shape, early-cpio+main images,
                               # undecodable image = INCOMPLETE, WARN vs
                               # BLOCKED classification, decoder segment
-                              # rules (no raw compressed-blob scanning)
+                              # rules (no raw compressed-blob scanning),
+                              # plus v2 --from-device harvesting: nested
+                              # lsblk children, case-insensitive dedupe,
+                              # loop/ram/squashfs skip, blkid export,
+                              # --device filter + unknown device,
+                              # zero-harvest = INCOMPLETE, explicit-wins
+                              # merge, stdin, and end-to-end BLOCKED
+                              # from harvested identifiers alone
 ```
 
 ## Field check (Oct 25, 2026, Tritium after recovery)
