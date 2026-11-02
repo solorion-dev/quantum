@@ -20,6 +20,16 @@ Identifiers are matched case-insensitively (vfat UUIDs print upper-case,
 configs may carry either case) and may be filesystem UUIDs, PARTUUIDs,
 labels, serials, or /dev/disk/by-id fragments.
 
+v2: identifiers can also be harvested from a device inventory instead
+of being typed by hand — `--from-device FILE` (or `-` for stdin)
+auto-detects an `lsblk -J` JSON dump or a `blkid -o export` dump and
+harvests UUID/PARTUUID (uuid-class) plus LABEL/PARTLABEL/SERIAL/WWN
+(id-class) from it, optionally restricted to one device's subtree with
+`--device NAME`. Harvested identifiers merge with any explicit
+`--uuid`/`--id` values (explicit values win on duplicates). A device
+file that yields zero identifiers is INCOMPLETE, never a clean verdict:
+"sweep nothing, find nothing" must not clear a drive for removal.
+
 Verdicts:
   BLOCKED    a live (non-backup) surface references an identifier
   INCOMPLETE a surface that should have been scanned could not be
@@ -78,6 +88,156 @@ class Hit:
     identifier: str
     live: bool
     detail: str = ""
+
+
+# --- device harvesting (--from-device, v2) ------------------------------
+SKIP_DEVICE_TYPES = {"loop", "ram", "squashfs"}
+
+# harvest field (lower-case) -> identifier kind; iteration order is the
+# harvest order within one device node.
+HARVEST_FIELDS = (("uuid", "uuid"), ("partuuid", "uuid"),
+                  ("label", "id"), ("partlabel", "id"),
+                  ("serial", "id"), ("wwn", "id"))
+
+
+class HarvestError(Exception):
+    """A --from-device source could not be harvested as requested."""
+
+
+@dataclass
+class HarvestedIdentifier:
+    value: str
+    kind: str               # "uuid" or "id"
+    source_device: str
+    field: str              # uuid | partuuid | label | partlabel | serial | wwn
+
+
+def _harvest_add(out: list, seen: set, value, kind: str,
+                 source_device: str, field_name: str) -> None:
+    if value is None:
+        return
+    value = str(value).strip()
+    if not value:
+        return
+    key = norm(value)
+    if key in seen:
+        return
+    seen.add(key)
+    out.append(HarvestedIdentifier(value, kind, source_device, field_name))
+
+
+def _device_name(name: str) -> str:
+    """Normalise a --device argument: 'sda', '/dev/sda' -> 'sda'."""
+    name = str(name).strip()
+    return os.path.basename(name) if name.startswith("/") else name
+
+
+def _walk_lsblk(node: dict):
+    """Yield a blockdevices node and its children, depth-first.
+
+    Nodes of a skipped type (loop/ram/squashfs) are pruned together
+    with their whole subtree.
+    """
+    dtype = str(node.get("type") or "").strip().lower()
+    if dtype in SKIP_DEVICE_TYPES:
+        return
+    yield node
+    for child in node.get("children") or []:
+        if isinstance(child, dict):
+            yield from _walk_lsblk(child)
+
+
+def _find_lsblk_node(nodes: list, wanted: str) -> dict | None:
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        if _device_name(str(node.get("name") or "")) == wanted:
+            return node
+        found = _find_lsblk_node(node.get("children") or [], wanted)
+        if found is not None:
+            return found
+    return None
+
+
+def harvest_lsblk(data: dict, device: str | None = None) -> list:
+    """Harvest identifiers from parsed `lsblk -J` JSON."""
+    roots = data.get("blockdevices")
+    if not isinstance(roots, list):
+        raise HarvestError("lsblk JSON has no 'blockdevices' list")
+    if device:
+        wanted = _device_name(device)
+        target = _find_lsblk_node(roots, wanted)
+        if target is None:
+            raise HarvestError(f"unknown device: {device}")
+        roots = [target]
+    out: list = []
+    seen: set = set()
+    for root in roots:
+        if not isinstance(root, dict):
+            continue
+        for node in _walk_lsblk(root):
+            source = _device_name(str(node.get("name") or ""))
+            for field_name, kind in HARVEST_FIELDS:
+                _harvest_add(out, seen, node.get(field_name), kind,
+                             source, field_name)
+    return out
+
+
+def harvest_blkid(text: str, device: str | None = None) -> list:
+    """Harvest identifiers from `blkid -o export` text.
+
+    Blocks are separated by blank lines; each starts with DEVNAME= and
+    carries UUID/PARTUUID/LABEL/PARTLABEL key=value lines.
+    """
+    wanted = _device_name(device) if device else None
+    out: list = []
+    seen: set = set()
+    matched = wanted is None
+    for block in re.split(r"\n\s*\n", text):
+        fields: dict = {}
+        order: list = []
+        for line in block.splitlines():
+            if "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            if key not in fields:
+                order.append(key)
+            fields[key] = val.strip()
+        if not fields:
+            continue
+        devname = fields.get("DEVNAME", "")
+        source = _device_name(devname) if devname else ""
+        if wanted is not None:
+            if source != wanted and devname != device:
+                continue
+            matched = True
+        for field_name, kind in HARVEST_FIELDS:
+            if field_name.upper() in fields:
+                _harvest_add(out, seen, fields[field_name.upper()], kind,
+                             source, field_name)
+    if wanted is not None and not matched:
+        raise HarvestError(f"unknown device: {device}")
+    return out
+
+
+def harvest_identifiers(text: str, device: str | None = None) -> list:
+    """Auto-detect a device inventory dump and harvest identifiers.
+
+    A leading '{' means lsblk JSON; anything else is treated as
+    `blkid -o export` text. Raises HarvestError for malformed JSON or
+    an unknown --device name.
+    """
+    stripped = text.strip()
+    if stripped.startswith("{"):
+        try:
+            data = json.loads(stripped)
+        except ValueError as exc:
+            raise HarvestError(f"malformed lsblk JSON: {exc}") from exc
+        if not isinstance(data, dict):
+            raise HarvestError("lsblk JSON is not an object")
+        return harvest_lsblk(data, device)
+    return harvest_blkid(text, device)
 
 
 @dataclass
@@ -277,10 +437,72 @@ def main(argv: list[str] | None = None) -> int:
                     help="label, serial, or by-id fragment (repeatable)")
     ap.add_argument("--efibootmgr", metavar="FILE",
                     help="file containing `efibootmgr -v` output to scan")
+    ap.add_argument("--from-device", metavar="FILE", dest="from_device",
+                    help="harvest identifiers from an `lsblk -J` JSON or "
+                         "`blkid -o export` dump ('-' reads stdin)")
+    ap.add_argument("--device", metavar="NAME",
+                    help="with --from-device: harvest only this device's "
+                         "subtree (e.g. sda)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
-    identifiers = list(args.uuid) + list(args.extra_ids)
+    explicit = list(args.uuid) + list(args.extra_ids)
+    harvested: list = []
+    identifiers_source = "explicit"
+    if args.from_device:
+        identifiers_source = "explicit+device" if explicit else "device"
+        try:
+            if args.from_device == "-":
+                device_text = sys.stdin.read()
+            else:
+                with open(args.from_device, "r", encoding="utf-8",
+                          errors="replace") as fh:
+                    device_text = fh.read()
+        except OSError as exc:
+            print(f"error: cannot read --from-device file "
+                  f"{args.from_device}: {exc.strerror or exc}",
+                  file=sys.stderr)
+            return 2
+        try:
+            harvested = harvest_identifiers(device_text, args.device)
+        except HarvestError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        if not harvested:
+            # Zero harvested identifiers: never issue a verdict from an
+            # empty identifier set (that would read CLEAN for any root).
+            # Report INCOMPLETE and clear nothing.
+            reason = ("--from-device yielded zero identifiers; "
+                      "no sweep was run and nothing is cleared")
+            if args.json:
+                print(json.dumps({
+                    "root": args.root, "identifiers": explicit,
+                    "verdict": "INCOMPLETE",
+                    "harvested": [],
+                    "identifiers_source": identifiers_source,
+                    "hits": [], "unverified": [reason], "scanned": [],
+                }, indent=2))
+            else:
+                print(f"boot-ref-sweep: root={args.root} "
+                      f"identifiers={', '.join(explicit)}")
+                print("  harvested: (none)")
+                print(f"  UNVERIFIED: {reason}")
+                print("VERDICT: INCOMPLETE")
+                print("Removal is NOT cleared: some surfaces could not "
+                      "be verified.")
+            return EXIT["INCOMPLETE"]
+    elif args.device:
+        print("error: --device requires --from-device", file=sys.stderr)
+        return 2
+
+    # Merge: explicit identifiers come first and win on duplicates;
+    # harvested values already present (case-insensitively) are dropped.
+    identifiers = list(explicit)
+    seen = {norm(i) for i in identifiers}
+    for h in harvested:
+        if norm(h.value) not in seen:
+            seen.add(norm(h.value))
+            identifiers.append(h.value)
     if not identifiers:
         print("error: at least one --uuid or --id is required",
               file=sys.stderr)
@@ -292,15 +514,24 @@ def main(argv: list[str] | None = None) -> int:
     sweep = run(args.root, identifiers, args.efibootmgr)
     v = verdict(sweep)
     if args.json:
-        print(json.dumps({
+        payload = {
             "root": args.root, "identifiers": identifiers, "verdict": v,
             "hits": [vars(h) for h in sweep.hits],
             "unverified": sweep.unverified,
             "scanned": sweep.scanned,
-        }, indent=2))
+        }
+        if args.from_device:
+            payload["harvested"] = [vars(h) for h in harvested]
+            payload["identifiers_source"] = identifiers_source
+        print(json.dumps(payload, indent=2))
     else:
         print(f"boot-ref-sweep: root={args.root} "
               f"identifiers={', '.join(identifiers)}")
+        if args.from_device:
+            print(f"  harvested ({identifiers_source}): "
+                  + ", ".join(f"{h.value} [{h.kind}:{h.field} "
+                              f"from {h.source_device}]"
+                              for h in harvested))
         for h in sweep.hits:
             print(f"  {'LIVE ' if h.live else 'BACKUP'} [{h.surface}] "
                   f"{h.path} :: {h.identifier} — {h.detail}")
