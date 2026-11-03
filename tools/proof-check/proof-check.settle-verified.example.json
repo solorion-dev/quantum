@@ -1,0 +1,1 @@
+{"checked_at":"2026-11-03T11:30:00+00:00","claim":"Example delegated-work claim (settle-check --json shape, plus the optional claim_id / checked_at fields proof-check understands)","claim_id":"example-complete","notes":["settled across the window and checked"],"problems":[],"status":"verified"}
