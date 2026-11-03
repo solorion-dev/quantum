@@ -31,12 +31,13 @@ import html
 import json
 import os
 import re
+import sys
 import threading
 import urllib.request
 import urllib.error
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, unquote, parse_qs
+from urllib.parse import urlparse, unquote, parse_qs, quote
 
 PORT = 7656
 GATEWAY = os.environ.get("BREEZE_DEMO_GATEWAY", "http://127.0.0.1:8091/mcp")
@@ -46,6 +47,60 @@ CREATOR_KEY_FILE = os.environ.get(
     "BREEZE_CREATOR_KEY_FILE", "/home/scott/.cooper/breeze-creator/mcp-key")
 CREATOR_TOKEN_FILE = os.environ.get(
     "BREEZE_CREATOR_TOKEN_FILE", "/home/scott/.cooper/breeze-creator/ui-token")
+
+# --- Solorion universal login (dsect-auth) ---------------------------------
+# Voice creation is authorized per signed-in user: dsect-auth role "admin"
+# or a "breeze-creator" entry in the user's services_allowed. The shared
+# creator token above remains wired as a break-glass path only.
+AUTH_DIR = "/home/scott/.config/dsect-auth"
+AUTH_SERVICE = "breeze"
+CREATOR_SERVICE_MARK = "breeze-creator"
+SESSION_COOKIE = "breeze_session"
+_dsect_auth = None
+
+
+def _auth():
+    """The shared dsect_auth module, or None when unavailable on this host."""
+    global _dsect_auth
+    if _dsect_auth is None:
+        try:
+            if AUTH_DIR not in sys.path:
+                sys.path.insert(0, AUTH_DIR)
+            import dsect_auth
+            _dsect_auth = dsect_auth
+        except Exception:
+            _dsect_auth = False
+    return _dsect_auth or None
+
+
+def _session_claims(handler):
+    """Verified dsect-auth JWT claims from the session cookie, or None."""
+    auth = _auth()
+    if auth is None:
+        return None
+    raw = handler.headers.get("Cookie") or ""
+    token = None
+    for part in raw.split(";"):
+        part = part.strip()
+        if part.startswith(SESSION_COOKIE + "="):
+            token = unquote(part[len(SESSION_COOKIE) + 1:])
+            break
+    if not token:
+        return None
+    try:
+        return auth.verify_token(token)
+    except Exception:
+        return None
+
+
+def _can_create(claims):
+    """Voice-creation permission: admin role, or an explicit services grant."""
+    if not claims:
+        return False
+    if claims.get("role") == "admin":
+        return True
+    services = claims.get("services") or []
+    return CREATOR_SERVICE_MARK in services or "breeze:create-voice" in services
 BREEZE_DIR = Path("/mnt/fast/breeze-mcp")
 NEBULA_OUTPUT_ROOTS = [Path("/home/scott/ComfyUI/output")]
 MAX_BODY = 65536
@@ -269,393 +324,1716 @@ def prompt_param_for(workflow):
 # --------------------------------------------------------------------- page
 
 CSS = """
-:root{--ink:#16161a;--mut:#6b6b76;--line:#e4e4ea;--bg:#f6f6f8;--card:#fff;
---violet:#6d28d9;--ok:#14743c;--err:#b3261e;--radius:14px}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
-Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);
--webkit-font-smoothing:antialiased}
-.wrap{max-width:880px;margin:0 auto;padding:28px 18px 56px}
-header h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
-header p{margin:0;color:var(--mut);font-size:14.5px;line-height:1.5}
-.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;
-border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--mut)}
-.badge.live{color:var(--ok);border-color:#bfe3cd}
-.badge.warn{color:#8a5a00;border-color:#ecd9a8;background:#fffaf0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-padding:20px;margin-top:18px}
-.card h2{margin:0 0 4px;font-size:18px}
-.card .sub{color:var(--mut);font-size:13.5px;margin:0 0 14px;line-height:1.5}
-label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
-label:first-of-type{margin-top:0}
-select,input[type=text],input[type=password],textarea{width:100%;font:inherit;font-size:15px;
-padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-textarea{resize:vertical;min-height:96px;line-height:1.5}
-.row{display:flex;gap:12px;flex-wrap:wrap}
-.row>div{flex:1;min-width:180px}
-.count{font-size:12px;color:var(--mut);text-align:right;margin-top:4px}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.chip{font-size:12.5px;padding:6px 11px;border:1px solid var(--line);
-border-radius:999px;background:#fafafa;cursor:pointer}
-.chip:hover{border-color:var(--violet);color:var(--violet)}
-button.primary{background:#111;color:#fff;border:0;font:inherit;font-weight:600;
-font-size:15px;padding:12px 22px;border-radius:10px;cursor:pointer;margin-top:18px}
-button.primary:disabled{opacity:.45;cursor:default}
-.status{margin-top:14px;font-size:14px;color:var(--mut);min-height:20px}
-.status.err{color:var(--err)}
-.bar{height:8px;background:#eeeef2;border-radius:99px;overflow:hidden;margin-top:8px;
-display:none}
-.bar>i{display:block;height:100%;width:0;background:var(--violet);
-transition:width .4s ease}
-audio{width:100%;margin-top:12px}
-.dl{font-size:13.5px;margin-top:8px;display:inline-block}
-.hist{margin-top:6px}
-.hist .item{border-top:1px solid var(--line);padding:12px 0}
-.hist .item:first-child{border-top:0}
-.hist .meta{font-size:12.5px;color:var(--mut);margin-bottom:6px}
-.hist .txt{font-size:14.5px;line-height:1.45}
-.notice{border:1px solid #ecd9a8;background:#fffaf0;border-radius:var(--radius);
-padding:14px 18px;margin-top:18px;font-size:14px;line-height:1.55}
-.outputs{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
-.outputs figure{margin:0;width:220px}
-.outputs img{width:100%;border:1px solid var(--line);border-radius:10px;display:block}
-.outputs figcaption{font-size:12px;color:var(--mut);margin-top:5px;word-break:break-all}
-footer{color:var(--mut);font-size:12.5px;margin-top:26px;line-height:1.6}
-code{background:#f0f0f3;padding:1px 5px;border-radius:5px;font-size:12.5px}
+:root {
+  --ink: #0f172a;
+  --ink-secondary: #475569;
+  --mut: #64748b;
+  --line: #e2e8f0;
+  --line-focus: #94a3b8;
+  --bg: #f8fafc;
+  --parchment: #faf5ea;
+  --parchment-deep: #f2e9d8;
+  --parchment-line: #e2d5ba;
+  --card: #ffffff;
+  --card-subtle: #f1f5f9;
+  --violet: #7c3aed;
+  --violet-light: #ede9fe;
+  --violet-hover: #6d28d9;
+  --teal: #0d9488;
+  --teal-light: #ccfbf1;
+  --ok: #15803d;
+  --ok-bg: #f0fdf4;
+  --ok-line: #bbf7d0;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --warn-line: #fde68a;
+  --err: #b91c1c;
+  --err-bg: #fef2f2;
+  --err-line: #fecaca;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+header {
+  margin-bottom: 24px;
+}
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+header p {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 15px;
+}
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--mut);
+}
+.badge.live {
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+}
+.badge.warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+}
+.badge.brand {
+  color: var(--violet);
+  background: var(--violet-light);
+  border-color: #ddd6fe;
+}
+.badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Tabs Navigation */
+.tabs-nav {
+  display: flex;
+  gap: 6px;
+  background: var(--card-subtle);
+  padding: 4px;
+  border-radius: var(--radius);
+  margin-top: 20px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.tab-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.6);
+}
+.tab-btn.active {
+  color: var(--ink);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Tab Panels */
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.18s ease forwards;
+}
+.tab-panel.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 18px;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card .sub {
+  color: var(--ink-secondary);
+  font-size: 14px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+/* Forms */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 16px 0 6px;
+  color: var(--ink);
+}
+label:first-of-type { margin-top: 0; }
+select, input[type=text], input[type=password], textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 14.5px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+select:focus, input[type=text]:focus, input[type=password]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.row > div {
+  flex: 1;
+  min-width: 220px;
+}
+.char-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--mut);
+  margin-top: 5px;
+}
+
+/* Chips */
+.chips-wrap {
+  margin-top: 10px;
+}
+.chips-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 13px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-subtle);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip:hover {
+  border-color: var(--violet);
+  color: var(--violet);
+  background: #fff;
+}
+.chip.active {
+  background: var(--violet-light);
+  border-color: #ddd6fe;
+  color: var(--violet);
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 20px;
+}
+button.primary {
+  background: #0f172a;
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+button.primary:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+button.primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+button.secondary {
+  background: #fff;
+  color: var(--ink-secondary);
+  border: 1px solid var(--line);
+  font: inherit;
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+button.secondary:hover:not(:disabled) {
+  border-color: var(--line-focus);
+  color: var(--ink);
+  background: var(--card-subtle);
+}
+button.secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button.danger-text {
+  background: transparent;
+  color: var(--err);
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button.danger-text:hover {
+  background: var(--err-bg);
+}
+
+/* Status & Progress */
+.status {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--ink-secondary);
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status.err {
+  color: var(--err);
+}
+.status.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 10px;
+  display: none;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--violet);
+  transition: width 0.4s ease;
+}
+
+/* Audio Player Container */
+.player-box {
+  background: var(--parchment);
+  border: 1px solid var(--parchment-line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-top: 16px;
+}
+.player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+audio {
+  width: 100%;
+  outline: none;
+}
+.player-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.dl-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--violet);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dl-link:hover {
+  text-decoration: underline;
+}
+
+/* History */
+.hist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.hist-item {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  transition: box-shadow 0.15s ease;
+}
+.hist-item:hover {
+  box-shadow: var(--shadow-sm);
+}
+.hist-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--mut);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hist-badge {
+  background: var(--violet-light);
+  color: var(--violet);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.hist-txt {
+  font-size: 14.5px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.hist-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hist-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Notice */
+.notice {
+  border: 1px solid #ecd9a8;
+  background: #fffaf0;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-top: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.info-banner {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--violet);
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  margin-bottom: 18px;
+}
+
+/* Nebula Outputs */
+.outputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.outputs figure {
+  margin: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.outputs img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+.outputs img:hover {
+  transform: scale(1.02);
+}
+.outputs figcaption {
+  font-size: 12px;
+  color: var(--mut);
+  padding: 8px 12px;
+  word-break: break-all;
+  border-top: 1px solid var(--line);
+  background: #fafafa;
+}
+
+footer {
+  color: var(--mut);
+  font-size: 13px;
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  line-height: 1.6;
+}
+code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Solorion parchment surfaces (TRK-0593): new components are light-first
+   parchment, matching the Solorion auth pages. */
+.auth-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.auth-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--parchment);
+  border: 1px solid var(--parchment-line);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.auth-note {
+  font-size: 13px;
+  color: var(--mut);
+}
+.auth-btn {
+  background: #0f172a;
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.auth-btn:hover { background: #1e293b; }
+.auth-btn.ghost {
+  background: #fff;
+  color: var(--ink-secondary);
+  border: 1px solid var(--line);
+}
+.auth-btn.ghost:hover { border-color: var(--line-focus); color: var(--ink); }
+
+/* React voice player (TRK-0592) */
+.vp {
+  background: var(--parchment);
+  border: 1px solid var(--parchment-line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hist .vp { background: #fff; }
+.vp-play {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 0;
+  background: #0f172a;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.vp-play:hover { background: #1e293b; transform: translateY(-1px); }
+.vp-main { flex: 1; min-width: 0; }
+.vp-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-sub {
+  font-size: 12px;
+  color: var(--mut);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-track {
+  height: 8px;
+  background: var(--parchment-deep);
+  border-radius: 99px;
+  margin-top: 7px;
+  cursor: pointer;
+}
+.vp-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--ink);
+  border-radius: 99px;
+}
+.vp-time {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 88px;
+  text-align: right;
+}
+.vp-unavailable { font-size: 13px; color: var(--mut); }
+
+@media (max-width: 640px) {
+  .wrap { padding: 20px 14px 48px; }
+  .card { padding: 18px 14px; }
+  .btn-row { flex-direction: column; align-items: stretch; }
+  button.primary, button.secondary { width: 100%; justify-content: center; }
+  .hist-footer { flex-direction: column; align-items: flex-start; }
+}
 """
 
 JS = """
-const $=id=>document.getElementById(id);
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function api(path,opts){const r=await fetch(path,opts);
-  const d=await r.json().catch(()=>({error:"bad server response"}));
-  if(!r.ok)throw new Error(d.message||d.error||("HTTP "+r.status));return d;}
-function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ---------------- Breeze ----------------
-const DIRECTIONS=[
- "Speak casually and warmly, like a friend chatting over coffee. Relaxed and upbeat, gentle volume, never projected or announcer-like.",
- "Speak like a calm documentary narrator: measured pace, clear diction, warm low register, natural pauses between sentences.",
- "Bright and energetic, like a morning radio host: upbeat and smiling, but never shouted."];
-const SAMPLES=[
- "Good evening. This is the Breeze demo page, coming to you live through the Quantum MCP.",
- "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.",
- "Welcome back to the Quantum Channel. Tonight we take a look back at how far the fleet has come."];
-let history=[];
-function buildChips(){
- $("dirChips").innerHTML=DIRECTIONS.map((d,i)=>`<button type="button" class="chip" data-d="${i}">Direction ${i+1}</button>`).join("");
- $("dirChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("bInstruction").value=DIRECTIONS[+b.dataset.d];});
- $("textChips").innerHTML=SAMPLES.map((s,i)=>`<button type="button" class="chip" data-t="${i}">Sample ${i+1}</button>`).join("");
- $("textChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("bText").value=SAMPLES[+b.dataset.t];countChars();});
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const d = await r.json().catch(() => ({ error: "bad server response" }));
+  if (!r.ok) throw new Error(d.message || d.error || ("HTTP " + r.status));
+  return d;
 }
-function countChars(){$("bCount").textContent=$("bText").value.length+" / 2000 characters";}
-async function loadVoices(){
- try{const d=await api("/api/voices");
-   $("bVoice").innerHTML=d.voices.map(v=>`<option value="${esc(v.name)}">${esc(v.name)}</option>`).join("");
-   const def=d.voices.find(v=>v.name==="cooper-v7")||d.voices[0];
-   if(def)$("bVoice").value=def.name;
- }catch(e){$("bStatus").textContent="Could not load voices: "+e.message;$("bStatus").className="status err";}
+
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
 }
-async function breezeGenerate(){
- const text=$("bText").value.trim(),voice=$("bVoice").value,
-       instr=$("bInstruction").value.trim();
- const st=$("bStatus"),bar=$("bBar"),fill=$("bFill");
- st.className="status";$("bPlayer").style.display="none";$("bDl").style.display="none";
- if(!text){st.textContent="Write or pick some text first.";st.className="status err";return;}
- $("bGo").disabled=true;bar.style.display="block";fill.style.width="4%";
- st.textContent="Asking Breeze to start the job...";
- const t0=Date.now();
- try{
-  const job=await api("/api/breeze/generate",{method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({text,voice,instruction:instr||undefined})});
-  const jobId=job.job_id;let state=job.state||"queued";
-  while(true){
-   if(Date.now()-t0>10*60*1000)throw new Error("Timed out after 10 minutes - the job may still finish on the hub; try a shorter text.");
-   const s=await api("/api/breeze/status/"+encodeURIComponent(jobId));
-   state=s.state;
-   if(s.chunks_total){fill.style.width=Math.round(100*(s.chunks_done||0)/s.chunks_total)+"%";
-     st.textContent=`Rendering with ${voice} - chunk ${s.chunks_done||0} of ${s.chunks_total}...`;}
-   else st.textContent="Job "+state+"...";
-   if(state==="done")break;
-   if(state==="error")throw new Error(s.error||"Generation failed on the hub.");
-   await sleep(2500);
+
+// ---------------- Voice Player (React, TRK-0592) ----------------
+// One shared React component replaces every native audio-controls
+// preview: TTS renders, New Voice samples, and History clips.
+const vpRoots = new WeakMap();
+function fmtTime(s) {
+  if (!isFinite(s) || s == null) return "0:00";
+  s = Math.max(0, Math.floor(s));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function VoicePlayer(props) {
+  const audioRef = React.useRef(null);
+  const [playing, setPlaying] = React.useState(false);
+  const [cur, setCur] = React.useState(0);
+  const [dur, setDur] = React.useState(0);
+  React.useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return undefined;
+    const onTime = () => setCur(a.currentTime);
+    const onMeta = () => setDur(a.duration || 0);
+    const onEnd = () => { setPlaying(false); setCur(0); };
+    a.addEventListener("timeupdate", onTime);
+    a.addEventListener("loadedmetadata", onMeta);
+    a.addEventListener("ended", onEnd);
+    return () => {
+      a.removeEventListener("timeupdate", onTime);
+      a.removeEventListener("loadedmetadata", onMeta);
+      a.removeEventListener("ended", onEnd);
+    };
+  }, [props.src]);
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) { a.play(); setPlaying(true); }
+    else { a.pause(); setPlaying(false); }
+  };
+  const seek = (e) => {
+    const a = audioRef.current;
+    if (!a || !dur) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    a.currentTime = ratio * dur;
+    setCur(a.currentTime);
+  };
+  const pct = dur ? Math.min(100, 100 * cur / dur) : 0;
+  return React.createElement("div", { className: "vp" },
+    React.createElement("audio", { ref: audioRef, src: props.src, preload: "metadata" }),
+    React.createElement("button", { type: "button", className: "vp-play", onClick: toggle, "aria-label": playing ? "Pause" : "Play" }, playing ? "❚❚" : "▶"),
+    React.createElement("div", { className: "vp-main" },
+      React.createElement("div", { className: "vp-label" }, props.label || "Voice clip"),
+      props.sublabel ? React.createElement("div", { className: "vp-sub" }, props.sublabel) : null,
+      React.createElement("div", { className: "vp-track", onClick: seek },
+        React.createElement("div", { className: "vp-fill", style: { width: pct + "%" } }))),
+    React.createElement("div", { className: "vp-time" }, fmtTime(cur) + " / " + fmtTime(dur)));
+}
+function mountPlayer(el, opts) {
+  if (!el) return;
+  if (!window.React || !window.ReactDOM) {
+    el.innerHTML = '<div class="vp"><span class="vp-unavailable">Player unavailable (React CDN unreachable) - use the download link.</span></div>';
+    return;
   }
-  fill.style.width="100%";
-  const res=await api("/api/breeze/result/"+encodeURIComponent(jobId));
-  const url="/audio/"+encodeURIComponent(jobId);
-  const pl=$("bPlayer");pl.src=url;pl.style.display="block";
-  const dl=$("bDl");dl.href=url;dl.download=res.filename||"breeze.mp3";
-  dl.textContent="Download MP3 ("+Math.round((res.size_bytes||0)/1024)+" KB)";dl.style.display="inline-block";
-  st.textContent="Done in "+Math.round((Date.now()-t0)/1000)+"s - press play.";
-  history.unshift({text,voice,url,time:new Date()});
+  let root = vpRoots.get(el);
+  if (!root) { root = ReactDOM.createRoot(el); vpRoots.set(el, root); }
+  root.render(React.createElement(VoicePlayer, Object.assign({}, opts, { key: opts.src })));
+}
+
+// ---------------- Solorion sign-in state (TRK-0591) ----------------
+let authState = { signed_in: false, can_create: false, email: null, role: null };
+async function loadAuth() {
+  try {
+    authState = await api("/api/auth/me");
+  } catch (e) { /* sign-in display is best-effort */ }
+  const area = $("authArea");
+  if (!area) return;
+  if (authState.signed_in) {
+    area.innerHTML =
+      '<span class="auth-chip"><span class="badge-dot" style="color:var(--ok)"></span> ' +
+      esc(authState.email || "Signed in") + (authState.role ? " · " + esc(authState.role) : "") + "</span>" +
+      (authState.can_create
+        ? '<span class="badge live"><span class="badge-dot"></span> Voice creator</span>'
+        : '<span class="badge warn"><span class="badge-dot"></span> No creation permission</span>') +
+      '<button type="button" class="auth-btn ghost" id="authOut">Sign out</button>';
+    $("authOut").addEventListener("click", async () => {
+      try { await fetch("/api/auth/logout", { method: "POST" }); } catch (e) {}
+      await loadAuth();
+      nvRefreshGate();
+    });
+  } else {
+    area.innerHTML =
+      '<span class="auth-note">Not signed in - sign-in is only needed to create voices.</span>' +
+      '<a class="auth-btn" href="/login">Sign in with Solorion</a>';
+  }
+}
+
+// ---------------- Tabs Navigation ----------------
+function initTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".tab-panel");
+  
+  function switchTab(targetId) {
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.target === targetId));
+    panels.forEach(p => p.classList.toggle("active", p.id === targetId));
+    window.location.hash = targetId.replace("tab-", "");
+  }
+
+  tabs.forEach(t => {
+    t.addEventListener("click", () => switchTab(t.dataset.target));
+  });
+
+  const hash = window.location.hash.replace("#", "");
+  if (hash && $("tab-" + hash)) {
+    switchTab("tab-" + hash);
+  }
+}
+
+// ---------------- Presets Catalogue ----------------
+const DIRECTIONS = [
+  { label: "Casual & Warm", text: "Speak casually and warmly, like a friend chatting over coffee. Relaxed and upbeat, gentle volume, never projected or announcer-like." },
+  { label: "Calm Documentary", text: "Speak like a calm documentary narrator: measured pace, clear diction, warm low register, natural pauses between sentences." },
+  { label: "Upbeat Morning", text: "Bright and energetic, like a morning radio host: upbeat and smiling, but never shouted." },
+  { label: "Gentle & Soothing", text: "Soft, gentle, calm delivery with a slow and soothing pace, perfect for nighttime relaxation." }
+];
+
+const SAMPLES = [
+  { label: "Fleet Greeting", text: "Good evening. This is the Breeze demo page, coming to you live through the Quantum MCP on Tritium." },
+  { label: "Phonetic Test", text: "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs." },
+  { label: "Quantum Channel", text: "Welcome back to the Quantum Channel. Tonight we take a look back at how far the fleet has come." },
+  { label: "Smart Home Brief", text: "Tritium server reports all 24 core services up and healthy. Indoor temperature is comfortable." }
+];
+
+const DESC_PRESETS = [
+  { label: "Warm Baritone", text: "A warm, resonant masculine baritone voice with calm pacing and a friendly, confident tone." },
+  { label: "Calm Narrator", text: "A composed and articulate storytelling voice with gentle warmth and crystal-clear pronunciation." },
+  { label: "Energetic Host", text: "An upbeat, engaging, and dynamic conversational voice with bright energy and expressive pauses." },
+  { label: "Thoughtful Guide", text: "A gentle, reassuring tone with an even cadence and soothing vocal texture." }
+];
+
+function buildChips() {
+  $("dirChips").innerHTML = DIRECTIONS.map((d, i) =>
+    `<button type="button" class="chip" data-idx="${i}">${esc(d.label)}</button>`
+  ).join("");
+  $("dirChips").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      $("bInstruction").value = DIRECTIONS[+b.dataset.idx].text;
+      $("dirChips").querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+    };
+  });
+
+  $("textChips").innerHTML = SAMPLES.map((s, i) =>
+    `<button type="button" class="chip" data-idx="${i}">${esc(s.label)}</button>`
+  ).join("");
+  $("textChips").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      $("bText").value = SAMPLES[+b.dataset.idx].text;
+      $("textChips").querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      countChars();
+    };
+  });
+
+  $("nvDescChips").innerHTML = DESC_PRESETS.map((p, i) =>
+    `<button type="button" class="chip" data-idx="${i}">${esc(p.label)}</button>`
+  ).join("");
+  $("nvDescChips").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      $("nvDesc").value = DESC_PRESETS[+b.dataset.idx].text;
+      $("nvDescChips").querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+    };
+  });
+}
+
+function countChars() {
+  const len = $("bText").value.length;
+  $("bCount").textContent = `${len} / 2000 characters`;
+}
+
+// ---------------- Voice Loading ----------------
+let loadedVoices = [];
+async function loadVoices() {
+  try {
+    const d = await api("/api/voices");
+    loadedVoices = d.voices || [];
+    $("bVoice").innerHTML = loadedVoices.map(v => {
+      const sizeKb = v.size_bytes ? Math.round(v.size_bytes / 1024) + " KB" : "";
+      const isCanonical = v.name === "cooper-v3" ? " (Official Default)" : "";
+      const label = `${v.name}${isCanonical}${sizeKb ? " · " + sizeKb : ""}`;
+      return `<option value="${esc(v.name)}">${esc(label)}</option>`;
+    }).join("");
+
+    // Cooper-v3 is canonical official default
+    const def = loadedVoices.find(v => v.name === "cooper-v3") || loadedVoices[0];
+    if (def) $("bVoice").value = def.name;
+    $("bVoiceInfo").textContent = `${loadedVoices.length} voices ready on Tritium GPU`;
+  } catch (e) {
+    $("bStatus").textContent = "Could not load voices: " + e.message;
+    $("bStatus").className = "status err";
+  }
+}
+
+// ---------------- Breeze TTS Generator ----------------
+let activeBreezePoll = false;
+let currentBreezeJobId = null;
+
+function resetBreezeUi() {
+  activeBreezePoll = false;
+  currentBreezeJobId = null;
+  $("bGo").disabled = false;
+  $("bCancel").style.display = "none";
+  $("bBar").style.display = "none";
+  $("bFill").style.width = "0%";
+}
+
+async function breezeGenerate() {
+  const text = $("bText").value.trim();
+  const voice = $("bVoice").value;
+  const instr = $("bInstruction").value.trim();
+  const st = $("bStatus"), bar = $("bBar"), fill = $("bFill");
+
+  st.className = "status";
+  $("bPlayerBox").style.display = "none";
+
+  if (!text) {
+    st.textContent = "Please write or select some text to speak first.";
+    st.className = "status err";
+    return;
+  }
+
+  $("bGo").disabled = true;
+  $("bCancel").style.display = "inline-flex";
+  bar.style.display = "block";
+  fill.style.width = "4%";
+  st.textContent = "Submitting voice job to Breeze via Quantum MCP...";
+
+  activeBreezePoll = true;
+  const t0 = Date.now();
+
+  try {
+    const job = await api("/api/breeze/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, instruction: instr || undefined })
+    });
+    const jobId = job.job_id;
+    currentBreezeJobId = jobId;
+    let state = job.state || "queued";
+
+    while (activeBreezePoll) {
+      if (Date.now() - t0 > 10 * 60 * 1000) {
+        throw new Error("Job timed out after 10 minutes — the job may still finish on the hub.");
+      }
+      const s = await api("/api/breeze/status/" + encodeURIComponent(jobId));
+      state = s.state;
+      if (s.chunks_total) {
+        const pct = Math.round(100 * (s.chunks_done || 0) / s.chunks_total);
+        fill.style.width = Math.max(4, pct) + "%";
+        st.textContent = `Rendering with ${voice} — chunk ${s.chunks_done || 0} of ${s.chunks_total} (${pct}%)...`;
+      } else {
+        st.textContent = `Breeze job: ${state}...`;
+      }
+      if (state === "done") break;
+      if (state === "error") throw new Error(s.error || "Generation failed on the hub.");
+      await sleep(2000);
+    }
+
+    if (!activeBreezePoll) return;
+
+    fill.style.width = "100%";
+    const res = await api("/api/breeze/result/" + encodeURIComponent(jobId));
+    const url = "/audio/" + encodeURIComponent(jobId);
+    mountPlayer($("bPlayer"), { src: url, label: voice, sublabel: "Breeze render" });
+    $("bPlayerBox").style.display = "block";
+
+    const dl = $("bDl");
+    dl.href = url;
+    dl.download = res.filename || `${voice}-${jobId}.mp3`;
+    const kb = res.size_bytes ? ` (${Math.round(res.size_bytes / 1024)} KB)` : "";
+    dl.textContent = `Download MP3${kb}`;
+
+    const dur = Math.round((Date.now() - t0) / 1000);
+    st.textContent = `Rendered successfully in ${dur}s with ${voice}.`;
+    st.className = "status ok";
+
+    addHistoryItem({
+      jobId,
+      voice,
+      text,
+      instruction: instr,
+      url,
+      timestamp: Date.now()
+    });
+  } catch (e) {
+    if (activeBreezePoll) {
+      st.textContent = "Generation failed: " + e.message;
+      st.className = "status err";
+    }
+  } finally {
+    resetBreezeUi();
+  }
+}
+
+function cancelBreeze() {
+  activeBreezePoll = false;
+  $("bStatus").textContent = "Generation cancelled by user.";
+  $("bStatus").className = "status err";
+  resetBreezeUi();
+}
+
+// ---------------- Persistent History ----------------
+const HISTORY_KEY = "breeze_history_v2";
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function addHistoryItem(item) {
+  const hist = getHistory();
+  hist.unshift(item);
+  if (hist.length > 50) hist.pop();
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+  } catch (e) {}
   renderHistory();
- }catch(e){
-   if(/no longer tracked|unknown job|not found/i.test(e.message))
-     st.textContent="That job is no longer tracked - the hub restarted and cleared its job table. Generate again.";
-   else st.textContent="Something went wrong: "+e.message;
-   st.className="status err";bar.style.display="none";
- }
- $("bGo").disabled=false;
-}
-function renderHistory(){
- $("histList").innerHTML=history.map(h=>`<div class="item">
-   <div class="meta">${esc(h.voice)} - ${h.time.toLocaleTimeString()}</div>
-   <div class="txt">${esc(h.text.slice(0,140))}${h.text.length>140?"...":""}</div>
-   <audio controls preload="none" src="${h.url}"></audio></div>`).join("");
- $("histCard").style.display=history.length?"block":"none";
 }
 
-// ---------------- New Voice (design + save, creator-gated) ----------------
-let nvDesignJob=null;
-function nvToken(){return $("nvToken").value.trim();}
-function nvCount(){$("nvSampleCount").textContent=$("nvSample").value.length+" / 320 characters";}
-async function nvRefreshGate(){
- try{const d=await api("/api/creator/status");
-   if(!d.provisioned){
-     $("nvGate").textContent="Voice creation is not provisioned on the server (no creator key file), so the form below is locked.";
-     $("nvGo").disabled=true;$("nvSave").disabled=true;
-   }else if(!d.token_set){
-     $("nvGate").textContent="No creator token is set on Tritium yet, so creation stays locked until one is provisioned.";
-     $("nvGo").disabled=true;
-   }else{
-     $("nvGate").textContent="Creation is gated: it takes the creator token (set on Tritium) plus a separate scoped hub key - the demo key this page normally uses cannot create voices.";
-   }
- }catch(e){$("nvGate").textContent="Could not check creation status: "+e.message;}
-}
-async function nvPoll(jobId,st,fill,t0){
- while(true){
-  if(Date.now()-t0>5*60*1000)throw new Error("Timed out after 5 minutes - the job may still finish on the hub.");
-  const s=await api("/api/breeze/status/"+encodeURIComponent(jobId));
-  if(fill&&s.chunks_total)fill.style.width=Math.round(100*(s.chunks_done||0)/s.chunks_total)+"%";
-  st.textContent="Job "+(s.state||"...")+"...";
-  if(s.state==="done")return s;
-  if(s.state==="error")throw new Error(s.error||"The job failed on the hub.");
-  await sleep(2500);
- }
-}
-async function nvDesign(){
- const instr=$("nvDesc").value.trim(),sample=$("nvSample").value.trim();
- const st=$("nvStatus"),bar=$("nvBar"),fill=$("nvFill");
- st.className="status";$("nvPlayer").style.display="none";$("nvSave").disabled=true;nvDesignJob=null;
- if(!nvToken()){st.textContent="Enter the creator token first.";st.className="status err";return;}
- if(!instr){st.textContent="Describe the voice first.";st.className="status err";return;}
- if(!sample){st.textContent="Give the voice a sample line to speak.";st.className="status err";return;}
- $("nvGo").disabled=true;bar.style.display="block";fill.style.width="6%";
- st.textContent="Designing the voice on Tritium's GPU...";
- const t0=Date.now();
- try{
-  const job=await api("/api/voices/design",{method:"POST",
-    headers:{"Content-Type":"application/json","X-Creator-Token":nvToken()},
-    body:JSON.stringify({instruction:instr,sample_text:sample})});
-  nvDesignJob=job.job_id;
-  await nvPoll(nvDesignJob,st,fill,t0);
-  fill.style.width="100%";
-  const pl=$("nvPlayer");pl.src="/audio/"+encodeURIComponent(nvDesignJob);
-  pl.style.display="block";
-  st.textContent="Sample ready - have a listen. Happy with it? Name the voice and save it.";
-  $("nvSave").disabled=false;
- }catch(e){st.textContent="Something went wrong: "+e.message;st.className="status err";bar.style.display="none";}
- $("nvGo").disabled=false;
-}
-async function nvSave(){
- const name=$("nvName").value.trim();
- const st=$("nvStatus");st.className="status";
- if(!nvDesignJob){st.textContent="Render a sample first.";st.className="status err";return;}
- if(!/^[a-z0-9][a-z0-9-]{0,39}$/.test(name)){
-   st.textContent="Name must be a lowercase slug: letters, digits and hyphens, max 40 characters.";
-   st.className="status err";return;}
- $("nvSave").disabled=true;$("nvGo").disabled=true;
- st.textContent="Freezing '"+name+"' into a saved voice profile...";
- const t0=Date.now();
- try{
-  const job=await api("/api/voices/save",{method:"POST",
-    headers:{"Content-Type":"application/json","X-Creator-Token":nvToken()},
-    body:JSON.stringify({design_job_id:nvDesignJob,name})});
-  await nvPoll(job.job_id,st,null,t0);
-  st.textContent="Saved. '"+name+"' is now a Breeze voice - it is in the picker above, in the hub catalogue, and in Home Assistant's Breeze engine.";
-  loadVoices();
- }catch(e){st.textContent="Something went wrong: "+e.message;st.className="status err";$("nvSave").disabled=false;}
- $("nvGo").disabled=false;
-}
-
-// ---------------- Nebula ----------------
-let promptTargets={};
-async function loadWorkflows(){
- try{const d=await api("/api/workflows");
-   $("nWorkflow").innerHTML=d.workflows.map(w=>`<option value="${esc(w.name)}">${esc(w.name)}</option>`).join("");
-   const def=d.workflows.find(w=>w.name.includes("DreamShaper 8"))||d.workflows[0];
-   if(def)$("nWorkflow").value=def.name;
-   notePromptTarget();
- }catch(e){$("nStatus").textContent="Could not load workflows: "+e.message;$("nStatus").className="status err";}
-}
-async function notePromptTarget(){
- const wf=$("nWorkflow").value;if(!wf)return;
- if(!(wf in promptTargets)){
-   try{const d=await api("/api/workflow_prompt?workflow="+encodeURIComponent(wf));
-     promptTargets[wf]=d.prompt_param||null;
-   }catch(e){promptTargets[wf]=null;}
- }
- $("nPromptNote").textContent=promptTargets[wf]
-   ? "The prompt is wired to this workflow's positive-prompt node."
-   : "This workflow exposes no prompt node - it will run with its built-in defaults.";
-}
-async function nebulaGenerate(){
- const wf=$("nWorkflow").value,backend=$("nBackend").value,prompt=$("nPrompt").value.trim();
- const st=$("nStatus");st.className="status";$("nOutputs").innerHTML="";
- $("nGo").disabled=true;const t0=Date.now();
- st.textContent="Queuing the run on Nebula...";
- try{
-  const job=await api("/api/nebula/generate",{method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({workflow:wf,backend,prompt:prompt||undefined})});
-  if(job.state==="deferred"||job.deferred){st.textContent="The backend is busy - the run was deferred by Nebula. Try again in a bit.";
-    $("nGo").disabled=false;return;}
-  const pid=job.prompt_id;let state="queued";
-  while(true){
-   if(Date.now()-t0>15*60*1000)throw new Error("Timed out after 15 minutes - video workflows can run long; the run may still complete in Nebula.");
-   const s=await api("/api/nebula/status/"+encodeURIComponent(pid));
-   state=s.state||state;
-   st.textContent="Nebula run "+state+" ("+Math.round((Date.now()-t0)/1000)+"s)...";
-   if(s.done||state==="done"||state==="completed"||state==="success"){
-     const outs=s.outputs||[];
-     if(!outs.length){st.textContent="Run finished - no output files were reported.";break;}
-     st.textContent="Done - "+outs.length+" output file(s).";
-     $("nOutputs").innerHTML=outs.map(o=>{
-       const name=typeof o==="string"?o:(o.filename||o.name||"");
-       const url="/nebula_output/"+encodeURIComponent(name);
-       return /\\.(png|jpe?g|webp|gif)$/i.test(name)
-         ? `<figure><a href="${url}"><img src="${url}" alt=""></a><figcaption>${esc(name)}</figcaption></figure>`
-         : `<figure><figcaption><a href="${url}">${esc(name)}</a></figcaption></figure>`;}).join("");
-     break;
-   }
-   if(state==="error"||state==="failed")throw new Error(s.error||"The Nebula run failed.");
-   await sleep(4000);
+function clearAllHistory() {
+  if (confirm("Clear all generation history in this browser?")) {
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
   }
- }catch(e){st.textContent="Something went wrong: "+e.message;st.className="status err";}
- $("nGo").disabled=false;
 }
 
-window.addEventListener("DOMContentLoaded",()=>{
- buildChips();countChars();loadVoices();loadWorkflows();
- $("bText").addEventListener("input",countChars);
- $("bGo").addEventListener("click",breezeGenerate);
- $("nGo").addEventListener("click",nebulaGenerate);
- $("nWorkflow").addEventListener("change",notePromptTarget);
- nvRefreshGate();nvCount();
- $("nvSample").addEventListener("input",nvCount);
- $("nvGo").addEventListener("click",nvDesign);
- $("nvSave").addEventListener("click",nvSave);
+function deleteHistoryItem(idx) {
+  const hist = getHistory();
+  hist.splice(idx, 1);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+  renderHistory();
+}
+
+function useHistoryText(idx) {
+  const hist = getHistory();
+  const item = hist[idx];
+  if (item) {
+    $("bText").value = item.text || "";
+    if (item.voice && loadedVoices.some(v => v.name === item.voice)) {
+      $("bVoice").value = item.voice;
+    }
+    if (item.instruction) {
+      $("bInstruction").value = item.instruction;
+    }
+    countChars();
+    document.querySelector('.tab-btn[data-target="tab-tts"]').click();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function renderHistory() {
+  const hist = getHistory();
+  const list = $("histList");
+  if (!hist.length) {
+    list.innerHTML = `<div class="sub" style="margin-top:10px;">No clips generated yet. Renders created in the TTS Studio will appear here with audio playback and download links.</div>`;
+    return;
+  }
+  list.innerHTML = hist.map((h, i) => {
+    const timeStr = new Date(h.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dateStr = new Date(h.timestamp).toLocaleDateString([], { month: "short", day: "numeric" });
+    return `
+      <div class="hist-item">
+        <div class="hist-meta">
+          <div><span class="hist-badge">${esc(h.voice)}</span> · ${dateStr} at ${timeStr}</div>
+          <button type="button" class="danger-text" onclick="deleteHistoryItem(${i})">Remove</button>
+        </div>
+        <div class="hist-txt">"${esc(h.text)}"</div>
+        <div class="hist-player" data-src="${h.url}" data-label="${esc(h.voice)}" data-sub="History clip"></div>
+        <div class="hist-footer" style="margin-top:12px;">
+          <a class="dl-link" href="${h.url}" download="${esc(h.voice)}-clip.mp3">⬇ Download MP3</a>
+          <button type="button" class="secondary" style="padding:6px 14px;font-size:13px;" onclick="useHistoryText(${i})">Use Text in Studio</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+  list.querySelectorAll(".hist-player").forEach(el => {
+    mountPlayer(el, { src: el.dataset.src, label: el.dataset.label, sublabel: el.dataset.sub });
+  });
+}
+
+// ---------------- New Voice Designer ----------------
+let nvDesignJob = null;
+const TOKEN_KEY = "breeze_creator_token";
+
+function nvToken() {
+  return $("nvToken").value.trim();
+}
+
+function nvCount() {
+  $("nvSampleCount").textContent = `${$("nvSample").value.length} / 320 characters`;
+}
+
+function initTokenStorage() {
+  const saved = localStorage.getItem(TOKEN_KEY);
+  if (saved) {
+    $("nvToken").value = saved;
+    $("nvRemember").checked = true;
+    updateTokenBadge(true);
+  }
+  $("nvToken").addEventListener("input", () => {
+    if ($("nvRemember").checked) {
+      localStorage.setItem(TOKEN_KEY, nvToken());
+    }
+    updateTokenBadge(Boolean(nvToken()));
+  });
+  $("nvRemember").addEventListener("change", () => {
+    if ($("nvRemember").checked) {
+      localStorage.setItem(TOKEN_KEY, nvToken());
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  });
+}
+
+function updateTokenBadge(hasToken) {
+  const badge = $("nvTokenBadge");
+  if (hasToken) {
+    badge.className = "badge live";
+    badge.innerHTML = `<span class="badge-dot"></span> Creator Token Set`;
+  } else {
+    badge.className = "badge warn";
+    badge.innerHTML = `<span class="badge-dot"></span> Token Required`;
+  }
+}
+
+async function nvRefreshGate() {
+  try {
+    const d = await api("/api/creator/status");
+    if (!d.provisioned) {
+      $("nvGate").innerHTML = `<span style="color:var(--err)">Voice creation is not provisioned on the server (no creator key file); form is locked.</span>`;
+      $("nvGo").disabled = true;
+      $("nvSave").disabled = true;
+    } else if (d.can_create) {
+      $("nvGate").innerHTML = `Signed in as ${esc(d.email || "your Solorion account")} - your account has voice-creation permission, so no creator token is needed. Renders sample on GPU, then freezes profile into Tritium's voices catalogue.`;
+      $("nvGo").disabled = false;
+    } else if (!d.token_set && !d.signed_in) {
+      $("nvGate").innerHTML = `<span style="color:var(--warn)">No creator token is provisioned on Tritium yet - creation needs a signed-in creator account.</span>`;
+      $("nvGo").disabled = true;
+    } else if (d.signed_in) {
+      $("nvGate").innerHTML = `Signed in as ${esc(d.email || "your account")} - this account does not have voice-creation permission, but the break-glass creator token below still works.`;
+    } else {
+      $("nvGate").innerHTML = `Creation is authorized per user: sign in with a Solorion account that has the creator permission, or use the break-glass creator token below. Creation is authenticated via scoped hub key & human creator token. Renders sample on GPU, then freezes profile into Tritium's voices catalogue.`;
+    }
+  } catch (e) {
+    $("nvGate").textContent = "Could not check creation status: " + e.message;
+  }
+}
+
+async function nvPoll(jobId, st, fill, t0) {
+  while (true) {
+    if (Date.now() - t0 > 5 * 60 * 1000) {
+      throw new Error("Timed out after 5 minutes — the job may still finish on the hub.");
+    }
+    const s = await api("/api/breeze/status/" + encodeURIComponent(jobId));
+    if (fill && s.chunks_total) {
+      fill.style.width = Math.round(100 * (s.chunks_done || 0) / s.chunks_total) + "%";
+    }
+    st.textContent = `Job status: ${s.state || "rendering"}...`;
+    if (s.state === "done") return s;
+    if (s.state === "error") throw new Error(s.error || "The job failed on the hub.");
+    await sleep(2000);
+  }
+}
+
+async function nvDesign() {
+  const instr = $("nvDesc").value.trim();
+  const sample = $("nvSample").value.trim();
+  const st = $("nvStatus"), bar = $("nvBar"), fill = $("nvFill");
+
+  st.className = "status";
+  $("nvPlayerBox").style.display = "none";
+  $("nvSave").disabled = true;
+  nvDesignJob = null;
+
+  if (!authState.can_create && !nvToken()) {
+    st.textContent = "Sign in with a creator account, or enter the break-glass creator token above.";
+    st.className = "status err";
+    return;
+  }
+  if (!instr) {
+    st.textContent = "Please describe the desired voice characteristics.";
+    st.className = "status err";
+    return;
+  }
+  if (!sample) {
+    st.textContent = "Please provide a sample reference line to speak.";
+    st.className = "status err";
+    return;
+  }
+
+  $("nvGo").disabled = true;
+  bar.style.display = "block";
+  fill.style.width = "6%";
+  st.textContent = "Designing voice profile on Tritium GPU...";
+  const t0 = Date.now();
+
+  try {
+    const seedRaw = $("nvSeed").value.trim();
+    const designHeaders = { "Content-Type": "application/json" };
+    if (nvToken()) designHeaders["X-Creator-Token"] = nvToken();
+    const job = await api("/api/voices/design", {
+      method: "POST",
+      headers: designHeaders,
+      body: JSON.stringify({ instruction: instr, sample_text: sample,
+                             seed: seedRaw === "" ? undefined : Number(seedRaw) })
+    });
+    nvDesignJob = job.job_id;
+    await nvPoll(nvDesignJob, st, fill, t0);
+    fill.style.width = "100%";
+    mountPlayer($("nvPlayer"), { src: "/audio/" + encodeURIComponent(nvDesignJob),
+                                 label: $("nvName").value.trim() || "Designed voice",
+                                 sublabel: "New Voice sample" });
+    $("nvPlayerBox").style.display = "block";
+    st.textContent = "Sample rendered! Listen above. If satisfied, specify a name and freeze the profile." +
+      (job.seed_note ? " Seed: " + job.seed_note : "");
+    st.className = "status ok";
+    $("nvSave").disabled = false;
+  } catch (e) {
+    st.textContent = "Design failed: " + e.message;
+    st.className = "status err";
+  } finally {
+    $("nvGo").disabled = false;
+    bar.style.display = "none";
+  }
+}
+
+async function nvSave() {
+  const name = $("nvName").value.trim().toLowerCase().replace(/\\s+/g, "-");
+  const st = $("nvStatus");
+  st.className = "status";
+
+  if (!nvDesignJob) {
+    st.textContent = "Render a sample audio line first.";
+    st.className = "status err";
+    return;
+  }
+  if (!/^[a-z0-9][a-z0-9-]{0,39}$/.test(name)) {
+    st.textContent = "Voice name must be lowercase alphanumeric with hyphens (max 40 chars, e.g. 'friendly-announcer').";
+    st.className = "status err";
+    return;
+  }
+
+  $("nvSave").disabled = true;
+  $("nvGo").disabled = true;
+  st.textContent = `Freezing '${name}' into permanent .breeze profile...`;
+  const t0 = Date.now();
+
+  try {
+    const saveHeaders = { "Content-Type": "application/json" };
+    if (nvToken()) saveHeaders["X-Creator-Token"] = nvToken();
+    const job = await api("/api/voices/save", {
+      method: "POST",
+      headers: saveHeaders,
+      body: JSON.stringify({ design_job_id: nvDesignJob, name })
+    });
+    await nvPoll(job.job_id, st, null, t0);
+    st.textContent = `Voice '${name}' saved successfully! Available in Studio picker, Hub API, and Home Assistant tts.breeze.`;
+    st.className = "status ok";
+    await loadVoices();
+    $("bVoice").value = name;
+  } catch (e) {
+    st.textContent = "Save failed: " + e.message;
+    st.className = "status err";
+    $("nvSave").disabled = false;
+  } finally {
+    $("nvGo").disabled = false;
+  }
+}
+
+// ---------------- Nebula Workflows ----------------
+let promptTargets = {};
+
+async function loadWorkflows() {
+  try {
+    const d = await api("/api/workflows");
+    const rawList = d.workflows || [];
+    
+    // Group workflows logically by prefix
+    const groups = {};
+    for (const w of rawList) {
+      let clean = w.name.replace(/\\.json$/i, "");
+      let cat = "General Workflows";
+      if (clean.startsWith("3D -")) {
+        cat = "3D Generation";
+        clean = clean.replace(/^3D -\\s*/, "");
+      } else if (clean.startsWith("Audio -")) {
+        cat = "Audio & Music";
+        clean = clean.replace(/^Audio -\\s*/, "");
+      } else if (clean.startsWith("Image Edit -")) {
+        cat = "Image Editing";
+        clean = clean.replace(/^Image Edit -\\s*/, "");
+      } else if (clean.startsWith("Image to Image -")) {
+        cat = "Image to Image";
+        clean = clean.replace(/^Image to Image -\\s*/, "");
+      } else if (clean.startsWith("Image to Video -")) {
+        cat = "Image to Video";
+        clean = clean.replace(/^Image to Video -\\s*/, "");
+      } else if (clean.startsWith("Text to Image -")) {
+        cat = "Text to Image";
+        clean = clean.replace(/^Text to Image -\\s*/, "");
+      } else if (clean.startsWith("Text to Video -")) {
+        cat = "Text to Video";
+        clean = clean.replace(/^Text to Video -\\s*/, "");
+      } else if (clean.startsWith("Video -")) {
+        cat = "Video Generation";
+        clean = clean.replace(/^Video -\\s*/, "");
+      } else if (clean.startsWith("Upscale -")) {
+        cat = "Upscaling";
+        clean = clean.replace(/^Upscale -\\s*/, "");
+      }
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push({ raw: w.name, clean });
+    }
+
+    let htmlOptions = "";
+    for (const [cat, items] of Object.entries(groups)) {
+      htmlOptions += `<optgroup label="${esc(cat)}">`;
+      for (const it of items) {
+        htmlOptions += `<option value="${esc(it.raw)}">${esc(it.clean)}</option>`;
+      }
+      htmlOptions += `</optgroup>`;
+    }
+    $("nWorkflow").innerHTML = htmlOptions;
+
+    // Default to DreamShaper 8 fast
+    const def = rawList.find(w => w.name.includes("DreamShaper 8")) || rawList[0];
+    if (def) $("nWorkflow").value = def.name;
+    notePromptTarget();
+  } catch (e) {
+    $("nStatus").textContent = "Could not load workflows: " + e.message;
+    $("nStatus").className = "status err";
+  }
+}
+
+async function notePromptTarget() {
+  const wf = $("nWorkflow").value;
+  if (!wf) return;
+  if (!(wf in promptTargets)) {
+    try {
+      const d = await api("/api/workflow_prompt?workflow=" + encodeURIComponent(wf));
+      promptTargets[wf] = d.prompt_param || null;
+    } catch (e) {
+      promptTargets[wf] = null;
+    }
+  }
+  const note = $("nPromptNote");
+  if (promptTargets[wf]) {
+    note.innerHTML = `<span style="color:var(--ok)">✓ Prompt node mapped (${esc(promptTargets[wf].key || 'text')})</span>`;
+  } else {
+    note.innerHTML = `<span style="color:var(--mut)">ℹ Uses workflow defaults (no external prompt node)</span>`;
+  }
+}
+
+async function nebulaGenerate() {
+  const wf = $("nWorkflow").value;
+  const backend = $("nBackend").value;
+  const prompt = $("nPrompt").value.trim();
+  const st = $("nStatus");
+
+  st.className = "status";
+  $("nOutputs").innerHTML = "";
+  $("nGo").disabled = true;
+  const t0 = Date.now();
+  st.textContent = "Queuing execution on Nebula ComfyUI...";
+
+  try {
+    const job = await api("/api/nebula/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workflow: wf, backend, prompt: prompt || undefined })
+    });
+    if (job.state === "deferred" || job.deferred) {
+      st.textContent = "The GPU backend is busy — job was deferred. Please retry shortly.";
+      $("nGo").disabled = false;
+      return;
+    }
+    const pid = job.prompt_id;
+    let state = "queued";
+    while (true) {
+      if (Date.now() - t0 > 15 * 60 * 1000) {
+        throw new Error("Timed out after 15 minutes — video workflows can run long.");
+      }
+      const s = await api("/api/nebula/status/" + encodeURIComponent(pid));
+      state = s.state || state;
+      st.textContent = `Nebula status: ${state} (${Math.round((Date.now() - t0) / 1000)}s elapsed)...`;
+      if (s.done || state === "done" || state === "completed" || state === "success") {
+        const outs = s.outputs || [];
+        if (!outs.length) {
+          st.textContent = "Execution completed — no output files reported.";
+          break;
+        }
+        st.textContent = `Completed! ${outs.length} output file(s) generated.`;
+        st.className = "status ok";
+        $("nOutputs").innerHTML = outs.map(o => {
+          const name = typeof o === "string" ? o : (o.filename || o.name || "");
+          const url = "/nebula_output/" + encodeURIComponent(name);
+          return /\\.(png|jpe?g|webp|gif)$/i.test(name)
+            ? `<figure><a href="${url}" target="_blank"><img src="${url}" alt=""></a><figcaption>${esc(name)}</figcaption></figure>`
+            : `<figure><figcaption><a href="${url}" target="_blank">⬇ ${esc(name)}</a></figcaption></figure>`;
+        }).join("");
+        break;
+      }
+      if (state === "error" || state === "failed") {
+        throw new Error(s.error || "The Nebula workflow execution failed.");
+      }
+      await sleep(3500);
+    }
+  } catch (e) {
+    st.textContent = "Execution failed: " + e.message;
+    st.className = "status err";
+  } finally {
+    $("nGo").disabled = false;
+  }
+}
+
+// ---------------- Initialization ----------------
+window.addEventListener("DOMContentLoaded", () => {
+  initTabs();
+  buildChips();
+  countChars();
+  loadVoices();
+  loadWorkflows();
+  renderHistory();
+  initTokenStorage();
+  loadAuth();
+  $("nvSeedDice").addEventListener("click", () => {
+    $("nvSeed").value = Math.floor(Math.random() * 2147483647);
+  });
+
+  $("bText").addEventListener("input", countChars);
+  $("bGo").addEventListener("click", breezeGenerate);
+  $("bCancel").addEventListener("click", cancelBreeze);
+
+  $("nGo").addEventListener("click", nebulaGenerate);
+  $("nWorkflow").addEventListener("change", notePromptTarget);
+
+  nvRefreshGate();
+  nvCount();
+  $("nvSample").addEventListener("input", nvCount);
+  $("nvGo").addEventListener("click", nvDesign);
+  $("nvSave").addEventListener("click", nvSave);
 });
 """
 
-def render_page():
-    if MCP.provisioned:
-        badge = '<span class="badge live">MCP connected via the hub gateway</span>'
-        notice = ""
-    else:
-        badge = '<span class="badge warn">MCP key not provisioned yet</span>'
-        notice = f"""<div class="notice"><strong>One step left:</strong> this page talks to the
-Quantum MCP gateway on Tritium, but no gateway key file is provisioned for it yet
-(expected at <code>{html.escape(KEY_FILE)}</code>). Once a worker key is dropped
-there and the service restarted, the panels below go live &mdash; everything else
-on this page is already wired.</div>"""
+def render_login_page(next_url="/"):
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Breeze Studio - MCP Demo</title>
+<title>Sign in - Breeze Studio - Solorion</title>
+<style>{CSS}
+.login-wrap {{ max-width: 420px; margin: 8vh auto 0; padding: 0 16px 40px; }}
+.login-card {{ background: #fff; border: 1px solid var(--parchment-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 28px 26px; }}
+.login-brand {{ font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--violet); margin-bottom: 6px; }}
+</style>
+</head>
+<body style="background: var(--parchment);">
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">Solorion</div>
+    <h1 style="margin:0 0 6px; font-size:24px;">Sign in to Breeze Studio</h1>
+    <p class="sub" style="margin:0 0 8px;">Use your Solorion account. Voice creation needs an account with the creator permission; speech generation stays open on the tailnet.</p>
+    <label for="liEmail">Email</label>
+    <input type="text" id="liEmail" autocomplete="username" placeholder="you@dsect.net">
+    <label for="liPass">Password</label>
+    <input type="password" id="liPass" autocomplete="current-password" placeholder="Your password">
+    <div class="status err" id="liStatus"></div>
+    <div class="btn-row">
+      <button class="primary" id="liGo" style="flex:1; justify-content:center;">Sign in</button>
+    </div>
+    <p class="sub" style="margin:14px 0 0;"><a href="/" style="color:var(--violet); text-decoration:none;">&larr; Back to Breeze Studio</a></p>
+  </div>
+</div>
+<script>
+const NEXT = {json.dumps(next_url)};
+async function doLogin() {{
+  const email = document.getElementById("liEmail").value.trim();
+  const password = document.getElementById("liPass").value;
+  const st = document.getElementById("liStatus");
+  st.textContent = "";
+  try {{
+    const r = await fetch("/api/auth/login", {{method: "POST", headers: {{"Content-Type": "application/json"}}, body: JSON.stringify({{email, password}})}});
+    const d = await r.json().catch(() => ({{}}));
+    if (!r.ok) throw new Error(d.message || "Sign-in failed.");
+    window.location.href = NEXT || "/";
+  }} catch (e) {{ st.textContent = e.message; }}
+}}
+document.getElementById("liGo").addEventListener("click", doLogin);
+document.getElementById("liPass").addEventListener("keydown", e => {{ if (e.key === "Enter") doLogin(); }});
+</script>
+</body>
+</html>"""
+
+
+def render_page():
+    if MCP.provisioned:
+        badge = '<span class="badge live"><span class="badge-dot"></span> MCP Gateway Connected</span>'
+        notice = ""
+    else:
+        badge = '<span class="badge warn"><span class="badge-dot"></span> MCP Key Unprovisioned</span>'
+        notice = f"""<div class="notice"><strong>Configuration note:</strong> The gateway key file was not found at <code>{html.escape(KEY_FILE)}</code>. Once added, live media tools will connect automatically.</div>"""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breeze Studio - Quantum Voice & Media</title>
 <style>{CSS}</style>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 </head>
 <body>
 <div class="wrap">
-<header>
-  <h1>Breeze Studio</h1>
-  <p>A small workflow page for the Quantum MCP media tools &mdash; Breeze voice
-  generation and Nebula media runs, exercised live through the hub gateway.</p>
-  <p style="margin-top:10px">{badge}</p>
-</header>
-{notice}
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Breeze Studio</h1>
+        <p>Quantum MCP Voice & Media Studio &mdash; Breeze text-to-speech synthesis &amp; Nebula generative workflows.</p>
+      </div>
+      <div class="badges">
+        {badge}
+        <span class="badge brand"><span class="badge-dot"></span> Tritium GPU</span>
+        <span class="badge"><span class="badge-dot"></span> Tailnet Only</span>
+      </div>
+    </div>
+    <div class="auth-area" id="authArea"><span class="auth-note">Checking sign-in...</span></div>
+    <nav class="tabs-nav">
+      <button type="button" class="tab-btn active" data-target="tab-tts">🎙️ TTS Studio</button>
+      <button type="button" class="tab-btn" data-target="tab-creator">✨ Voice Creator</button>
+      <button type="button" class="tab-btn" data-target="tab-nebula">🌌 Nebula Workflows</button>
+      <button type="button" class="tab-btn" data-target="tab-history">📜 History</button>
+    </nav>
+  </header>
+  {notice}
 
-<section class="card">
-  <h2>Breeze &mdash; text to speech</h2>
-  <p class="sub">Pick a voice profile, write something, optionally steer it with a
-  direction. Generation runs on Tritium's GPU (~15 s per sentence chunk) and jobs
-  serialize on the hub, so longer texts take a little while.</p>
-  <label for="bVoice">Voice</label>
-  <select id="bVoice"><option>Loading voices...</option></select>
-  <label for="bText">Text to speak</label>
-  <textarea id="bText" maxlength="2000" placeholder="Write what the voice should say..."></textarea>
-  <div class="count" id="bCount">0 / 2000 characters</div>
-  <div class="chips" id="textChips"></div>
-  <label for="bInstruction">Direction <span style="color:var(--mut);font-weight:400">(optional)</span></label>
-  <input type="text" id="bInstruction" placeholder="e.g. warm, unhurried, slight smile">
-  <div class="chips" id="dirChips"></div>
-  <button class="primary" id="bGo">Generate voice</button>
-  <div class="status" id="bStatus"></div>
-  <div class="bar" id="bBar"><i id="bFill"></i></div>
-  <audio id="bPlayer" controls style="display:none"></audio>
-  <div><a class="dl" id="bDl" style="display:none" href="#">Download MP3</a></div>
-</section>
+  <!-- TAB 1: TTS STUDIO -->
+  <main id="tab-tts" class="tab-panel active">
+    <section class="card">
+      <h2>Breeze &mdash; Text to Speech Studio</h2>
+      <p class="sub">Synthesize natural speech using high-fidelity Breeze voice models running on Tritium's dedicated GPU queue.</p>
+      
+      <div class="row">
+        <div>
+          <label for="bVoice">Voice Profile</label>
+          <select id="bVoice"><option>Loading voices...</option></select>
+          <div class="char-info" style="margin-top:4px;"><span id="bVoiceInfo">Checking models...</span></div>
+        </div>
+      </div>
 
-<section class="card" id="nvCard">
-  <h2>New Voice &mdash; design &amp; save</h2>
-  <p class="sub">Describe a voice in plain words, hear a sample line spoken in it,
-  then freeze it into a saved profile. A saved voice shows up in the picker
-  above, in the hub catalogue, and in Home Assistant's Breeze engine.</p>
-  <p class="sub" id="nvGate">Checking creation status...</p>
-  <label for="nvToken">Creator token</label>
-  <input type="password" id="nvToken" placeholder="Creator token (lives in this form only)" autocomplete="off">
-  <label for="nvName">Voice name</label>
-  <input type="text" id="nvName" maxlength="40" placeholder="e.g. cheerful-narrator">
-  <label for="nvDesc">Voice description</label>
-  <textarea id="nvDesc" maxlength="1000" placeholder="Describe the voice: age, warmth, pace, accent, energy..."></textarea>
-  <label for="nvSample">Sample line</label>
-  <textarea id="nvSample" maxlength="320" style="min-height:56px">Hello! This is a brand new Breeze voice, designed and saved through Breeze Studio.</textarea>
-  <div class="count" id="nvSampleCount">0 / 320 characters</div>
-  <button class="primary" id="nvGo">Render sample</button>
-  <button class="primary" id="nvSave" disabled>Save voice</button>
-  <div class="status" id="nvStatus"></div>
-  <div class="bar" id="nvBar"><i id="nvFill"></i></div>
-  <audio id="nvPlayer" controls style="display:none"></audio>
-</section>
+      <label for="bText" style="margin-top:16px;">Text to Speak</label>
+      <textarea id="bText" maxlength="2000" placeholder="Type or paste the text you want the voice to read aloud..."></textarea>
+      <div class="char-info">
+        <span style="font-size:11px;color:var(--mut);">Maximum 2,000 characters per render job</span>
+        <span id="bCount">0 / 2000 characters</span>
+      </div>
 
-<section class="card" id="histCard" style="display:none">
-  <h2>This session</h2>
-  <p class="sub">Clips generated since this page was opened.</p>
-  <div class="hist" id="histList"></div>
-</section>
+      <div class="chips-wrap">
+        <div class="chips-label">Sample Passages</div>
+        <div class="chips" id="textChips"></div>
+      </div>
 
-<section class="card">
-  <h2>Nebula &mdash; media workflows</h2>
-  <p class="sub">Queue a Nebula workflow run through the same MCP. Image workflows
-  finish in well under a minute; video workflows can take several minutes.</p>
-  <div class="row">
-    <div><label for="nWorkflow">Workflow</label>
-      <select id="nWorkflow"><option>Loading workflows...</option></select></div>
-    <div><label for="nBackend">Backend</label>
-      <select id="nBackend"><option value="nvidia">NVIDIA &mdash; RTX 2060 Super</option>
-      <option value="amd">AMD &mdash; Radeon 890M</option></select></div>
-  </div>
-  <label for="nPrompt">Prompt <span style="color:var(--mut);font-weight:400">(optional)</span></label>
-  <input type="text" id="nPrompt" placeholder="Describe the image or scene...">
-  <div class="count" id="nPromptNote" style="text-align:left"></div>
-  <button class="primary" id="nGo">Run workflow</button>
-  <div class="status" id="nStatus"></div>
-  <div class="outputs" id="nOutputs"></div>
-</section>
+      <label for="bInstruction" style="margin-top:16px;">
+        Direction / Tone Instruction <span style="color:var(--mut);font-weight:400">(optional)</span>
+      </label>
+      <input type="text" id="bInstruction" placeholder="e.g. warm and conversational, slight smile, calm unhurried pace">
 
-<footer>Breeze Studio &mdash; a demo surface for TRK-0210's MCP media tools
-(voices and workflows are listed live from the hub). Private, tailnet-only.
-Breeze job history lives in the hub's memory: if the hub restarts, finished
-MP3s stay on disk but in-flight jobs are forgotten.</footer>
+      <div class="chips-wrap">
+        <div class="chips-label">Tone &amp; Style Presets</div>
+        <div class="chips" id="dirChips"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" id="bGo">
+          <span>Generate Voice</span>
+        </button>
+        <button class="secondary" id="bCancel" style="display:none;">Cancel Job</button>
+      </div>
+
+      <div class="status" id="bStatus"></div>
+      <div class="bar" id="bBar"><i id="bFill"></i></div>
+
+      <div class="player-box" id="bPlayerBox" style="display:none;">
+        <div class="player-header">
+          <span>Rendered Audio Preview</span>
+          <span style="color:var(--ok);font-weight:600;">Ready</span>
+        </div>
+        <div id="bPlayer"></div>
+        <div class="player-actions">
+          <a class="dl-link" id="bDl" href="#">⬇ Download MP3</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TAB 2: VOICE CREATOR -->
+  <main id="tab-creator" class="tab-panel">
+    <section class="card" id="nvCard">
+      <h2>New Voice &mdash; Design &amp; Freeze</h2>
+      <p class="sub">Describe vocal characteristics in plain English, render a sample clone reference line, and save the profile permanently into Tritium's catalogue.</p>
+      
+      <div class="info-banner" id="nvGate">Checking creation authorization...</div>
+
+      <div class="row">
+        <div>
+          <label for="nvToken">
+            Creator Token <span style="font-weight:400;color:var(--mut);">(break-glass - not needed when signed in with a creator account)</span>
+          </label>
+          <input type="password" id="nvToken" placeholder="Enter creator authorization token" autocomplete="off">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:400;margin:0;cursor:pointer;">
+              <input type="checkbox" id="nvRemember"> Remember in this browser
+            </label>
+            <span class="badge" id="nvTokenBadge"><span class="badge-dot"></span> Checking...</span>
+          </div>
+        </div>
+        <div>
+          <label for="nvName">Voice Slug Name</label>
+          <input type="text" id="nvName" maxlength="40" placeholder="e.g. calm-narrator, deep-scotty">
+          <div class="char-info"><span>Lowercase alphanumeric &amp; hyphens only (max 40)</span></div>
+        </div>
+      </div>
+
+      <label for="nvDesc" style="margin-top:16px;">Voice Description &amp; Characteristics</label>
+      <textarea id="nvDesc" maxlength="1000" placeholder="Describe the voice: age, warmth, pacing, pitch, vocal fry, energy, accent..."></textarea>
+      
+      <div class="chips-wrap">
+        <div class="chips-label">Description Presets</div>
+        <div class="chips" id="nvDescChips"></div>
+      </div>
+
+      <label for="nvSample" style="margin-top:16px;">Clone Sample Line</label>
+      <textarea id="nvSample" maxlength="320" style="min-height:60px;">Hello! This is a brand new Breeze voice, designed and saved through Breeze Studio.</textarea>
+      <div class="char-info">
+        <span style="font-size:11px;color:var(--mut);">Used as the permanent clone reference waveform</span>
+        <span id="nvSampleCount">0 / 320 characters</span>
+      </div>
+
+      <div class="row" style="margin-top:4px;">
+        <div>
+          <label for="nvSeed">Design Seed <span style="font-weight:400;color:var(--mut)">(optional)</span></label>
+          <input type="number" id="nvSeed" min="0" max="2147483647" step="1" placeholder="Blank = engine default">
+          <div class="char-info"><span>Reproducibility seed for the design engine; each render reports whether the seed was honored.</span></div>
+        </div>
+        <div>
+          <label aria-hidden="true">&nbsp;</label>
+          <button type="button" class="secondary" id="nvSeedDice">&#127922; Random seed</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary" id="nvGo">Render Sample</button>
+        <button class="secondary" id="nvSave" disabled>Save &amp; Register Voice</button>
+      </div>
+
+      <div class="status" id="nvStatus"></div>
+      <div class="bar" id="nvBar"><i id="nvFill"></i></div>
+
+      <div class="player-box" id="nvPlayerBox" style="display:none;">
+        <div class="player-header">
+          <span>Voice Sample Preview</span>
+          <span style="color:var(--ok);font-weight:600;">Sample Ready</span>
+        </div>
+        <div id="nvPlayer"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TAB 3: NEBULA WORKFLOWS -->
+  <main id="tab-nebula" class="tab-panel">
+    <section class="card">
+      <h2>Nebula &mdash; Generative Media Workflows</h2>
+      <p class="sub">Run ComfyUI image, video, 3D, and audio generation pipelines on Tritium's local compute engines.</p>
+
+      <div class="row">
+        <div>
+          <label for="nWorkflow">Pipeline Workflow</label>
+          <select id="nWorkflow"><option>Loading workflows...</option></select>
+        </div>
+        <div>
+          <label for="nBackend">Compute Backend</label>
+          <select id="nBackend">
+            <option value="nvidia">NVIDIA &mdash; RTX 2060 Super</option>
+            <option value="amd">AMD &mdash; Radeon 890M</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="nPrompt" style="margin-top:16px;">
+        Prompt Override <span style="color:var(--mut);font-weight:400">(optional)</span>
+      </label>
+      <input type="text" id="nPrompt" placeholder="Describe the desired image, scene, or artistic style...">
+      <div class="char-info" id="nPromptNote" style="margin-top:6px;">Detecting target node...</div>
+
+      <div class="btn-row">
+        <button class="primary" id="nGo">Run Workflow</button>
+      </div>
+
+      <div class="status" id="nStatus"></div>
+      <div class="outputs" id="nOutputs"></div>
+    </section>
+  </main>
+
+  <!-- TAB 4: HISTORY -->
+  <main id="tab-history" class="tab-panel">
+    <section class="card">
+      <h2>
+        <span>Generation History</span>
+        <button type="button" class="danger-text" onclick="clearAllHistory()">Clear History</button>
+      </h2>
+      <p class="sub">Audio clips generated during your sessions, saved in your local browser storage for easy playback and download.</p>
+      <div class="hist" id="histList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Breeze Studio</strong> &mdash; Quantum MCP Media Interface &bull; Private &amp; Tailnet-Only &bull; Hosted on Tritium.
+  </footer>
 </div>
 <script>{JS}</script>
 </body>
 </html>"""
-
-# -------------------------------------------------------------------- HTTP
 
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype, extra=None):
@@ -709,14 +2087,33 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send(500, f"<h1>Page error</h1><pre>{html.escape(str(exc))}</pre>",
                            "text/html; charset=utf-8")
+        elif path == "/login":
+            nxt = (parse_qs(parsed.query).get("next") or ["/"])[0]
+            if not nxt.startswith("/") or nxt.startswith("//"):
+                nxt = "/"
+            self._send(200, render_login_page(nxt),
+                       "text/html; charset=utf-8")
+        elif path == "/api/auth/me":
+            claims = _session_claims(self)
+            self._json(200, {"ok": True,
+                             "signed_in": claims is not None,
+                             "email": (claims or {}).get("email"),
+                             "role": (claims or {}).get("role"),
+                             "can_create": _can_create(claims),
+                             "auth_available": _auth() is not None})
         elif path == "/healthz":
             self._send(200, "ok", "text/plain")
         elif path == "/api/voices":
             self._mcp_json(lambda: MCP.call("quantum_breeze_list_voices", {}))
         elif path == "/api/creator/status":
+            claims = _session_claims(self)
             self._json(200, {"ok": True,
                              "provisioned": CREATOR.provisioned,
-                             "token_set": _creator_token() is not None})
+                             "token_set": _creator_token() is not None,
+                             "signed_in": claims is not None,
+                             "email": (claims or {}).get("email"),
+                             "role": (claims or {}).get("role"),
+                             "can_create": _can_create(claims)})
         elif path == "/api/workflows":
             self._mcp_json(lambda: MCP.call("quantum_nebula_list_workflows", {}))
         elif path == "/api/workflow_prompt":
@@ -793,26 +2190,92 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, data, ctype,
                    {"Content-Disposition": f'{disp}; filename="{p.name}"'})
 
+    # -- Solorion sign-in --
+    def _auth_login(self):
+        auth = _auth()
+        if auth is None:
+            self._json(503, {"ok": False, "error": "auth_unavailable",
+                             "message": "The Solorion auth module is not "
+                                        "available on this host."})
+            return
+        payload = self._read_body()
+        if payload is None:
+            self._json(400, {"ok": False, "error": "invalid JSON body"})
+            return
+        email = str(payload.get("email") or "").strip()
+        password = str(payload.get("password") or "")
+        if not email or not password:
+            self._json(400, {"ok": False, "error": "bad_credentials",
+                             "message": "Email and password are required."})
+            return
+        try:
+            res = auth.authenticate(email, password, AUTH_SERVICE,
+                                    ip=self.client_address[0],
+                                    user_agent=self.headers.get("User-Agent"))
+        except Exception as e:
+            self._json(500, {"ok": False, "error": "server_error",
+                             "message": str(e)[:200]})
+            return
+        if not res.get("success"):
+            self._json(401, {"ok": False, "error": "login_failed",
+                             "message": res.get("error") or "Sign-in failed."})
+            return
+        user = res.get("user") or {}
+        raw_services = user.get("services_allowed")
+        if isinstance(raw_services, str):
+            try:
+                services = json.loads(raw_services or "[]")
+            except json.JSONDecodeError:
+                services = []
+        else:
+            services = raw_services or []
+        claims = {"role": user.get("role"), "services": services}
+        cookie = (f"{SESSION_COOKIE}={res['token']}; Path=/; Max-Age=86400; "
+                  "HttpOnly; SameSite=Lax")
+        if (self.headers.get("X-Forwarded-Proto") or "").lower() == "https":
+            cookie += "; Secure"
+        self._send(200, json.dumps({"ok": True,
+                                    "email": user.get("email"),
+                                    "role": user.get("role"),
+                                    "can_create": _can_create(claims)}),
+                   "application/json; charset=utf-8",
+                   {"Set-Cookie": cookie})
+
     # -- voice creation (creator-gated) --
     def _creator_gate(self):
         """None when the caller may create voices, else (code, obj).
 
-        Two independent secrets, neither of them the demo key: the
-        server-side breeze-creator gateway key (checked implicitly when
-        CREATOR.call runs - the hub refuses the demo key for these tools)
-        and the creator token the user typed, compared here against the
-        token file on Tritium.
+        Authorization, in order:
+        1. A Solorion (dsect-auth) session whose user holds the creation
+           permission - admin role, or a "breeze-creator" services grant.
+           Permitted users never type the token.
+        2. Break-glass: the shared creator token typed into the form,
+           compared here against the token file on Tritium, backed by the
+           scoped breeze-creator gateway key when CREATOR.call runs (the
+           hub refuses the demo key for these tools).
         """
+        claims = _session_claims(self)
+        if _can_create(claims):
+            return None
         expected = _creator_token()
-        if expected is None:
+        given = self.headers.get("X-Creator-Token") or ""
+        if expected is not None and given and hmac.compare_digest(given, expected):
+            return None
+        if given:
+            return 403, {"ok": False, "error": "creator_unauthorized",
+                         "message": "That creator token does not match."}
+        if claims is not None:
+            return 403, {"ok": False, "error": "creator_forbidden",
+                         "message": "You are signed in, but your account "
+                                    "does not have voice-creation permission."}
+        if expected is None and _auth() is None:
             return 503, {"ok": False, "error": "creator_token_not_set",
                          "message": "No creator token is provisioned on "
                                     "Tritium yet, so voice creation is locked."}
-        given = self.headers.get("X-Creator-Token") or ""
-        if not hmac.compare_digest(given, expected):
-            return 403, {"ok": False, "error": "creator_unauthorized",
-                         "message": "That creator token does not match."}
-        return None
+        return 401, {"ok": False, "error": "login_required",
+                     "message": "Sign in with a Solorion account that has "
+                                "voice-creation permission, or present the "
+                                "creator token."}
 
     def _creator_post(self, path):
         gate = self._creator_gate()
@@ -835,9 +2298,39 @@ class Handler(BaseHTTPRequestHandler):
                                  "message": "A sample line is required (max 320 "
                                             "chars - it becomes the clone reference)."})
                 return
-            self._mcp_json(lambda: CREATOR.call(
-                "quantum_breeze_design_voice",
-                {"instruction": instruction, "sample_text": sample}))
+            seed = payload.get("seed")
+            if seed is not None:
+                try:
+                    seed = int(seed)
+                except (TypeError, ValueError):
+                    self._json(400, {"ok": False, "error": "bad_seed",
+                                     "message": "Seed must be an integer."})
+                    return
+                if seed < 0 or seed > 2147483647:
+                    self._json(400, {"ok": False, "error": "bad_seed",
+                                     "message": "Seed must be between 0 and "
+                                                "2147483647."})
+                    return
+            args = {"instruction": instruction, "sample_text": sample}
+            if seed is not None:
+                args["seed"] = seed
+
+            def _design():
+                res = CREATOR.call("quantum_breeze_design_voice", args)
+                if seed is not None:
+                    # The engine (breeze-cli) accepts --seed, but the hub
+                    # design tool does not forward it yet, so today the
+                    # seed is recorded and forwarded but NOT honored. Say
+                    # so plainly instead of pretending (TRK-0591).
+                    res = dict(res)
+                    res["seed_requested"] = seed
+                    res["seed_honored"] = False
+                    res["seed_note"] = ("Seed forwarded, but the hub design "
+                                        "tool does not pass --seed to "
+                                        "breeze-cli yet; this sample was "
+                                        "rendered with the engine default.")
+                return res
+            self._mcp_json(_design)
         else:  # /api/voices/save
             design_job_id = str(payload.get("design_job_id") or "").strip()
             name = str(payload.get("name") or "").strip()
@@ -856,7 +2349,14 @@ class Handler(BaseHTTPRequestHandler):
     # -- POST --
     def do_POST(self):
         path = urlparse(self.path).path
-        if path in ("/api/voices/design", "/api/voices/save"):
+        if path == "/api/auth/login":
+            self._auth_login()
+        elif path == "/api/auth/logout":
+            self._send(200, json.dumps({"ok": True}),
+                       "application/json; charset=utf-8",
+                       {"Set-Cookie": f"{SESSION_COOKIE}=; Path=/; Max-Age=0; "
+                                        "HttpOnly; SameSite=Lax"})
+        elif path in ("/api/voices/design", "/api/voices/save"):
             self._creator_post(path)
         elif path == "/api/breeze/generate":
             payload = self._read_body()
