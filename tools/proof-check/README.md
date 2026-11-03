@@ -65,6 +65,110 @@ honestly reporting but know you cannot trust — a background
 delivery under a foreign session id is the canonical case (zero
 default trust until its output file is read).
 
+## Evidence freshness (v2)
+
+Proof also decays. An evidence entry may carry `observed_at` —
+an ISO-8601 timestamp **with a timezone** recording when the
+evidence was actually observed:
+
+```json
+{"kind": "real_session", "detail": "Moonlight session, clean logs",
+ "observed_at": "2026-11-03T10:00:00+00:00"}
+```
+
+The reference instant ("now") is, in precedence order: the
+`--now <iso>` CLI flag, the manifest's top-level `"now"` field,
+or the current UTC time. An unparseable effective `now` is a
+usage error (`INCOMPLETE`, exit 2) — freshness is never judged
+against a guessed instant. The flag exists so tests and replays
+are deterministic.
+
+Each claim type has a **fixed, tool-owned maximum age** for its
+evidence. A manifest cannot override or extend it: any
+`max_age*` key anywhere in a manifest is reported in the
+result's `ignored_fields` and never honoured.
+
+| Claim types | Max evidence age |
+|---|---|
+| `works`, `fixed`, `healthy` | 24 hours |
+| `complete`, `copied`, `exists` ("present") | 7 days |
+| `absent`, `identity` | 30 days |
+| `received` (and any default) | 7 days |
+
+Per entry, the report gains `observed_at`, `freshness`,
+`age_seconds`, and `max_age_seconds`, where `freshness` is one of:
+
+- `fresh` — dated, age ≤ the claim type's maximum (an age exactly
+  equal to the maximum is fresh; one second over is stale).
+  Counts normally. Future-dated evidence (negative age) is fresh.
+- `stale` — dated, older than the maximum. Reported with its age
+  and **never counts** toward `SUPPORTED` — the same treatment
+  family as discounted evidence, with its own distinct reason.
+  A claim whose only evidence is stale is `UNSUPPORTED`; stale
+  evidence alongside fresh-but-weak evidence leaves the verdict
+  to the fresh evidence alone.
+- `invalid` — `observed_at` present but naive (no timezone) or
+  unparseable. Reported with `invalid_reason`, never counts, and
+  never crashes the run or voids the manifest.
+- `undated` — no `observed_at`. Counts exactly as in v1 (no
+  regression) and is listed as undated in the report.
+
+See `proof-check.freshness.example.json` for all three dated
+outcomes in one deterministic manifest (it pins `"now"`, so it
+reproduces forever): fresh `works` → `SUPPORTED`, two-day-old
+`works` → `UNSUPPORTED` (stale), undated `complete` →
+`SUPPORTED`.
+
+## Auto-evidence from tool artifacts (v2)
+
+`--evidence-from <file.json>` (repeatable) derives evidence
+entries from other tools' JSON output instead of hand-asserted
+manifest entries. The artifact shapes are the **real** ones,
+read from the tools' sources — not guessed:
+
+| Tool | Real `--json` shape (key fields) | Countable result | Non-countable results |
+|---|---|---|---|
+| settle-check | `{"claim", "status", "problems", "notes"}` — the verdict word is the lowercase **`status`**; there is no `verdict` field | `status: "verified"` → derives a `content_read` entry (level 3) | `failed` / `unsettled` / `error` → derives nothing; reported in `derived_evidence` as skipped, with the reason |
+| merge-verify | `{"verdict", "exit_code", "repo", "head", "checks", "errors", "config_source", "discovered"}` — the verdict word is the uppercase **`verdict`** | `verdict: "VERIFIED"` → derives an `endtoend_run` entry (level 4) | `FAILED` / `INCOMPLETE` → derives nothing; reported as skipped, with the reason |
+
+Detection is by content (a `checks`/`head`/`verdict`+`repo`
+shape is merge-verify; a `status`/`problems`/`notes` shape is
+settle-check), never by filename. A JSON file that matches
+neither shape is reported as skipped (`unrecognized artifact
+shape`) and counts for nothing. A missing, unreadable, or
+unparseable artifact file is a usage error (`INCOMPLETE`,
+exit 2).
+
+**Linkage.** An artifact may carry a `claim_id` field naming
+the manifest claim it belongs to; it is merged into that claim
+only (a `claim_id` matching no claim, or several, is a usage
+error, exit 2). With no `claim_id`, the artifact applies only
+when the manifest has **exactly one claim** — with more, the
+run exits 2 with an explanation rather than guessing which
+claim a verdict belongs to.
+
+**Timestamps.** Derived entries get
+`source: "<tool>:<artifact path>"`. Their `observed_at` comes
+from the artifact's own timestamp field if one is present
+(`observed_at`, `timestamp`, `checked_at`, `generated_at`,
+`finished_at`, `started_at`, `run_at`, `created_at` — in that
+order); neither real tool emits any of these today, so the
+normal path is the fallback: **the artifact file's mtime, in
+UTC**. Derived evidence is then subject to the same freshness
+rules as hand-asserted evidence — an old verified artifact is
+stale proof, not a pass. In each claim's evidence list, derived
+entries carry `"derived": true`.
+
+Deterministic demo (both artifacts carry `claim_id` +
+`checked_at`, and the manifest pins `"now"`):
+
+```sh
+python3 src/proof_check.py proof-check.auto.example.json \
+  --evidence-from proof-check.settle-verified.example.json \
+  --evidence-from proof-check.merge-verified.example.json
+# -> SUPPORTED, exit 0
+```
+
 ## Claim requirements
 
 | Claim type | Minimum level | Reading |
@@ -133,6 +237,10 @@ One JSON file: a `claims` list. Each claim names its `id`, its
 | `evidence[].detail` | What the evidence is, concretely — surface probed, numbers seen, path taken |
 | `evidence[].discounted` | Optional, default `false`. Reported but never counts |
 | `evidence[].discount_reason` | Optional. Why the evidence is discounted |
+| `evidence[].observed_at` | Optional (v2). ISO-8601 with timezone; see freshness above |
+| `evidence[].source` | Optional. Where the evidence came from (auto-evidence sets this automatically) |
+| `now` (top level) | Optional (v2). Reference instant for freshness; the `--now` flag overrides it |
+| `max_age*` (anywhere) | **Never honoured** (v2). The freshness table is tool-owned; occurrences are reported in `ignored_fields` |
 
 See `proof-check.example.json` for the six origin incidents as a
 full manifest.
@@ -163,7 +271,19 @@ Overall verdict is the weakest claim's verdict
   no claims or an empty claims list, a missing field, an unknown
   claim type, or an unknown evidence kind. No per-claim verdicts
   are emitted in this case; a verdict computed on a malformed
-  claim set would be a lie.
+  claim set would be a lie. (v2 adds, under the same contract: an
+  unparseable `--now` / top-level `now`, a missing/unreadable/
+  unparseable `--evidence-from` file, and ambiguous auto-evidence
+  linkage — no `claim_id` with more than one claim, or a
+  `claim_id` that matches no claim. A *bad `observed_at`* is
+  explicitly NOT in this list: it invalidates only its own
+  evidence entry.)
+
+Stale, invalid, and discounted evidence never counts, so a
+claim left with no countable evidence is `UNSUPPORTED`, and a
+claim left with only fresh-but-insufficient evidence is
+`OVERCLAIMED` — freshness changes which evidence counts, never
+the verdict vocabulary.
 
 ## Usage
 
@@ -177,15 +297,24 @@ python3 src/proof_check.py proof-check.example.json
 # {verdict, exit_code, manifest,
 #  claims: [{id, type, statement, verdict, required_level,
 #            required_level_name, best_level, best_level_name,
-#            reason,
+#            max_age_seconds, reason,
 #            evidence: [{kind, level, level_name, detail,
-#                        discounted, discount_reason, counted}]}],
-#  errors: [...]}
+#                        discounted, discount_reason, counted,
+#                        source, derived, observed_at, freshness,
+#                        age_seconds, max_age_seconds, stale,
+#                        invalid_reason}]}],
+#  errors: [...], now, derived_evidence: [...],
+#  ignored_fields: [...]}
 python3 src/proof_check.py proof-check.example.json --json
+
+# freshness judged at a fixed instant (deterministic replay),
+# with evidence derived from real tool artifacts
+python3 src/proof_check.py manifest.json --now 2026-11-03T12:00:00+00:00 \
+  --evidence-from settle-result.json --evidence-from merge-result.json
 ```
 
-Read-only. Stdlib only (Python 3.10+). It reads one manifest and
-writes nothing.
+Read-only. Stdlib only (Python 3.10+). It reads one manifest
+(plus any `--evidence-from` artifacts) and writes nothing.
 
 ## Adoption
 
@@ -206,7 +335,8 @@ other two actually proved.
 ## Tests
 
 ```sh
-python3 -m pytest tests/ -q   # 36 tests: every claim type
+python3 -m pytest tests/ -q   # 62 tests: the 36 v1 tests
+                              # (every claim type
                               # supported at its exact level,
                               # the origin failures (receipt does
                               # not prove complete, probe does not
@@ -225,7 +355,31 @@ python3 -m pytest tests/ -q   # 36 tests: every claim type
                               # manifest exit 1, all-supported
                               # exit 0, human output, and the
                               # shipped example manifest coming
-                              # out all-weak — all against real
-                              # temp manifest files run through
-                              # the real CLI
+                              # out all-weak) plus 26 v2 tests:
+                              # stale vs fresh at the exact
+                              # boundary (max age fresh, +1s
+                              # stale), invalid observed_at
+                              # (naive / garbage / impossible)
+                              # never counting and never
+                              # crashing, a manifest unable to
+                              # extend max_age, stale-only ->
+                              # UNSUPPORTED and stale-strong +
+                              # fresh-weak -> OVERCLAIMED,
+                              # undated evidence still counting,
+                              # --now determinism and its
+                              # precedence over manifest `now`,
+                              # the 24h / 7d / 30d table,
+                              # settle-check verified / failed /
+                              # unsettled / error derivation,
+                              # merge-verify VERIFIED / FAILED /
+                              # INCOMPLETE derivation, claim_id
+                              # linkage, ambiguous multi-claim
+                              # and unmatched claim_id -> exit 2,
+                              # artifact timestamp field beating
+                              # file mtime, repeatable
+                              # --evidence-from, and a missing
+                              # artifact file -> exit 2 — all
+                              # against real temp manifest and
+                              # artifact files run through the
+                              # real CLI
 ```
