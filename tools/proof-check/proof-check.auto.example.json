@@ -1,0 +1,1 @@
+{"claims":[{"evidence":[],"id":"example-complete","statement":"The delegated work is complete (backed by a settle-check VERIFIED artifact).","type":"complete"},{"evidence":[],"id":"example-works","statement":"The merged tree works (backed by a merge-verify VERIFIED artifact).","type":"works"}],"now":"2026-11-03T12:00:00+00:00"}
