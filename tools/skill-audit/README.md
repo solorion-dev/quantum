@@ -34,6 +34,43 @@ of crying wolf:
 - `/tmp/…` paths are **skipped** — ephemeral by definition.
 - Template and date placeholders (`{{NAME}}`, `week-YYYY-MM-DD.yaml`,
   `${VAR}`) are **skipped**, not dead.
+- **Declared host-scoped paths** are **unverified**, not dead (see below).
+  Some paths legitimately live on only one host — e.g. a skill about a
+  home server referencing `~/.cloudflared/` in prose that itself says
+  the config lives on that server. The heuristic rules above can't know
+  that, so the skill author declares it, in either of two ways:
+
+  1. **Inline directive** — put the HTML comment
+     `<!-- skill-audit: host-scoped -->` on the *same line* as the
+     reference:
+
+     ```markdown
+     Derive names from the tunnel configs (`~/.cloudflared/`) on Tritium. <!-- skill-audit: host-scoped -->
+     ```
+
+     The directive covers only path, skill-folder, and link references
+     extracted from that line (not GitHub repo references). A directive
+     on its own line declares nothing.
+
+  2. **Per-skill ignore file** — a `.skill-audit-ignore` file in the
+     skill root, one entry per line: a path prefix exactly as references
+     are written, optionally followed by `# reason`:
+
+     ```text
+     # Tritium host only
+     ~/.cloudflared/ # cloudflared configs live on Tritium
+     ```
+
+     Blank lines and comment-only lines are ignored. A reference whose
+     written value starts with a listed prefix is covered.
+
+  Either way the contract is narrow: a declared path that *does* exist
+  on this host still reports `ok`; a declared path missing here reports
+  `unverified` with a detail naming the declaration (and the ignore-file
+  reason, when given); an *undeclared* missing path still reports
+  `dead` and still fails the run (exit `1`). Declarations never rescue
+  anything else, and `--strict` still fails on the resulting
+  `unverified` findings if you want declared paths to stay visible.
 
 Statuses: `ok`, `dead`, `unverified`, `skipped`. Exit code is `1` when any
 reference is dead, `0` when clean, `2` on usage error. `--strict` also
