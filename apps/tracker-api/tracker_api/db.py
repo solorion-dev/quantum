@@ -251,22 +251,18 @@ def project_of(c, row):
         seen.add(nxt["id"]); cur = nxt
     return {"id": cur["id"], "title": cur["title"], "derived": True}
 
-# `automated` rule: true when the item's CREATOR or its LAST WRITER is an automated actor.
-#   creator     = actor of the item's 'created' event (else items.source if it is an automated source)
+# `automated` rule: true only when the item's CREATING write or its LAST write came from an UNATTENDED path.
+#   creator     = actor of the item's 'created' event (plus items.source)
 #   last writer = the field_clock entry with the latest `at` (per-field provenance)
-#   automated actor = provenance source in AUTOMATED_SOURCES, OR the actor's people.kind in AUTOMATED_KINDS,
-#                     OR the handle itself is a sync/A2A system actor. Humans (people.kind='human') and unknown
-#                     UI actors are not automated. Accepting a GitHub suggestion is a human write.
-AUTOMATED_SOURCES = {"sync", "github", "github-sync", "webhook", "a2a", "agent", "automation"}
-AUTOMATED_KINDS = {"agent", "bot", "a2a", "sync", "system"}
+#   unattended  = write source in AUTOMATED_SOURCES, or the handle is a system actor in SYSTEM_ACTORS.
+#   people.kind does NOT count: an agent (or human) writing through the board UI / API with X-Actor is a
+#   directed write, not automated. Accepting a GitHub suggestion is a write by the accepting person.
+AUTOMATED_SOURCES = {"sync", "github", "github-sync", "webhook", "a2a", "automation"}
 SYSTEM_ACTORS = {"sync", "github-sync", "a2a", "webhook"}
 
 def _actor_automated(c, actor, source=None):
     if source and source in AUTOMATED_SOURCES: return True
-    if not actor: return False
-    if actor in SYSTEM_ACTORS: return True
-    r = c.execute("SELECT kind FROM people WHERE handle=?", (actor,)).fetchone()
-    return bool(r and r["kind"] in AUTOMATED_KINDS)
+    return bool(actor and actor in SYSTEM_ACTORS)
 
 def is_automated(c, row):
     ev = c.execute("SELECT actor FROM events WHERE item_id=? AND kind='created' ORDER BY id LIMIT 1",

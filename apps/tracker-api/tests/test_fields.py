@@ -44,15 +44,23 @@ class Automated(unittest.TestCase):
         self.assertFalse(db.create_item(self.c, {"title": "h"}, "scotty")["automated"])
     def test_unknown_ui_actor_not_automated(self):
         self.assertFalse(db.create_item(self.c, {"title": "u"}, "board-ui")["automated"])
-    def test_agent_created(self):
-        self.assertTrue(db.create_item(self.c, {"title": "a"}, "pixel")["automated"])
+    def test_agent_via_ui_not_automated(self):
+        self.assertFalse(db.create_item(self.c, {"title": "a"}, "pixel")["automated"])
+    def test_agent_kind_with_unattended_source_automated(self):
+        self.assertTrue(db.create_item(self.c, {"title": "a"}, "pixel", source="a2a")["automated"])
+    def test_webhook_actor_created(self):
+        self.assertTrue(db.create_item(self.c, {"title": "w"}, "webhook")["automated"])
     def test_sync_source_created(self):
         self.assertTrue(db.create_item(self.c, {"title": "s"}, "scotty", source="sync")["automated"])
     def test_a2a_actor_created(self):
         self.assertTrue(db.create_item(self.c, {"title": "x"}, "a2a")["automated"])
-    def test_last_writer_agent_makes_automated(self):
+    def test_last_writer_agent_ui_not_automated(self):
         it = db.create_item(self.c, {"title": "h"}, "scotty")
         it, _ = db.update_item(self.c, it["id"], {"priority": "high"}, "pixel")
+        self.assertFalse(it["automated"])
+    def test_last_writer_sync_makes_automated(self):
+        it = db.create_item(self.c, {"title": "h"}, "scotty")
+        it, _ = db.update_item(self.c, it["id"], {"priority": "high"}, "github-sync", source="sync")
         self.assertTrue(it["automated"])
     def test_human_accepting_suggestion_is_human_write(self):
         it, _ = db.update_item(self.c, "TRK-9001", {"priority": "low"}, "scotty", source="github-suggest")

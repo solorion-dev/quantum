@@ -51,11 +51,11 @@ curl -s 'localhost:7655/api/suggestions?state=pending'
 - Item `project`: `{id, title, derived}`. The live schema has no project column, so it is the top-level ancestor via
   `parentId` (a root is its own project). If an explicit `items.project` column exists it wins
   (`migrations/002_project_column.sql`, **proposed, not applied**, for review).
-- Item `automated` (bool): true when the item's **creator** (its `created` event actor, or `items.source`) or its
-  **last writer** (latest `field_clock` entry) is automated: provenance source in
-  `sync|github|github-sync|webhook|a2a|agent|automation`, or the actor's `people.kind` in `agent|bot|a2a|sync|system`,
-  or a system handle (`sync`, `github-sync`, `a2a`, `webhook`). Humans and unknown UI actors are not.
-  Accepting a GitHub suggestion counts as the accepting person's write.
+- Item `automated` (bool): true **only** when the item's **creating write** (its `created` event actor, or
+  `items.source`) or its **last write** (latest `field_clock` entry) came from an unattended path: write source in
+  `sync|github|github-sync|webhook|a2a|automation`, or a system handle (`sync`, `github-sync`, `a2a`, `webhook`).
+  `people.kind` does **not** count: an agent acting through the board UI or API with `X-Actor` is a directed write
+  and is not automated. Accepting a GitHub suggestion counts as the accepting person's write.
 - Relations: `relations(item_id, related_id, 'parent')` stores parent → child, so `{rel:"parent", direction:"out"}`
   reads **"Parent of"** and `direction:"in"` reads **"Child of"**.
 
