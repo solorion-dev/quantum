@@ -11,6 +11,7 @@ import { ListView } from './components/ListView'
 import { ProjectsView, type ProjectGroup } from './components/ProjectsView'
 import { DetailPanel } from './components/DetailPanel'
 import { SuggestionsInbox } from './components/SuggestionsInbox'
+import { CreateItemDialog, type CreateInput } from './components/CreateItemDialog'
 
 type View = 'board' | 'list' | 'projects'
 const parseHash = () => {
@@ -37,6 +38,7 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(init.filters)
   const [openId, setOpenId] = useState<string | null>(init.item)
   const [inbox, setInbox] = useState(false)
+  const [creating, setCreating] = useState<Status | null>(null)
   const [toasts, setToasts] = useState<ToastData[]>([])
   const [theme, setThemeState] = useState(getTheme())
   const phone = usePhone()
@@ -84,6 +86,17 @@ export default function App() {
       toast({ title: `${id} updated`, tone: 'ok' })
     } catch (e) { setItems(prev); toast({ title: `Could not update ${id}`, text: String((e as Error).message), tone: 'err' }) }
   }
+  const create = async (input: CreateInput): Promise<boolean> => {
+    if (!client) return false
+    try {
+      const it = await client.createItem(input)
+      setItems((xs) => [...xs.filter((x) => x.id !== it.id), it])
+      setCreating(null)
+      toast({ title: `${it.id} created`, text: it.title, tone: 'ok' })
+      setOpenId(it.id)
+      return true
+    } catch (e) { toast({ title: 'Could not create item', text: String((e as Error).message), tone: 'err' }); return false }
+  }
   const move = (id: string, to: Status) => { const it = byId.get(id); if (it && it.status !== to) void save(id, { status: to }) }
   const decide = async (id: string, accept: boolean, reason?: string) => {
     if (!client) return
@@ -109,6 +122,7 @@ export default function App() {
       <a href="#main" className="tb-skip">Skip to content</a>
       <AppBar title="Tracker" subtitle={client ? (client.source === 'api' ? 'Live: tracker-api' : 'Offline: fixture data') : 'Connecting…'}
         actions={<>
+          <Button size="sm" onClick={() => setCreating('backlog')}>New item</Button>
           <Button variant="outline" size="sm" onClick={() => setInbox(true)} aria-label={`Suggestions inbox, ${sugs.length} pending`}>
             Inbox <span className="tb-count tb-count--pill" aria-hidden="true">{sugs.length}</span>
           </Button>
@@ -149,7 +163,7 @@ export default function App() {
         <SummaryStrip items={shown} onFlag={flagFilter} />
         <p className="sr-only" role="status" aria-live="polite">{loading ? '' : `${shown.length} of ${items.length} items shown`}</p>
         <Tabs label="Tracker views" value={view} onChange={(v) => setView(v as View)} className="tb-tabs" tabs={[
-          { id: 'board', label: `Board · ${shown.length}`, panel: panel(<Board items={shown} people={peopleMap} a2a={filters.a2a} onOpen={setOpenId} onMove={move} />) },
+          { id: 'board', label: `Board · ${shown.length}`, panel: panel(<Board items={shown} people={peopleMap} a2a={filters.a2a} onOpen={setOpenId} onMove={move} onAdd={(s) => setCreating(s)} />) },
           { id: 'list', label: 'List', panel: panel(<ListView items={shown} people={peopleMap} a2a={filters.a2a} onOpen={setOpenId} projectName={projectName} />) },
           { id: 'projects', label: `Projects · ${groups.length}`, panel: panel(<ProjectsView groups={groups} onOpen={setOpenId} onFilter={(p) => { set('project', [p]); setView('board') }} />) },
         ]} />
@@ -158,6 +172,8 @@ export default function App() {
         onClose={() => setOpenId(null)} onOpen={setOpenId} onSave={save} />}
       <SuggestionsInbox open={inbox} onClose={() => setInbox(false)} suggestions={sugs} byId={byId} phone={phone}
         onAccept={(id) => decide(id, true)} onReject={(id, r) => decide(id, false, r)} onOpenItem={(id) => { setInbox(false); setOpenId(id) }} />
+      {creating !== null && <CreateItemDialog open initialStatus={creating ?? 'backlog'} onClose={() => setCreating(null)} onCreate={create}
+        people={people} labels={labels} items={items} phone={phone} />}
       <Toaster toasts={toasts} onDismiss={(id) => setToasts((x) => x.filter((t) => t.id !== id))} />
     </div>
   )

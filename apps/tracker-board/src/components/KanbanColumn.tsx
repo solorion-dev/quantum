@@ -5,7 +5,8 @@ const COL_PAGE = 30
 import type { Status } from '../types'
 import { statusLabel } from '../lib/meta'
 
-export function KanbanColumn({ status, count, children, collapsed, onToggle, onDropItem, automated }: {
+export function KanbanColumn({ status, count, children, collapsed, onToggle, onDropItem, automated, onAdd }: {
+  onAdd?: () => void
   status: Status; count: number; children: ReactNode; collapsed?: boolean; onToggle?: () => void
   onDropItem: (id: string, to: Status) => void; automated?: ReactNode
 }) {
@@ -40,6 +41,7 @@ export function KanbanColumn({ status, count, children, collapsed, onToggle, onD
             </button>
           ) : (<><span>{statusLabel[status]}</span><span className="tb-count" aria-label={`${count} items`}>{count}</span></>)}
         </h2>
+        {onAdd && <button type="button" className="btn btn-small ghost tb-col-add" aria-label={`New item in ${statusLabel[status]}`} title={`New item in ${statusLabel[status]}`} onClick={onAdd}>+</button>}
       </div>
       <div className="panel-body tb-col-body">
         {count === 0 ? <p className="tb-empty">Nothing here</p> : <ul className="tb-cards" role="list">{all.slice(0, limit)}</ul>}

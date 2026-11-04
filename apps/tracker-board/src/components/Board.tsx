@@ -5,7 +5,7 @@ import type { A2AMode } from '../lib/filters'
 import { ItemCard } from './ItemCard'
 import { KanbanColumn } from './KanbanColumn'
 
-export function Board({ items, people, a2a, onOpen, onMove }: {
+export function Board({ items, people, a2a, onOpen, onMove, onAdd }: { onAdd?: (s: Status) => void;
   items: TrackerItem[]; people: Map<string, Person>; a2a: A2AMode
   onOpen: (id: string) => void; onMove: (id: string, to: Status) => void
 }) {
@@ -53,7 +53,7 @@ export function Board({ items, people, a2a, onOpen, onMove }: {
           return (
             <KanbanColumn key={s} status={s} count={all.length} collapsed={collapsed}
               onToggle={isSide ? () => setExpanded((x) => ({ ...x, [s]: !x[s] })) : undefined}
-              onDropItem={onMove}
+              onDropItem={onMove} onAdd={onAdd ? () => onAdd(s) : undefined}
               automated={auto.length > 0 && (
                 <button type="button" className="btn btn-small ghost tb-a2a-toggle" aria-expanded={!!openA2A[s]}
                   onClick={() => setOpenA2A((x) => ({ ...x, [s]: !x[s] }))}>

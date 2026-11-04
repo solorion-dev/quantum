@@ -37,6 +37,10 @@ test('board keyboard: arrows move focus, Shift+Right moves card (PATCH), Enter o
   const id = (await page.locator(':focus').getAttribute('data-id'))!
   await page.keyboard.press('Shift+ArrowRight')
   await expect(page.getByText(`${id} updated`)).toBeVisible()
+  // Pixel is an agent, so Volt's `automated` flag is now true: the card folds into In review's A2A group.
+  const grp = page.getByRole('button', { name: /^Show \d+ automated \(A2A\) in In review/ })
+  await expect(grp).toBeVisible()
+  await grp.press('Enter')
   await expect(page.locator(`.tb-card[data-id="${id}"]`)).toHaveAttribute('data-col', '3')
   await page.locator(`.tb-card[data-id="${id}"]`).focus()
   await page.keyboard.press('Enter')
@@ -58,7 +62,7 @@ test('shared filters: priority chip, flags, applies across tabs', async ({ page 
   await expect(page.getByText('Priority: Critical')).toBeVisible()
   const crit = await page.locator('.tb-card').count()
   expect(crit).toBeGreaterThan(0)
-  await page.getByRole('tab', { name: /^List/ }).click()
+  await page.getByRole('tab', { name: /^List/ }).press('Enter')
   const rows = page.locator('.tb-list tbody tr')
   expect(await rows.count()).toBeGreaterThanOrEqual(crit) // list also includes collapsed Backlog/Cancelled
   for (const t of await rows.allInnerTexts()) expect(t.toLowerCase()).toContain('critical')
@@ -73,7 +77,7 @@ test('shared filters: priority chip, flags, applies across tabs', async ({ page 
 })
 
 test('list: sortable headers expose aria-sort', async ({ page }) => {
-  await page.getByRole('tab', { name: /^List/ }).click()
+  await page.getByRole('tab', { name: /^List/ }).press('Enter')
   const th = page.getByRole('columnheader', { name: /^Sort: ID/ })
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'ascending')
@@ -134,7 +138,7 @@ test('600-item synthetic dataset stays bounded and responsive', async ({ page, i
   await expect(page.locator('.tb-card').first()).toContainText('Synthetic 59')
   const filterMs = Date.now() - t1
   await page.getByRole('searchbox', { name: 'Search items' }).fill('')
-  await page.getByRole('tab', { name: /^List/ }).click()
+  await page.getByRole('tab', { name: /^List/ }).press('Enter')
   await expect(page.locator('.tb-list tbody tr')).toHaveCount(101) // 100 rows + "show more" row
   const t2 = Date.now()
   await page.getByRole('button', { name: /^Show 100 more/ }).click()
@@ -143,4 +147,55 @@ test('600-item synthetic dataset stays bounded and responsive', async ({ page, i
   test.info().annotations.push({ type: 'perf', description: `load ${loadMs}ms, cards in DOM ${cards}, filter ${filterMs}ms, list +100 ${moreMs}ms` })
   expect(filterMs).toBeLessThan(1500)
   await axe(page, 'list-600')
+})
+
+test('create item: app-bar button and column "+" → POST /api/items → toast → opens new item', async ({ page, request, isMobile }) => {
+  // Column "+" pre-fills that status.
+  await page.getByRole('button', { name: 'New item in In review' }).press('Enter')
+  const dlg = page.getByRole('dialog', { name: 'New item' })
+  await expect(dlg).toBeVisible()
+  await expect(dlg.getByLabel('Status')).toHaveValue('in_review')
+  await expect(dlg.getByLabel('Title (required)')).toBeFocused()
+  await axe(page, isMobile ? 'create-sheet' : 'create-modal')
+  await dlg.getByRole('button', { name: 'Cancel' }).press('Enter')
+  await expect(dlg).toBeHidden()
+
+  await page.getByRole('button', { name: 'New item', exact: true }).press('Enter')
+  await expect(dlg).toBeVisible()
+  await dlg.getByRole('button', { name: 'Create item' }).press('Enter')
+  await expect(dlg.getByText('Title is required')).toBeVisible()
+  await expect(dlg.getByLabel('Title (required)')).toHaveAttribute('aria-invalid', 'true')
+  const title = `E2E created ${isMobile ? 'phone' : 'desktop'} ${Date.now()}`
+  await dlg.getByLabel('Title (required)').fill(title)
+  await dlg.getByLabel('Status').selectOption('planned')
+  await dlg.getByLabel('Priority').selectOption('high')
+  await dlg.getByLabel('Assignee').selectOption('pixel')
+  await dlg.getByRole('checkbox', { name: 'ui' }).press('Space')
+  await expect(dlg.getByRole('checkbox', { name: 'ui' })).toBeChecked()
+  await dlg.getByLabel('Parent').selectOption('TRK-9001')
+  await dlg.getByLabel('Description').fill('Created by Playwright against the throwaway API.')
+  const posted = page.waitForRequest((r) => r.method() === 'POST' && /\/api\/items$/.test(r.url()))
+  await dlg.getByRole('button', { name: 'Create item' }).press('Enter')
+  const req = await posted
+  expect(req.headers()['x-actor']).toBe('pixel')
+  expect(req.postDataJSON()).toMatchObject({ title, status: 'planned', priority: 'high', assigneeId: 'pixel', labels: ['ui'], parentId: 'TRK-9001' })
+  await expect(page.getByText(/TRK-\d+ created/)).toBeVisible()
+  const detail = page.getByRole('dialog').filter({ hasText: title })
+  await expect(detail.getByRole('heading', { name: 'Relations' })).toBeVisible()
+  const id = (await page.getByText(/TRK-\d+ created/).textContent())!.match(/TRK-\d+/)![0]
+  const got = await (await request.get(`${API}/items/${id}`)).json()
+  expect(got.item).toMatchObject({ title, status: 'planned', priority: 'high', assigneeId: 'pixel', parentId: 'TRK-9001', labels: ['ui'] })
+})
+
+test('forward-compatible fields: item.project groups, item.automated overrides heuristic', async ({ page }) => {
+  await page.route(/\/api\/items(\?.*)?$/, async (route) => {
+    const res = await route.fetch(); const j = await res.json()
+    j.items = j.items.map((i: Record<string, unknown>, n: number) => ({ ...i, project: n < 3 ? { id: 'Alpha', title: 'Alpha project', derived: false } : null, automated: n === 3 }))
+    await route.fulfill({ response: res, json: j })
+  })
+  await page.reload()
+  await page.getByRole('tab', { name: /^Projects/ }).press('Enter')
+  await expect(page.getByRole('heading', { name: 'Alpha · Alpha project' })).toBeVisible()
+  await page.getByRole('tab', { name: /^List/ }).press('Enter')
+  await expect(page.getByRole('button', { name: 'Show 1 automated (A2A) items' })).toBeVisible()
 })

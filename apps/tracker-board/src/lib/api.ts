@@ -53,10 +53,10 @@ export class HttpClient implements TrackerClient {
     return r.item
   }
   createItem(input: ItemPatch & { title: string }) { return this.req<TrackerItem>('/items', { method: 'POST', body: JSON.stringify(input) }) }
-  // 7fa3ad8 (live schema) returns `name`; 946dcb8 returned `display`. Accept either, fall back to id.
+  // Prefer `display`; `name` (7fa3ad8 live schema) is a fallback alias; then id.
   listPeople() {
     return this.req<{ people: (Omit<Person, 'display'> & { display?: string | null; name?: string | null })[] }>('/people')
-      .then((r) => r.people.map((p) => ({ ...p, display: p.display || p.name || p.id })))
+      .then((r) => r.people.map((p) => ({ ...p, display: p.display ?? p.name ?? p.id })))
   }
   listLabels() { return this.req<{ labels: Label[] }>('/labels').then((r) => r.labels) }
   listSuggestions() { return this.req<{ suggestions: Suggestion[] }>('/suggestions?state=pending').then((r) => r.suggestions) }

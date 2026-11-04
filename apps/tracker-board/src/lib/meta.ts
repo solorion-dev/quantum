@@ -26,12 +26,20 @@ export const isStale = (i: TrackerItem) => i.stale
 export const needsTriage = (i: TrackerItem) => i.needsTriage
 
 /** A2A automated items: OPEN QUESTION for Volt — no flag yet; heuristic on label/title/kind. */
+// Prefer Volt's `automated` boolean once it lands; fall back to the label/title heuristic.
 export function isAutomated(i: TrackerItem): boolean {
+  if (typeof i.automated === 'boolean') return i.automated
   return i.labels.some((l) => l === 'a2a' || l === 'automated') || /^A2A\b/i.test(i.title)
 }
 
 export function projectOf(i: TrackerItem, byId: Map<string, TrackerItem>): { id: string; title: string } | null {
-  if (i.project) return { id: i.project, title: i.project }
+  // Volt's API: `project` is { id, title, derived } (or null); accept a bare string too.
+  const pr = i.project as unknown
+  if (typeof pr === 'string' && pr) return { id: pr, title: pr }
+  if (pr && typeof pr === 'object' && typeof (pr as { id?: unknown }).id === 'string') {
+    const o = pr as { id: string; title?: string | null }
+    return { id: o.id, title: o.title ?? o.id }
+  }
   let cur = i
   const seen = new Set<string>()
   while (cur.parentId && byId.has(cur.parentId) && !seen.has(cur.parentId)) {

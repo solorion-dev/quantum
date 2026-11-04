@@ -43,8 +43,10 @@ export interface TrackerItem {
   stale: boolean
   /** Server flag: no assignee, or priority none, or backlog with no labels. Read-only. */
   needsTriage: boolean
-  /** OPEN QUESTION for Volt: no project field in §6 yet. UI falls back to root ancestor. */
-  project?: string | null
+  /** Volt API: `{ id, title, derived }` (derived = root-ancestor fallback computed server-side); string tolerated. */
+  project?: { id: string; title?: string | null; derived?: boolean } | string | null
+  /** Coming from Volt: explicit A2A/automated flag. Until then UI guesses from labels/title. */
+  automated?: boolean | null
 }
 
 // Shapes below match apps/tracker-api @ 946dcb8 (GET /api/items/:id).

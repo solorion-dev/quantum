@@ -46,3 +46,9 @@ Load to first card took ≈350ms, with 150 cards in the DOM (paged). Search filt
 1. A project field and an A2A flag (see above).
 2. Kit: FilterBar chips use a generic "Remove filter" aria-label, so the app renders its own chips. Should this go upstream to @dsect/ui, along with the local Popover and MultiSelect?
 3. **Security:** tracker.dsect.net is public with no auth and exposes `POST /api/item/<id>/update`. It needs an auth decision before this board points at prod.
+
+## Nov 4 follow-up: New item + Volt fields
+- **New item**: app-bar "New item" button (default status Backlog) and a "+" in each expanded column header (`aria-label="New item in <Status>"`, pre-fills that status). `CreateItemDialog` = kit Dialog (modal >=721px, bottom sheet on phones), focus starts on Title; fields Title (required, inline error + aria-invalid), Status, Priority, Assignee, Labels (checkboxes), Parent, Description. POST `/api/items` with `X-Actor: pixel` -> toast "`TRK-n created`" -> detail opens. Dialog is unmounted while closed.
+- **People**: `display` preferred, `name` fallback alias, then id.
+- **project**: `item.project` (Volt: `{id,title,derived}`, string tolerated) wins; else root ancestor via parentId.
+- **automated**: boolean `item.automated` wins; else label/title heuristic. Since Pixel is `kind: agent`, any item Pixel creates/edits becomes automated and folds into the column's A2A group by default (e2e asserts this).

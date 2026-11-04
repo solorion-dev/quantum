@@ -125,3 +125,15 @@
   .tb-metric { min-width: 104px; flex: none; padding: var(--space-2) var(--space-3); }
 }
 .sheet .dialog__body { overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
+
+/* Create item */
+.tb-col-headrow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.tb-col-add { min-width: 32px; min-height: 32px; font-size: 18px; line-height: 1; }
+.tb-create { width: min(640px, 100vw); }
+.tb-create-form { display: grid; gap: var(--space-3); }
+.tb-create-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.tb-create-labels { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+.tb-create-labels legend { margin-bottom: 6px; width: 100%; }
+.tb-check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+.tb-create-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+@media (max-width: 720px) { .tb-create-row { grid-template-columns: 1fr; } }
