@@ -37,11 +37,11 @@ class App:
                 if m and method == "POST":
                     return 201, db.add_comment(c, m[1], actor, js().get("body"))
                 if method == "GET" and path == "/people":
-                    return 200, {"people": [{"id": r["handle"], "display": r["display"], "kind": r["kind"],
-                                             "githubLogin": r["github_login"], "active": bool(r["active"])}
+                    return 200, {"people": [{"id": r["handle"], "name": r["name"], "kind": r["kind"],
+                                             "githubLogin": r["github"] or None, "active": bool(r["active"])}
                                             for r in c.execute("SELECT * FROM people ORDER BY handle")]}
                 if method == "GET" and path == "/labels":
-                    return 200, {"labels": [dict(r) for r in c.execute("SELECT name, color FROM labels ORDER BY name")]}
+                    return 200, {"labels": [dict(r) for r in c.execute("SELECT name, color FROM tags ORDER BY name")]}
                 if method == "GET" and path in ("/suggestions", "/sync/suggestions"):
                     st = q.get("state", "pending"); return 200, {"suggestions": sync.list_suggestions(c, None if st == "all" else st)}
                 m = re.fullmatch(r"/(?:sync/)?suggestions/(SUG-\d+|\d+)/(accept|reject)", path)

@@ -105,7 +105,7 @@ def handle_webhook(c, adapter, secret, headers, body):
                 n += suggest(c, item["id"], "status", item["status"], "planned", sender, delivery, f"{event} reopened")
             elif action in ("assigned", "unassigned"):
                 login = (payload.get("assignee") or {}).get("login")
-                p = c.execute("SELECT handle FROM people WHERE github_login=?", (login,)).fetchone()
+                p = c.execute("SELECT handle FROM people WHERE github=? AND github != ''", (login,)).fetchone()
                 proposed = (p["handle"] if p else None) if action == "assigned" else None
                 if action == "assigned" and not p:
                     _log(c, None, "in", item["id"], "assign", "skipped", f"unknown github login", delivery)
@@ -150,7 +150,7 @@ def decide(c, sug_id, accept, actor, reason=None):
                                  source="github-suggest")
     c.execute("UPDATE suggested_changes SET state=?, decided_by=?, decided_at=?, decision_reason=? WHERE id=?",
               ("accepted" if accept else "rejected", actor, db.now(), reason, r["id"]))
-    c.execute("INSERT INTO events(item_id,kind,actor,body,at) VALUES(?,?,?,?,?)",
+    c.execute("INSERT INTO events(item_id,kind,actor,text,ts) VALUES(?,?,?,?,?)",
               (r["item_id"], "suggestion", actor, json.dumps({"id": f"SUG-{r['id']}", "accepted": accept,
                                                               "reason": reason}), db.now()))
     return {"suggestion": next(s for s in list_suggestions(c, None) if s["id"] == f"SUG-{r['id']}"),

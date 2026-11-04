@@ -7,20 +7,20 @@ Author: Volt (Harbor). Date: 2026-11-04. Status: draft for Helm/Scotty. Read-onl
 - **MCP:** 11 `quantum_tracker_*` tools in hub-api (PR #94, `lib/mcp-tracker-tools.js`). Production hub checkout is `/home/scott/dsect-hub-api`, branch `fix/service-probes-and-registry-audit`, not main (#1717).
 - **Live board:** `board_server.py` on Tritium, port 7654, systemd user unit `tracker-board.service`, served on tailnet via Tailscale Serve. Plain server-rendered kanban (v1 read-only, v2 adds the detail sheet, edit, and drag). Also embedded as HA panel `/config/dashboards/tracker.yaml`. **The live board code is not in any repo I could find.**
 - **React board (Pixel's lead):** `solorion-dev/quantum` (dsect-net/quantum redirects here), path **`apps/tracker-board`** (not `apps/tracker`), branch `worker/cooper/tracker-board-ui` @ `48fb36f` (Oct 26, "Tracker-v1.2-design"). Vite 7 + React 19 + TS 5.9 + Tailwind 4 + framer-motion. Not on main: 4 ahead, 43 behind. It does **not** use `@dsect/ui` or the Quantum UI kit today. It loads a `/board-data.json` snapshot (`scripts/snapshot-board.py`) and proxies `/api` to board_server.py. Verdict: this is the best base for the overhaul UI, but it is a prototype beside the live board, not what runs live.
-- **Schema (from the MCP output and code; a direct `.schema` dump failed because Tritium SSH returned 502 at 02:51 ET):**
-  - `items`: id (TRK-nnnn), kind {goal,issue,task,decision,milestone,bug,note}, title, body, status {backlog,planned,in_progress,in_review,blocked,done,cancelled}, priority {critical,high,medium,low,none}, assignee (handle text), parent_id, due_at, points, source, external_ref, created_at, updated_at
-  - `tags` (item↔tag)
-  - `links` (url / github issue|pr / memory id)
-  - `relations` (project, related, blocks, depends_on, parent, child, supersedes)
-  - `events` (comments + change history, with actor)
-  - `embeddings` (per item)
-  - `people` (handles, Matrix ids, mailboxes, hub workers)
-  - Exact table and column names still need confirming with a read-only `sqlite3 -readonly .schema`.
+- **Schema (verified via a read-only dump, 2026-11-04 03:0x ET; snapshot in `apps/tracker-api/tests/live_schema_20261104.sql`):** 600 items (TRK-0001..TRK-0600).
+  - `items`(id, kind, title, body, status default 'planned', priority default 'none', assignee/parent_id/due_at TEXT default '' (empty string, not NULL), points, source default 'manual', external_ref, created_at, updated_at). Indexes on kind and status.
+  - `tags`(name) and `item_tags`(item_id, tag). These are the existing labels.
+  - `events`(id, item_id, ts, actor default 'cooper', kind, text).
+  - `links`(id, item_id, kind ∈ {github_issue, github_pr, github, memory, url, file}, url, label).
+  - `relations`(item_id, related_id, relation ∈ {project, related, depends_on, parent, child, supersedes}).
+  - `people`(handle, name, kind, matrix_id, email, **github**, hub_worker, notes). 21 rows, 2 with github set.
+  - `embeddings`(item_id, model, dim, vec, text_hash) and `meta`(key, value).
+  - Live enums match ours. 7 items have an assignee that isn't in `people`; their `assignee_id` stays null and the text is kept.
 
 ## 2. Proposed data model (additive migrations; nothing existing is dropped)
 - `items`: existing columns plus `assignee_id` FK→people (keep the handle text during transition) and `field_clock` JSON (per-field `{writer, at}` for last-writer tracking).
-- `people`: id, handle, display, kind (human/agent), github_login, active. **This table is the authority on assignees.**
-- `labels`(id, name, color) and `item_labels`(item_id, label_id). Existing tags migrate into them.
+- `people`: existing table, reusing `people.github` as the GitHub login; adds `active`. **This table is the authority on assignees.**
+- Labels = the existing `tags`/`item_tags` (adds `tags.color`). No new label tables.
 - `status_history`(id, item_id, from, to, actor, at, source {ui,cli,mcp,github-suggest}).
 - `github_links`(item_id, repo, number, type {issue,pr}, project_id, project_item_id, node_id, etag, remote_updated_at, last_synced_at, UNIQUE(repo, number), UNIQUE(item_id, repo)).
 - `suggested_changes`(id, item_id, field, proposed_value, remote_actor, delivery_id, state {open,accepted,rejected}, decided_by, at).
