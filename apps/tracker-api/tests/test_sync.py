@@ -56,6 +56,15 @@ class Outbound(unittest.TestCase):
         self.assertEqual((s["added"], len(self.gh.items)), (7, 0))
         self.assertEqual(self.c.execute("SELECT COUNT(*) FROM sync_log").fetchone()[0], 0)
 
+    def test_dry_run_plans_same_counts_as_real_run(self):
+        d = sync.run_outbound(self.c, self.gh, dry=True)
+        r = sync.run_outbound(self.c, self.gh)
+        self.assertGreater(r["updatedFields"], 0)
+        for k in ("added", "updatedFields", "unchanged", "conflicts", "errors"):
+            self.assertEqual(d[k], r[k], k)
+        d2 = sync.run_outbound(self.c, self.gh, dry=True)             # after a real run, dry re-run plans nothing
+        self.assertEqual((d2["added"], d2["updatedFields"]), (0, 0))
+
     def test_error_isolated_per_item(self):
         self.gh.fail_on.add("NODE_solorion-dev/sandbox#100")
         s = sync.run_outbound(self.c, self.gh)

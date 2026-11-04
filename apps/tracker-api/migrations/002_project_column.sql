@@ -10,3 +10,5 @@ WITH RECURSIVE up(id, cur) AS (
 )
 UPDATE items SET project = (
   SELECT u.cur FROM up u JOIN items p ON p.id = u.cur WHERE u.id = items.id AND p.parent_id = '' LIMIT 1);
+-- A parentless item with no children is not a project (matches the API): clear it.
+UPDATE items SET project = '' WHERE parent_id = '' AND NOT EXISTS (SELECT 1 FROM items k WHERE k.parent_id = items.id);

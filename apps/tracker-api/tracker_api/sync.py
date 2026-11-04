@@ -38,13 +38,17 @@ def run_outbound(c, adapter, project_id=None, dry=False):
         if not item: continue
         try:
             pid = link["project_item_id"]
-            if not pid:
-                if dry: stats["added"] += 1; continue
-                pid = adapter.add_item(project_id, link["node_id"])
-                c.execute("UPDATE github_links SET project_item_id=?, project_id=? WHERE item_id=? AND repo=?",
-                          (pid, project_id, link["item_id"], link["repo"]))
+            if not pid and dry:
+                # Dry run plans exactly what the real run would do: a new Project item starts with no fields.
                 stats["added"] += 1
-            remote = adapter.get_project_item(project_id, pid) or {"fields": {}, "updatedAt": None}
+                remote = {"fields": {}, "updatedAt": None}
+            else:
+                if not pid:
+                    pid = adapter.add_item(project_id, link["node_id"])
+                    c.execute("UPDATE github_links SET project_item_id=?, project_id=? WHERE item_id=? AND repo=?",
+                              (pid, project_id, link["item_id"], link["repo"]))
+                    stats["added"] += 1
+                remote = adapter.get_project_item(project_id, pid) or {"fields": {}, "updatedAt": None}
             pushed = json.loads(link["last_pushed"] or "{}")
             changed = False
             for f, gh in MIRRORED.items():
@@ -57,7 +61,7 @@ def run_outbound(c, adapter, project_id=None, dry=False):
                     if suggest(c, item["id"], f, item[f], _from_remote(f, have), "github",
                                reason="remote edited during outbound"): stats["conflicts"] += 1
                     continue
-                if dry: stats["updatedFields"] += 1; continue
+                if dry: stats["updatedFields"] += 1; changed = True; continue
                 ts = adapter.update_field(project_id, pid, gh, want)
                 pushed[gh] = want; stats["updatedFields"] += 1; changed = True
                 remote["updatedAt"] = ts

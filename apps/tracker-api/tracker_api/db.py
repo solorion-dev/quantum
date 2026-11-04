@@ -239,9 +239,10 @@ def _has_col(c, table, col):
     return any(r[1] == col for r in c.execute(f"PRAGMA table_info({table})"))
 
 def project_of(c, row):
-    """Item's project. Live schema has no project column, so unless an explicit items.project column exists
-    (proposed in migrations/002_project_column.sql, not applied) it's the top-level ancestor via parent_id.
-    A root item is its own project. Cycles/missing parents stop at the last reachable item."""
+    """Item's project, or None. Live schema has no project column, so unless an explicit items.project column
+    exists (proposed in migrations/002_project_column.sql, not applied) it's the top-level ancestor via parent_id.
+    Only a top-level item that HAS children counts as a project: a parentless item with no children is
+    project None (the board shows it under 'No project'). Cycles/missing parents stop at the last reachable item."""
     if "project" in row.keys() and row["project"]:
         return {"id": row["project"], "title": None, "derived": False}
     cur, seen = row, {row["id"]}
@@ -249,6 +250,9 @@ def project_of(c, row):
         nxt = c.execute("SELECT id, title, parent_id FROM items WHERE id=?", (cur["parent_id"],)).fetchone()
         if not nxt: break
         seen.add(nxt["id"]); cur = nxt
+    if cur["id"] == row["id"] and not c.execute("SELECT 1 FROM items WHERE parent_id=? AND id<>? LIMIT 1",
+                                                (row["id"], row["id"])).fetchone():
+        return None
     return {"id": cur["id"], "title": cur["title"], "derived": True}
 
 # `automated` rule: true only when the item's CREATING write or its LAST write came from an UNATTENDED path.

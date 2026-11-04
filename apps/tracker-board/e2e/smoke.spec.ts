@@ -3,8 +3,8 @@ import AxeBuilder from '@axe-core/playwright'
 import { createHmac } from 'node:crypto'
 
 // Fake local-only secret from apps/tracker-api/README.md; never a real credential.
-const API = 'http://127.0.0.1:7656/api'
-const FAKE_SECRET = 'local-dev-fake-secret'
+const API = `http://127.0.0.1:${process.env.TB_API_PORT || '7656'}/api`
+const FAKE_SECRET = 'e2e-test-only-fake' // must match TRACKER_WEBHOOK_SECRET in playwright.config.ts
 
 const axe = async (page: Page, name: string) => {
   const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
@@ -37,10 +37,8 @@ test('board keyboard: arrows move focus, Shift+Right moves card (PATCH), Enter o
   const id = (await page.locator(':focus').getAttribute('data-id'))!
   await page.keyboard.press('Shift+ArrowRight')
   await expect(page.getByText(`${id} updated`)).toBeVisible()
-  // Pixel is an agent, so Volt's `automated` flag is now true: the card folds into In review's A2A group.
-  const grp = page.getByRole('button', { name: /^Show \d+ automated \(A2A\) in In review/ })
-  await expect(grp).toBeVisible()
-  await grp.press('Enter')
+  // Since dac0650 a board edit by an agent (X-Actor: pixel) is a directed write, not automated:
+  // the card stays visible in In review instead of folding into the A2A group.
   await expect(page.locator(`.tb-card[data-id="${id}"]`)).toHaveAttribute('data-col', '3')
   await page.locator(`.tb-card[data-id="${id}"]`).focus()
   await page.keyboard.press('Enter')
@@ -83,7 +81,10 @@ test('list: sortable headers expose aria-sort', async ({ page }) => {
   await expect(th).toHaveAttribute('aria-sort', 'ascending')
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'descending')
-  await expect(page.locator('.tb-list tbody tr').first()).toContainText('TRK-9020')
+  // Items created by earlier tests (shared server across projects) may sit above the seed, so check order, not a fixed id.
+  const ids = (await page.locator('.tb-list tbody tr td:first-child').allTextContents()).map((t) => Number(t.match(/TRK-(\d+)/)?.[1] ?? 0))
+  expect(ids[0]).toBeGreaterThanOrEqual(9020)
+  expect(ids[0]).toBe(Math.max(...ids))
 })
 
 test('suggestions inbox: real webhook → pending suggestion → accept', async ({ page, request, isMobile }) => {

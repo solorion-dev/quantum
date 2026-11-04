@@ -31,16 +31,21 @@ or call it directly from the browser (CORS allows `http://localhost:5173`). Send
 | POST | /api/suggestions/:id/accept | applies via normal update (history, field clock) |
 | POST | /api/suggestions/:id/reject | `{reason?}` |
 | GET | /api/sync/status, /api/sync/log | |
-| POST | /api/sync/run?dry=1 | outbound mirror to the **mock** Project |
+| POST | /api/sync/run?dry=1 | outbound mirror to the **mock** Project; `dry=1` writes nothing but reports the same planned counts (added, updatedFields, ...) as a real run |
+| DELETE | /api/items/:id | **501, out of scope**: items are never deleted; set `status` to `cancelled` |
 | POST | /api/webhooks/github | HMAC `X-Hub-Signature-256` verified, deduped by `X-GitHub-Delivery` |
 
 Item fields: see `TrackerItem` in the design note. `stale` (open + no update in 14 days) and `needsTriage`
 (no assignee, or priority `none`, or backlog with no labels) are **computed, read-only**.
 
-Try the inbound path locally (fake secret `local-dev-fake-secret`, override with `TRACKER_WEBHOOK_SECRET`):
+`TRACKER_WEBHOOK_SECRET` is **required**: the server refuses to start (non-zero exit, clear error, before touching
+any DB) if it is unset or blank. There is no default. Use a throwaway value locally; tests use an explicit fake.
+
+Try the inbound path locally:
 ```bash
+export TRACKER_WEBHOOK_SECRET=local-throwaway   # start the server with this set
 B='{"action":"closed","issue":{"number":100},"repository":{"full_name":"solorion-dev/sandbox"}}'
-S=$(printf %s "$B" | openssl dgst -sha256 -hmac local-dev-fake-secret | sed 's/.* //')
+S=$(printf %s "$B" | openssl dgst -sha256 -hmac "$TRACKER_WEBHOOK_SECRET" | sed 's/.* //')
 curl -s localhost:7655/api/webhooks/github -H "X-GitHub-Event: issues" -H "X-GitHub-Delivery: demo-1" \
   -H "X-Hub-Signature-256: sha256=$S" -d "$B"
 curl -s 'localhost:7655/api/suggestions?state=pending'
@@ -49,7 +54,8 @@ curl -s 'localhost:7655/api/suggestions?state=pending'
 ### Fields added Nov 4
 - People: `display` is the name field. `name` is a **deprecated alias** (same value), removed next release.
 - Item `project`: `{id, title, derived}`. The live schema has no project column, so it is the top-level ancestor via
-  `parentId` (a root is its own project). If an explicit `items.project` column exists it wins
+  `parentId`. Only a top-level item **with children** is a project; a parentless item with no children has
+  `project: null` (the board shows it under "No project"). If an explicit `items.project` column exists it wins
   (`migrations/002_project_column.sql`, **proposed, not applied**, for review).
 - Item `automated` (bool): true **only** when the item's **creating write** (its `created` event actor, or
   `items.source`) or its **last write** (latest `field_clock` entry) came from an unattended path: write source in
