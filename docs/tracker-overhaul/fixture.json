@@ -1,0 +1,536 @@
+{
+ "generatedAt": "2026-11-04T08:00:00Z",
+ "items": [
+  {
+   "id": "TRK-9001",
+   "kind": "task",
+   "title": "Sample item 1: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "backlog",
+   "priority": "critical",
+   "assigneeId": "volt",
+   "labels": [
+    "ui"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 1,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T10:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 100,
+    "type": "pull_request",
+    "projectItemId": "PVTI_fake0000",
+    "url": "https://github.com/solorion-dev/sandbox/issues/100",
+    "etag": "W/\"fake0\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "synced",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9002",
+   "kind": "bug",
+   "title": "Sample item 2: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "planned",
+   "priority": "high",
+   "assigneeId": "pixel",
+   "labels": [
+    "sync",
+    "api"
+   ],
+   "parentId": null,
+   "dueAt": "2026-11-06T17:00:00-05:00",
+   "points": 2,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T11:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9003",
+   "kind": "issue",
+   "title": "Sample item 3: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_progress",
+   "priority": "medium",
+   "assigneeId": "scout",
+   "labels": [
+    "db"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 3,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T12:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9004",
+   "kind": "goal",
+   "title": "Sample item 4: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_review",
+   "priority": "low",
+   "assigneeId": "coda",
+   "labels": [],
+   "parentId": null,
+   "dueAt": "2026-11-08T17:00:00-05:00",
+   "points": 5,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T13:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 103,
+    "type": "issue",
+    "projectItemId": "PVTI_fake0003",
+    "url": "https://github.com/solorion-dev/sandbox/issues/103",
+    "etag": "W/\"fake3\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "error",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9005",
+   "kind": "milestone",
+   "title": "Sample item 5: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "blocked",
+   "priority": "none",
+   "assigneeId": "quill",
+   "labels": [
+    "ui"
+   ],
+   "parentId": "TRK-9001",
+   "dueAt": null,
+   "points": 8,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T14:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9006",
+   "kind": "decision",
+   "title": "Sample item 6: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "done",
+   "priority": "critical",
+   "assigneeId": null,
+   "labels": [
+    "sync",
+    "api"
+   ],
+   "parentId": "TRK-9001",
+   "dueAt": "2026-11-10T17:00:00-05:00",
+   "points": 13,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T15:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9007",
+   "kind": "task",
+   "title": "Sample item 7: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "cancelled",
+   "priority": "high",
+   "assigneeId": "volt",
+   "labels": [
+    "db"
+   ],
+   "parentId": "TRK-9001",
+   "dueAt": null,
+   "points": null,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T16:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 106,
+    "type": "pull_request",
+    "projectItemId": "PVTI_fake0006",
+    "url": "https://github.com/solorion-dev/sandbox/issues/106",
+    "etag": "W/\"fake6\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "pending",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9008",
+   "kind": "bug",
+   "title": "Sample item 8: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "backlog",
+   "priority": "medium",
+   "assigneeId": "pixel",
+   "labels": [],
+   "parentId": null,
+   "dueAt": "2026-11-12T17:00:00-05:00",
+   "points": 1,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T17:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9009",
+   "kind": "issue",
+   "title": "Sample item 9: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "planned",
+   "priority": "low",
+   "assigneeId": "scout",
+   "labels": [
+    "ui"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 2,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T18:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9010",
+   "kind": "goal",
+   "title": "Sample item 10: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_progress",
+   "priority": "none",
+   "assigneeId": "coda",
+   "labels": [
+    "sync",
+    "api"
+   ],
+   "parentId": null,
+   "dueAt": "2026-11-14T17:00:00-05:00",
+   "points": 3,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T19:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 109,
+    "type": "issue",
+    "projectItemId": "PVTI_fake0009",
+    "url": "https://github.com/solorion-dev/sandbox/issues/109",
+    "etag": "W/\"fake9\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9011",
+   "kind": "milestone",
+   "title": "Sample item 11: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_review",
+   "priority": "critical",
+   "assigneeId": "quill",
+   "labels": [
+    "db"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 5,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T10:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9012",
+   "kind": "decision",
+   "title": "Sample item 12: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "blocked",
+   "priority": "high",
+   "assigneeId": null,
+   "labels": [],
+   "parentId": null,
+   "dueAt": "2026-11-16T17:00:00-05:00",
+   "points": 8,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T11:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9013",
+   "kind": "task",
+   "title": "Sample item 13: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "done",
+   "priority": "medium",
+   "assigneeId": "volt",
+   "labels": [
+    "ui"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 13,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T12:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 112,
+    "type": "pull_request",
+    "projectItemId": "PVTI_fake0012",
+    "url": "https://github.com/solorion-dev/sandbox/issues/112",
+    "etag": "W/\"fake12\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "suggested",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": "SUG-12",
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9014",
+   "kind": "bug",
+   "title": "Sample item 14: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "cancelled",
+   "priority": "low",
+   "assigneeId": "pixel",
+   "labels": [
+    "sync",
+    "api"
+   ],
+   "parentId": null,
+   "dueAt": "2026-11-18T17:00:00-05:00",
+   "points": null,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T13:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9015",
+   "kind": "issue",
+   "title": "Sample item 15: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "backlog",
+   "priority": "none",
+   "assigneeId": "scout",
+   "labels": [
+    "db"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 1,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T14:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9016",
+   "kind": "goal",
+   "title": "Sample item 16: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "planned",
+   "priority": "critical",
+   "assigneeId": "coda",
+   "labels": [],
+   "parentId": null,
+   "dueAt": "2026-11-20T17:00:00-05:00",
+   "points": 2,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T15:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 115,
+    "type": "issue",
+    "projectItemId": "PVTI_fake0015",
+    "url": "https://github.com/solorion-dev/sandbox/issues/115",
+    "etag": "W/\"fake15\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "synced",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9017",
+   "kind": "milestone",
+   "title": "Sample item 17: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_progress",
+   "priority": "high",
+   "assigneeId": "quill",
+   "labels": [
+    "ui"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 3,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T16:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9018",
+   "kind": "decision",
+   "title": "Sample item 18: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "in_review",
+   "priority": "medium",
+   "assigneeId": null,
+   "labels": [
+    "sync",
+    "api"
+   ],
+   "parentId": null,
+   "dueAt": "2026-11-22T17:00:00-05:00",
+   "points": 5,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-03T17:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9019",
+   "kind": "task",
+   "title": "Sample item 19: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "blocked",
+   "priority": "low",
+   "assigneeId": "volt",
+   "labels": [
+    "db"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 8,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-01T18:00:00Z",
+   "github": {
+    "repo": "solorion-dev/sandbox",
+    "number": 118,
+    "type": "pull_request",
+    "projectItemId": "PVTI_fake0018",
+    "url": "https://github.com/solorion-dev/sandbox/issues/118",
+    "etag": "W/\"fake18\"",
+    "remoteUpdatedAt": "2026-11-03T12:00:00Z"
+   },
+   "sync": {
+    "state": "error",
+    "lastSyncedAt": "2026-11-03T12:05:00Z",
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  },
+  {
+   "id": "TRK-9020",
+   "kind": "bug",
+   "title": "Sample item 20: fake tracker work",
+   "body": "Fixture data only.",
+   "status": "done",
+   "priority": "none",
+   "assigneeId": "pixel",
+   "labels": [],
+   "parentId": null,
+   "dueAt": "2026-11-24T17:00:00-05:00",
+   "points": 13,
+   "createdAt": "2026-10-20T14:00:00Z",
+   "updatedAt": "2026-11-02T19:00:00Z",
+   "github": null,
+   "sync": {
+    "state": "unlinked",
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null
+   }
+  }
+ ]
+}
