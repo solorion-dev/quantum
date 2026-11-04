@@ -1,399 +1,164 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
-import {
-  ArrowDownUp,
-  ArrowRight,
-  Check,
-  ChevronsLeftRight,
-  Copy,
-  Flag,
-  Link2,
-  Moon,
-  PanelRight,
-  Sun,
-  Trash2,
-  Undo2,
-  User,
-  Columns3,
-  List,
-} from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AppBar, Button, FilterBar, FilterBarActions, FilterSelect, SearchInput, Tabs, Toaster, getTheme, setTheme, type ToastData } from '@dsect/ui'
+import type { Label, Person, Status, Suggestion, TrackerItem } from './types'
+import { createClient, type ItemPatch, type TrackerClient } from './lib/api'
+import { PRIORITIES, STATUSES, priorityLabel, projectOf, statusLabel, setLabelColors } from './lib/meta'
+import { applyFilters, chipsFor, emptyFilters, fromQuery, removeChip, toQuery, type A2AMode, type Filters } from './lib/filters'
+import { MultiSelect } from './components/MultiSelect'
+import { SummaryStrip } from './components/SummaryStrip'
 import { Board } from './components/Board'
-import { ContextMenu } from './components/ContextMenu'
-import type { MenuItem } from './components/ContextMenu'
-import { Drawer } from './components/Drawer'
-import { Header } from './components/Header'
-import type { Filters } from './components/Header'
 import { ListView } from './components/ListView'
-import { Settings } from './components/Settings'
-import { Toast } from './components/Toast'
-import type { ToastData } from './components/Toast'
-import { useBoard } from './lib/store'
-import { COLUMNS, COLUMN_LABEL, PRIORITIES } from './types'
-import type { Card, ColumnId } from './types'
+import { ProjectsView, type ProjectGroup } from './components/ProjectsView'
+import { DetailPanel } from './components/DetailPanel'
+import { SuggestionsInbox } from './components/SuggestionsInbox'
 
-type Theme = 'light' | 'dark'
-
-function initialTheme(): Theme {
-  try {
-    const s = localStorage.getItem('tracker.theme')
-    if (s === 'light' || s === 'dark') return s
-  } catch {
-    /* ignore */
-  }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+type View = 'board' | 'list' | 'projects'
+const parseHash = () => {
+  const [path, q = ''] = location.hash.replace(/^#\/?/, '').split('?')
+  const [view, item] = path.split('/')
+  return { view: (['board', 'list', 'projects'].includes(view) ? view : 'board') as View, item: item || null, filters: fromQuery(q) }
+}
+function usePhone() {
+  const [p, setP] = useState(() => matchMedia('(max-width: 720px)').matches)
+  useEffect(() => { const m = matchMedia('(max-width: 720px)'); const f = () => setP(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f) }, [])
+  return p
 }
 
-const defaultCollapsed = () =>
-  Object.fromEntries(COLUMNS.map((c) => [c.id, !!c.defaultCollapsed])) as Record<ColumnId, boolean>
-
 export default function App() {
-  const [theme, setTheme] = useState<Theme>(initialTheme)
-  const [view, setView] = useState<'board' | 'list'>(() => (localStorage.getItem('tracker.view') === 'list' ? 'list' : 'board'))
-  const [query, setQuery] = useState('')
-  const [filters, setFilters] = useState<Filters>({ project: null, assignee: null, priority: null })
-  const [collapsed, setCollapsed] = useState<Record<ColumnId, boolean>>(defaultCollapsed)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [toast, setToast] = useState<ToastData | null>(null)
-  const toastTimer = useRef(0)
-  const toastId = useRef(0)
-  const searchRef = useRef<HTMLInputElement>(null)
+  const [init] = useState(parseHash)
+  const [client, setClient] = useState<TrackerClient | null>(null)
+  const [items, setItems] = useState<TrackerItem[]>([])
+  const [people, setPeople] = useState<Person[]>([])
+  const [labels, setLabels] = useState<Label[]>([])
+  const [sugs, setSugs] = useState<Suggestion[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [view, setView] = useState<View>(init.view)
+  const [filters, setFilters] = useState<Filters>(init.filters)
+  const [openId, setOpenId] = useState<string | null>(init.item)
+  const [inbox, setInbox] = useState(false)
+  const [toasts, setToasts] = useState<ToastData[]>([])
+  const [theme, setThemeState] = useState(getTheme())
+  const phone = usePhone()
+  const toast = (t: Omit<ToastData, 'id'>) => { const id = String(Math.random()); setToasts((x) => [...x, { ...t, id }]); setTimeout(() => setToasts((x) => x.filter((y) => y.id !== id)), 4000) }
 
-  const notify = useCallback((message: string, undoable = false) => {
-    window.clearTimeout(toastTimer.current)
-    setToast({ id: ++toastId.current, message, undoable })
-    toastTimer.current = window.setTimeout(() => setToast(null), 4500)
+  const refresh = useCallback(async (c: TrackerClient) => {
+    const [i, p, l, s] = await Promise.all([c.listItems(), c.listPeople(), c.listLabels(), c.listSuggestions()])
+    setItems(i); setPeople(p); setLabelColors(l); setLabels(l); setSugs(s)
   }, [])
-
-  const board = useBoard(notify)
-  const { cards } = board
-
-  // theme
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    createClient().then(async (c) => { setClient(c); await refresh(c) }).catch((e) => setError(String(e.message ?? e))).finally(() => setLoading(false))
+  }, [refresh])
+  useEffect(() => {
+    const q = toQuery(filters)
+    const h = `#/${view}${openId ? `/${openId}` : ''}${q ? `?${q}` : ''}`
+    if (location.hash !== h) history.replaceState(null, '', h)
+  }, [view, filters, openId])
+
+  const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
+  const peopleMap = useMemo(() => new Map(people.map((p) => [p.id, p])), [people])
+  const shown = useMemo(() => applyFilters(items, filters, byId), [items, filters, byId])
+  const projects = useMemo(() => {
+    const m = new Map<string, { id: string; title: string }>()
+    items.forEach((i) => { const p = projectOf(i, byId); if (p) m.set(p.id, p) })
+    return [...m.values()].sort((a, b) => a.id.localeCompare(b.id))
+  }, [items, byId])
+  const projectName = (i: TrackerItem) => projectOf(i, byId)?.id ?? '—'
+  const groups: ProjectGroup[] = useMemo(() => {
+    const g = new Map<string, ProjectGroup>()
+    for (const i of shown) {
+      const p = projectOf(i, byId) ?? (items.some((x) => x.parentId === i.id) ? { id: i.id, title: i.title } : { id: '__none', title: 'No project' })
+      if (!g.has(p.id)) g.set(p.id, { id: p.id, title: p.id === '__none' ? p.title : `${p.id} · ${p.title}`, items: [] })
+      g.get(p.id)!.items.push(i)
+    }
+    return [...g.values()].sort((a, b) => (a.id === '__none' ? 1 : b.id === '__none' ? -1 : a.id.localeCompare(b.id)))
+  }, [shown, byId, items])
+
+  const save = async (id: string, patch: ItemPatch) => {
+    if (!client) return
+    const prev = items
+    setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)))
     try {
-      localStorage.setItem('tracker.theme', theme)
-    } catch {
-      /* ignore */
-    }
-  }, [theme])
-  useEffect(() => {
+      const it = await client.updateItem(id, patch)
+      setItems((xs) => xs.map((x) => (x.id === id ? it : x)))
+      toast({ title: `${id} updated`, tone: 'ok' })
+    } catch (e) { setItems(prev); toast({ title: `Could not update ${id}`, text: String((e as Error).message), tone: 'err' }) }
+  }
+  const move = (id: string, to: Status) => { const it = byId.get(id); if (it && it.status !== to) void save(id, { status: to }) }
+  const decide = async (id: string, accept: boolean, reason?: string) => {
+    if (!client) return
     try {
-      localStorage.setItem('tracker.view', view)
-    } catch {
-      /* ignore */
-    }
-  }, [view])
+      if (accept) await client.acceptSuggestion(id); else await client.rejectSuggestion(id, reason)
+      toast({ title: `${id} ${accept ? 'accepted' : 'rejected'}`, tone: 'ok' })
+      await refresh(client)
+    } catch (e) { toast({ title: `Could not ${accept ? 'accept' : 'reject'} ${id}`, text: String((e as Error).message), tone: 'err' }) }
+  }
 
-  const toggleTheme = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), [])
+  const count = (pred: (i: TrackerItem) => boolean) => items.filter(pred).length
+  const set = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((f) => ({ ...f, [k]: v }))
+  const chips = chipsFor(filters, (k, v) => (v === '__none' ? (k === 'assignee' ? 'Unassigned' : 'No project') : k === 'assignee' ? peopleMap.get(v)?.display ?? v : v))
+  const flagFilter = (f: 'stale' | 'needs_triage' | 'blocked' | 'sync') => {
+    if (f === 'blocked') set('status', ['blocked'])
+    else if (f === 'sync') setInbox(true)
+    else set('flags', filters.flags.includes(f) ? filters.flags : [...filters.flags, f])
+  }
 
-  const projects = useMemo(() => Array.from(new Set(cards.map((c) => c.project))).sort(), [cards])
-  const assignees = useMemo(() => {
-    const s = new Set<string>(['cooper', 'scotty'])
-    cards.forEach((c) => c.assignee && s.add(c.assignee))
-    return Array.from(s).sort()
-  }, [cards])
-
-  const filtering = !!(query.trim() || filters.project || filters.assignee || filters.priority)
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return cards.filter((c) => {
-      if (filters.project && c.project !== filters.project) return false
-      if (filters.assignee && c.assignee !== filters.assignee) return false
-      if (filters.priority && c.priority !== filters.priority) return false
-      if (!q) return true
-      return (
-        c.title.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q) ||
-        (c.assignee ?? '').toLowerCase().includes(q) ||
-        c.project.toLowerCase().includes(q)
-      )
-    })
-  }, [cards, query, filters])
-
-  const allCounts = useMemo(() => {
-    const m = Object.fromEntries(COLUMNS.map((c) => [c.id, 0])) as Record<ColumnId, number>
-    cards.forEach((c) => (m[c.column] += 1))
-    return m
-  }, [cards])
-
-  const stats = useMemo(
-    () => ({
-      open: cards.filter((c) => c.column !== 'done' && c.column !== 'cancelled').length,
-      done: allCounts.done,
-      cancelled: allCounts.cancelled,
-    }),
-    [cards, allCounts],
-  )
-
-  const selected = useMemo(() => cards.find((c) => c.id === selectedId) ?? null, [cards, selectedId])
-
-  const openCard = useCallback((id: string | null) => {
-    setSelectedId(id)
-    history.replaceState(null, '', id ? `#${id}` : location.pathname + location.search)
-  }, [])
-
-  useEffect(() => {
-    const id = location.hash.slice(1)
-    if (id) setSelectedId(id)
-  }, [])
-
-  const copy = useCallback(
-    async (text: string, label: string) => {
-      try {
-        await navigator.clipboard.writeText(text)
-        notify(`${label} copied to clipboard`)
-      } catch {
-        notify('Clipboard unavailable')
-      }
-    },
-    [notify],
-  )
-
-  const openMenu = useCallback((x: number, y: number, items: MenuItem[]) => setMenu({ x, y, items }), [])
-  const closeMenu = useCallback(() => setMenu(null), [])
-
-  // No create flow: the tracker backend has no create endpoint yet, so the
-  // New/Add/Duplicate affordances are hidden until it does (see README).
-
-  const cardMenu = useCallback(
-    (e: React.MouseEvent, card: Card) => {
-      openMenu(e.clientX, e.clientY, [
-        { kind: 'label', label: card.id },
-        { kind: 'item', label: 'Open details', icon: <PanelRight size={14} />, hint: '\u21b5', onSelect: () => openCard(card.id) },
-        {
-          kind: 'item',
-          label: 'Move to',
-          icon: <ArrowRight size={14} />,
-          children: COLUMNS.map<MenuItem>((c) => ({
-            kind: 'item',
-            label: c.label,
-            checked: card.column === c.id,
-            onSelect: () => card.column !== c.id && board.updateCard(card.id, { column: c.id }, `${card.id} moved to ${c.label}`),
-          })),
-        },
-        {
-          kind: 'item',
-          label: 'Priority',
-          icon: <Flag size={14} />,
-          children: PRIORITIES.map<MenuItem>((p) => ({
-            kind: 'item',
-            label: p.label,
-            checked: card.priority === p.id,
-            onSelect: () => board.updateCard(card.id, { priority: p.id }, `${card.id} priority set to ${p.label.toLowerCase()}`),
-          })),
-        },
-        {
-          kind: 'item',
-          label: 'Assign to',
-          icon: <User size={14} />,
-          children: [
-            { kind: 'item', label: 'Unassigned', checked: !card.assignee, onSelect: () => board.updateCard(card.id, { assignee: null }, `${card.id} unassigned`) },
-            ...assignees.map<MenuItem>((a) => ({
-              kind: 'item',
-              label: a,
-              checked: card.assignee === a,
-              onSelect: () => board.updateCard(card.id, { assignee: a }, `${card.id} assigned to ${a}`),
-            })),
-          ],
-        },
-        { kind: 'sep' },
-        ...(card.column !== 'done'
-          ? [{ kind: 'item', label: 'Mark as done', icon: <Check size={14} />, onSelect: () => board.updateCard(card.id, { column: 'done' }, `${card.id} marked as done`) } as MenuItem]
-          : []),
-        { kind: 'item', label: 'Copy ID', icon: <Copy size={14} />, onSelect: () => copy(card.id, card.id) },
-        {
-          kind: 'item',
-          label: 'Copy link',
-          icon: <Link2 size={14} />,
-          onSelect: () => copy(`${location.origin}${location.pathname}#${card.id}`, 'Link'),
-        },
-        { kind: 'sep' },
-        {
-          // The backend has no DELETE: "delete" cancels the item instead.
-          kind: 'item',
-          label: 'Cancel item',
-          icon: <Trash2 size={14} />,
-          danger: true,
-          onSelect: () => {
-            if (selectedId === card.id) openCard(null)
-            board.deleteCard(card.id)
-          },
-        },
-      ])
-    },
-    [assignees, board, copy, openCard, openMenu, selectedId],
-  )
-
-  const columnMenu = useCallback(
-    (e: React.MouseEvent, col: ColumnId) => {
-      openMenu(e.clientX, e.clientY, [
-        { kind: 'label', label: COLUMN_LABEL[col] },
-        { kind: 'item', label: 'Sort by priority', icon: <ArrowDownUp size={14} />, onSelect: () => board.sortColumn(col) },
-        {
-          kind: 'item',
-          label: collapsed[col] ? 'Expand column' : 'Collapse column',
-          icon: <ChevronsLeftRight size={14} />,
-          onSelect: () => setCollapsed((c) => ({ ...c, [col]: !c[col] })),
-        },
-      ])
-    },
-    [board, collapsed, openMenu],
-  )
-
-  const boardMenu = useCallback(
-    (e: React.MouseEvent) => {
-      openMenu(e.clientX, e.clientY, [
-        { kind: 'item', label: 'Undo', icon: <Undo2 size={14} />, hint: '\u2318Z', disabled: !board.canUndo, onSelect: board.undo },
-        { kind: 'sep' },
-        {
-          kind: 'item',
-          label: view === 'board' ? 'Switch to list view' : 'Switch to board view',
-          icon: view === 'board' ? <List size={14} /> : <Columns3 size={14} />,
-          hint: 'V',
-          onSelect: () => setView((v) => (v === 'board' ? 'list' : 'board')),
-        },
-        {
-          kind: 'item',
-          label: theme === 'dark' ? 'Light mode' : 'Dark mode',
-          icon: theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />,
-          hint: 'D',
-          onSelect: toggleTheme,
-        },
-        ...(view === 'board'
-          ? [
-              { kind: 'sep' } as MenuItem,
-              {
-                kind: 'item',
-                label: 'Expand all columns',
-                icon: <ChevronsLeftRight size={14} />,
-                onSelect: () => setCollapsed(Object.fromEntries(COLUMNS.map((c) => [c.id, false])) as Record<ColumnId, boolean>),
-              } as MenuItem,
-            ]
-          : []),
-      ])
-    },
-    [board.canUndo, board.undo, openMenu, theme, toggleTheme, view],
-  )
-
-  // keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement
-      const typing = el.matches?.('input, textarea, select') || el.isContentEditable
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
-        if (typing) return
-        e.preventDefault()
-        board.undo()
-        return
-      }
-      if (e.key === 'Escape') {
-        if (settingsOpen) setSettingsOpen(false)
-        else if (selectedId) openCard(null)
-        return
-      }
-      if (typing || e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key === '/') {
-        e.preventDefault()
-        searchRef.current?.focus()
-      } else if (e.key === 'd') toggleTheme()
-      else if (e.key === 'v') setView((v) => (v === 'board' ? 'list' : 'board'))
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [board, openCard, selectedId, settingsOpen, toggleTheme])
-
+  const panel = (node: React.ReactNode) => (loading ? <p className="tb-empty" role="status">Loading tracker…</p> : error ? <p role="alert" className="tb-error">Could not load tracker: {error}</p> : node)
   return (
-    <div className="flex h-full flex-col">
-      <Header
-        stats={stats}
-        query={query}
-        setQuery={setQuery}
-        searchRef={searchRef}
-        filters={filters}
-        setFilters={setFilters}
-        projects={projects}
-        assignees={assignees}
-        view={view}
-        setView={setView}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        onSettings={() => setSettingsOpen(true)}
-        status={board.status}
-        syncedAt={board.syncedAt}
-        onRefresh={() => board.refresh()}
-        openMenu={openMenu}
-      />
-
-      <main className="min-h-0 flex-1 border-t border-line pt-3">
-        {view === 'board' ? (
-          <Board
-            cards={filtered}
-            allCounts={allCounts}
-            filtering={filtering}
-            collapsed={collapsed}
-            onToggle={(col) => setCollapsed((c) => ({ ...c, [col]: !c[col] }))}
-            onOpen={(card) => openCard(card.id)}
-            onMove={board.moveCard}
-            onCardMenu={cardMenu}
-            onColumnMenu={columnMenu}
-            onBoardMenu={boardMenu}
-            onCopyId={(id) => copy(id, id)}
-            selectedId={selectedId}
-          />
-        ) : (
-          <ListView
-            cards={filtered}
-            selectedId={selectedId}
-            onOpen={(card) => openCard(card.id)}
-            onCardMenu={cardMenu}
-            onColumnMenu={columnMenu}
-            onBoardMenu={boardMenu}
-          />
+    <div className="tb-app">
+      <a href="#main" className="tb-skip">Skip to content</a>
+      <AppBar title="Tracker" subtitle={client ? (client.source === 'api' ? 'Live: tracker-api' : 'Offline: fixture data') : 'Connecting…'}
+        actions={<>
+          <Button variant="outline" size="sm" onClick={() => setInbox(true)} aria-label={`Suggestions inbox, ${sugs.length} pending`}>
+            Inbox <span className="tb-count tb-count--pill" aria-hidden="true">{sugs.length}</span>
+          </Button>
+          <Button variant="ghost" onClick={() => { const t = theme === 'dark' ? 'light' : 'dark'; setTheme(t); setThemeState(t); try { localStorage.setItem('tracker.theme', t) } catch { /* ignore */ } }}>
+            {theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          </Button>
+        </>} />
+      <main id="main" className="tb-main">
+        <div className="tb-filterbar"><FilterBar applied={[]} aria-label="Filter items">
+          <SearchInput aria-label="Search items" placeholder="Search ID, title, label…" value={filters.q} onChange={(e) => set('q', e.target.value)} className="tb-search" />
+          <MultiSelect label="Status" value={filters.status} onChange={(v) => set('status', v as Status[])}
+            options={STATUSES.map((s) => ({ value: s, label: statusLabel[s], count: count((i) => i.status === s) }))} />
+          <MultiSelect label="Priority" value={filters.priority} onChange={(v) => set('priority', v as Filters['priority'])}
+            options={PRIORITIES.map((p) => ({ value: p, label: priorityLabel[p], count: count((i) => i.priority === p) }))} />
+          <MultiSelect label="Assignee" value={filters.assignee} onChange={(v) => set('assignee', v)}
+            options={[{ value: '__none', label: 'Unassigned', count: count((i) => !i.assigneeId) }, ...people.map((p) => ({ value: p.id, label: p.display, count: count((i) => i.assigneeId === p.id) }))]} />
+          <MultiSelect label="Labels" value={filters.labels} onChange={(v) => set('labels', v)}
+            options={labels.map((l) => ({ value: l.name, label: l.name, count: count((i) => i.labels.includes(l.name)) }))} />
+          <MultiSelect label="Project" value={filters.project} onChange={(v) => set('project', v)}
+            options={[...projects.map((p) => ({ value: p.id, label: `${p.id} · ${p.title}` })), { value: '__none', label: 'No project' }]} />
+          <MultiSelect label="Flags" value={filters.flags} onChange={(v) => set('flags', v as Filters['flags'])}
+            options={[{ value: 'stale', label: 'Stale', count: count((i) => i.stale) }, { value: 'needs_triage', label: 'Needs triage', count: count((i) => i.needsTriage) }]} />
+          <FilterBarActions>
+            <label className="tb-inline-label">Automated (A2A)
+              <FilterSelect value={filters.a2a} onChange={(e) => set('a2a', e.target.value as A2AMode)}>
+                <option value="group">Group</option><option value="show">Show inline</option><option value="hide">Hide</option>
+              </FilterSelect>
+            </label>
+          </FilterBarActions>
+        </FilterBar></div>
+        {chips.length > 0 && (
+          <div className="filterbar__applied tb-chips" aria-label="Applied filters" role="group">
+            {chips.map((c) => <span key={c.id} className="filter-chip">{c.label}
+              <button type="button" aria-label={`Remove filter ${c.label}`} onClick={() => setFilters((f) => removeChip(f, c.id))}>×</button></span>)}
+            <button type="button" className="filterbar__clear" onClick={() => setFilters({ ...emptyFilters, a2a: filters.a2a })}>Clear all</button>
+          </div>
         )}
+        <SummaryStrip items={shown} onFlag={flagFilter} />
+        <p className="sr-only" role="status" aria-live="polite">{loading ? '' : `${shown.length} of ${items.length} items shown`}</p>
+        <Tabs label="Tracker views" value={view} onChange={(v) => setView(v as View)} className="tb-tabs" tabs={[
+          { id: 'board', label: `Board · ${shown.length}`, panel: panel(<Board items={shown} people={peopleMap} a2a={filters.a2a} onOpen={setOpenId} onMove={move} />) },
+          { id: 'list', label: 'List', panel: panel(<ListView items={shown} people={peopleMap} a2a={filters.a2a} onOpen={setOpenId} projectName={projectName} />) },
+          { id: 'projects', label: `Projects · ${groups.length}`, panel: panel(<ProjectsView groups={groups} onOpen={setOpenId} onFilter={(p) => { set('project', [p]); setView('board') }} />) },
+        ]} />
       </main>
-
-      <AnimatePresence>
-        {selected && (
-          <Drawer
-            key={selected.id}
-            card={selected}
-            assignees={assignees}
-            onClose={() => openCard(null)}
-            onUpdate={(patch, message) => board.updateCard(selected.id, patch, message)}
-            onDelete={() => {
-              openCard(null)
-              board.deleteCard(selected.id)
-            }}
-            onCopy={copy}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {settingsOpen && (
-          <Settings
-            status={board.status}
-            error={board.error}
-            generatedAt={board.generatedAt}
-            cards={cards}
-            onClose={() => setSettingsOpen(false)}
-            onRefresh={() => board.refresh()}
-          />
-        )}
-      </AnimatePresence>
-
-      {menu && <ContextMenu key={`${menu.x}-${menu.y}`} x={menu.x} y={menu.y} items={menu.items} onClose={closeMenu} />}
-
-      <Toast
-        toast={toast}
-        onUndo={() => {
-          board.undo()
-          setToast(null)
-        }}
-      />
+      {client && <DetailPanel id={openId} load={client.getItem.bind(client)} byId={byId} people={peopleMap} phone={phone}
+        onClose={() => setOpenId(null)} onOpen={setOpenId} onSave={save} />}
+      <SuggestionsInbox open={inbox} onClose={() => setInbox(false)} suggestions={sugs} byId={byId} phone={phone}
+        onAccept={(id) => decide(id, true)} onReject={(id, r) => decide(id, false, r)} onOpenItem={(id) => { setInbox(false); setOpenId(id) }} />
+      <Toaster toasts={toasts} onDismiss={(id) => setToasts((x) => x.filter((t) => t.id !== id))} />
     </div>
   )
 }

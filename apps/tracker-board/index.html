@@ -3,21 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <script>
-      try {
-        var t = localStorage.getItem('tracker.theme');
-        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches))
-          document.documentElement.classList.add('dark');
-      } catch (e) {}
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tracker</title>
+    <script>
+      // Clean Light is the default; dark only when the user picked it here.
+      try { if (localStorage.getItem('tracker.theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark') } catch (e) {}
+    </script>
+    <title>Tracker · Solorion</title>
   </head>
   <body>
     <div id="root"></div>

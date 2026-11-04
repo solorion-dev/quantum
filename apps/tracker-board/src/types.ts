@@ -1,62 +1,81 @@
-export type ColumnId =
-  | 'review'
-  | 'progress'
-  | 'blocked'
-  | 'planned'
-  | 'done'
-  | 'backlog'
-  | 'cancelled'
+// Volt's canonical item model — docs/tracker-overhaul/tracker-overhaul-design-20261104.md §6.
+// `stale` / `needsTriage` are read-only server flags Volt is adding (answer 3, 2026-11-04).
 
-// 'none' is a real priority in the tracker backend (an item with no priority
-// set). It renders with 0 bars and ranks last — it is NOT folded into 'medium'.
+export type Status = 'backlog' | 'planned' | 'in_progress' | 'in_review' | 'blocked' | 'done' | 'cancelled'
 export type Priority = 'critical' | 'high' | 'medium' | 'low' | 'none'
+export type Kind = 'goal' | 'issue' | 'task' | 'decision' | 'milestone' | 'bug' | 'note'
+export type SyncState = 'unlinked' | 'pending' | 'synced' | 'suggested' | 'error'
 
-export type Kind = 'task' | 'bug' | 'issue' | 'goal' | 'milestone' | 'decision'
+export interface GitHubLink {
+  repo: string
+  number: number
+  type: 'issue' | 'pull_request'
+  projectItemId?: string | null
+  url: string
+  etag?: string | null
+  remoteUpdatedAt?: string | null
+}
 
-export interface Card {
+export interface SyncInfo {
+  state: SyncState
+  lastSyncedAt?: string | null
+  pendingSuggestionId?: string | null
+  error?: string | null
+}
+
+export interface TrackerItem {
   id: string
-  title: string
-  description: string
   kind: Kind
-  column: ColumnId
+  title: string
+  body?: string
+  status: Status
   priority: Priority
-  assignee: string | null
+  assigneeId: string | null
+  labels: string[]
+  parentId: string | null
+  dueAt: string | null
   points: number | null
-  due: string | null
-  project: string
+  createdAt: string
+  updatedAt: string
+  github: GitHubLink | null
+  sync: SyncInfo
+  /** Server flag: no update in 14 days and not done/cancelled. Read-only. */
   stale: boolean
-  createdAt: number
-  updatedAt: number
+  /** Server flag: no assignee, or priority none, or backlog with no labels. Read-only. */
+  needsTriage: boolean
+  /** OPEN QUESTION for Volt: no project field in §6 yet. UI falls back to root ancestor. */
+  project?: string | null
 }
 
-export interface ColumnDef {
-  id: ColumnId
-  label: string
-  defaultCollapsed?: boolean
+// Shapes below match apps/tracker-api @ 946dcb8 (GET /api/items/:id).
+export interface Comment { id: number | string; actor: string | null; body: string; at: string }
+export interface StatusChange { fromStatus: Status | null; toStatus: Status; actor: string | null; source: string | null; at: string }
+export interface ChangeEvent { actor: string | null; body: string; at: string }
+export interface Relation { rel: string; itemId: string; direction: 'out' | 'in' }
+export interface ExternalLink { kind: string; target: string; label: string | null }
+
+/** GET /api/items/:id — item + comments, history, relations, links, githubLink in one payload. */
+export interface ItemDetail {
+  item: TrackerItem
+  comments: Comment[]
+  statusHistory: StatusChange[]
+  changes: ChangeEvent[]
+  relations: Relation[]
+  links: ExternalLink[]
+  githubLink: GitHubLink | null
 }
 
-export const COLUMNS: ColumnDef[] = [
-  { id: 'review', label: 'In review' },
-  { id: 'progress', label: 'In progress' },
-  { id: 'blocked', label: 'Blocked' },
-  { id: 'planned', label: 'Planned' },
-  { id: 'done', label: 'Done · recent' },
-  { id: 'backlog', label: 'Backlog', defaultCollapsed: true },
-  { id: 'cancelled', label: 'Cancelled', defaultCollapsed: true },
-]
+export interface Person { id: string; display: string; kind?: 'human' | 'agent' | string; githubLogin?: string | null; active?: boolean }
+export interface Label { name: string; color?: string }
 
-export const COLUMN_LABEL: Record<ColumnId, string> = Object.fromEntries(
-  COLUMNS.map((c) => [c.id, c.label]),
-) as Record<ColumnId, string>
-
-export const PRIORITIES: { id: Priority; label: string; bars: number }[] = [
-  { id: 'critical', label: 'Critical', bars: 4 },
-  { id: 'high', label: 'High', bars: 3 },
-  { id: 'medium', label: 'Medium', bars: 2 },
-  { id: 'low', label: 'Low', bars: 1 },
-  { id: 'none', label: 'None', bars: 0 },
-]
-
-export const KINDS: Kind[] = ['task', 'bug', 'issue', 'goal', 'milestone', 'decision']
-
-export const POINT_OPTIONS = [1, 2, 3, 5, 8, 13]
+export interface Suggestion {
+  id: string
+  itemId: string
+  field: string
+  currentValue: unknown
+  proposedValue: unknown
+  remoteActor: string | null
+  reason: string | null
+  state: 'pending' | 'accepted' | 'rejected'
+  createdAt: string
+}

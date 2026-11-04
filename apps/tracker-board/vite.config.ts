@@ -1,18 +1,25 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { fileURLToPath } from 'node:url'
 
-// The /api proxy targets the live tracker-board service (Tritium :7654),
-// which serves item detail (GET /api/item/<id>) and edits
-// (POST /api/item/<id>/update). The board list itself comes from the
-// snapshot at /board-data.json (see scripts/snapshot-board.py) — the
-// service has no list endpoint. Override the target with TRACKER_API,
-// e.g. TRACKER_API=http://100.66.182.7:7654 (Tritium tailnet IP).
-const apiTarget = process.env.TRACKER_API ?? 'http://127.0.0.1:7654';
-const apiProxy = { '/api': { target: apiTarget, changeOrigin: true } };
+// @dsect/ui is consumed from the vendor/design-system submodule (file: dependency).
+// The submodule ships source, not dist, so we alias the package to its entry
+// (which imports the canonical tokens/base/components CSS itself).
+const kit = fileURLToPath(new URL('../../vendor/design-system', import.meta.url))
+
+// VITE_TRACKER_SOURCE=api proxies /api to Volt's tracker API (TRACKER_API, default :8787).
+const apiTarget = process.env.TRACKER_API ?? 'http://127.0.0.1:7655'
+const proxy = { '/api': { target: apiTarget, changeOrigin: true } }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: { port: 5174, proxy: apiProxy },
-  preview: { port: 4174, proxy: apiProxy },
-});
+  plugins: [react()],
+  resolve: {
+    alias: [
+      { find: /^@dsect\/ui$/, replacement: `${kit}/react/src/index.ts` },
+      { find: /^@dsect\/ui\/fonts\.css$/, replacement: `${kit}/fonts.css` },
+    ],
+    dedupe: ['react', 'react-dom'],
+  },
+  server: { port: 5174, proxy, fs: { allow: ['..', '../..'] } },
+  preview: { port: 4174, proxy },
+})

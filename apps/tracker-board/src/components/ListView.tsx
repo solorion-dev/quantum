@@ -1,110 +1,71 @@
-import { motion } from 'framer-motion'
-import { PriorityGlyph, kindLabel, priorityLabel } from './CardBody'
-import { Tooltip } from './Tooltip'
-import { cn } from '../lib/cn'
-import { dueInfo } from '../lib/format'
-import { COLUMNS } from '../types'
-import type { Card, ColumnId } from '../types'
+import { useMemo, useState } from 'react'
+import { LabelChip } from './LabelChip'
+import { Table, Th, Td } from '@dsect/ui'
+import type { Person, TrackerItem } from '../types'
+import { fmtDate, isAutomated, isOverdue, priorityRank, statusLabel, statusRank } from '../lib/meta'
+import type { A2AMode } from '../lib/filters'
+import { FlagBadges, GitHubBadge, PriorityBadge } from './Badges'
 
-interface Props {
-  cards: Card[]
-  selectedId: string | null
-  onOpen: (card: Card) => void
-  onCardMenu: (e: React.MouseEvent, card: Card) => void
-  onColumnMenu: (e: React.MouseEvent, col: ColumnId) => void
-  onBoardMenu: (e: React.MouseEvent) => void
-}
-
-export function ListView({ cards, selectedId, onOpen, onCardMenu, onColumnMenu, onBoardMenu }: Props) {
+const LIST_PAGE = 100
+type Key = 'id' | 'title' | 'status' | 'priority' | 'assignee' | 'dueAt' | 'updatedAt'
+export function ListView({ items, people, a2a, onOpen, projectName }: {
+  items: TrackerItem[]; people: Map<string, Person>; a2a: A2AMode; onOpen: (id: string) => void
+  projectName: (i: TrackerItem) => string
+}) {
+  const [sort, setSort] = useState<{ key: Key; dir: 'asc' | 'desc' }>({ key: 'priority', dir: 'asc' })
+  const [showAuto, setShowAuto] = useState(false)
+  const name = (i: TrackerItem) => (i.assigneeId ? people.get(i.assigneeId)?.display ?? i.assigneeId : '')
+  const rows = useMemo(() => {
+    const cmp: Record<Key, (a: TrackerItem, b: TrackerItem) => number> = {
+      id: (a, b) => a.id.localeCompare(b.id), title: (a, b) => a.title.localeCompare(b.title),
+      status: (a, b) => statusRank[a.status] - statusRank[b.status], priority: (a, b) => priorityRank[a.priority] - priorityRank[b.priority],
+      assignee: (a, b) => (name(a) || '~').localeCompare(name(b) || '~'),
+      dueAt: (a, b) => (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999'), updatedAt: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+    }
+    const s = [...items].sort((a, b) => (sort.dir === 'asc' ? 1 : -1) * cmp[sort.key](a, b) || a.id.localeCompare(b.id))
+    return s
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, sort, people])
+  const [limit, setLimit] = useState(LIST_PAGE)
+  const human = a2a === 'group' ? rows.filter((i) => !isAutomated(i)) : rows
+  const auto = a2a === 'group' ? rows.filter(isAutomated) : []
+  const th = (key: Key, label: string) => (
+    <Th sortable sortDir={sort.key === key ? sort.dir : undefined}
+      onSort={() => setSort((s) => ({ key, dir: s.key === key && s.dir === 'asc' ? 'desc' : 'asc' }))}>{label}</Th>
+  )
+  const row = (i: TrackerItem) => (
+    <tr key={i.id} className={isAutomated(i) ? 'tb-row-auto' : undefined}>
+      <Td><span className="tb-id">{i.id}</span></Td>
+      <Td><button type="button" className="tb-linkbtn" onClick={() => onOpen(i.id)}>{i.title}</button>
+        <div className="tb-row-meta">{i.labels.map((l) => <LabelChip key={l} name={l} />)}<FlagBadges item={i} /></div></Td>
+      <Td>{statusLabel[i.status]}</Td>
+      <Td><PriorityBadge p={i.priority} /></Td>
+      <Td>{name(i) || <span className="tb-muted">Unassigned</span>}</Td>
+      <Td>{projectName(i)}</Td>
+      <Td><span className={isOverdue(i) ? 'tb-due tb-due--over' : undefined}>{fmtDate(i.dueAt)}</span></Td>
+      <Td>{i.github ? <GitHubBadge github={i.github} sync={i.sync} /> : <span className="tb-muted">—</span>}</Td>
+      <Td>{fmtDate(i.updatedAt)}</Td>
+    </tr>
+  )
   return (
-    <div
-      className="thin-scroll h-full overflow-y-auto px-4 pb-16 sm:px-6"
-      onContextMenu={(e) => {
-        e.preventDefault()
-        if (!(e.target as HTMLElement).closest('[data-row],[data-group]')) onBoardMenu(e)
-      }}
-    >
-      <div className="mx-auto max-w-5xl">
-        {COLUMNS.map((col) => {
-          const rows = cards.filter((c) => c.column === col.id)
-          if (!rows.length) return null
-          return (
-            <section key={col.id} className="mb-6">
-              <div
-                data-group
-                onContextMenu={(e) => {
-                  e.preventDefault()
-                  onColumnMenu(e, col.id)
-                }}
-                className="sticky top-0 z-10 flex items-center gap-2 bg-bg/90 py-2 backdrop-blur"
-              >
-                <span className="text-[11px] font-semibold uppercase tracking-[0.14em]">{col.label}</span>
-                <span className="rounded-full border border-line-strong px-1.5 font-mono text-[10.5px] leading-[18px] text-fg-muted">
-                  {rows.length}
-                </span>
-              </div>
-              <div className="overflow-hidden rounded-xl border border-line">
-                {rows.map((c, i) => {
-                  const due = dueInfo(c)
-                  return (
-                    <motion.div
-                      key={c.id}
-                      data-row
-                      layout="position"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.18, delay: Math.min(i, 8) * 0.015 }}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => onOpen(c)}
-                      onKeyDown={(e) => e.key === 'Enter' && onOpen(c)}
-                      onContextMenu={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        onCardMenu(e, c)
-                      }}
-                      className={cn(
-                        'grid cursor-pointer grid-cols-[72px_1fr_auto] items-center gap-3 px-3.5 py-2.5 text-[13px] outline-none transition-colors hover:bg-muted focus-visible:bg-muted sm:grid-cols-[80px_1fr_110px_96px_84px]',
-                        i > 0 && 'border-t border-line',
-                        selectedId === c.id && 'bg-muted',
-                      )}
-                    >
-                      <span className="font-mono text-[11px] text-fg-muted">{c.id}</span>
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">{c.title || 'Untitled'}</span>
-                        <span className="text-[11px] uppercase tracking-wider text-fg-faint">
-                          {kindLabel(c.kind)} · {c.project}
-                        </span>
-                      </span>
-                      <Tooltip label={`Priority: ${priorityLabel(c.priority)}`} className="hidden sm:inline-flex">
-                        <span className="flex items-center gap-2 text-fg-muted">
-                          <PriorityGlyph priority={c.priority} />
-                          {c.priority}
-                        </span>
-                      </Tooltip>
-                      <span className="hidden text-fg-muted sm:block">{c.assignee ?? '—'}</span>
-                      <span className="text-right font-mono text-[11px]">
-                        {due ? (
-                          <Tooltip label={due.tip} className="inline-flex">
-                            <span className={cn('rounded px-1.5 py-px', due.overdue ? 'bg-fg font-semibold text-bg' : 'text-fg-muted')}>
-                              {due.label}
-                            </span>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-fg-faint">—</span>
-                        )}
-                      </span>
-                    </motion.div>
-                  )
-                })}
-              </div>
-            </section>
-          )
-        })}
-        {cards.length === 0 && (
-          <div className="mt-20 text-center text-sm text-fg-muted">No cards match your filters.</div>
-        )}
-      </div>
-    </div>
+    <Table title="Items" count={`${items.length}`} size="sm" className="tb-list"
+      footer={auto.length > 0 ? (
+        <button type="button" className="btn btn-small ghost" aria-expanded={showAuto} onClick={() => setShowAuto((v) => !v)}>
+          {showAuto ? 'Hide' : 'Show'} {auto.length} automated (A2A) items
+        </button>) : undefined}>
+      <thead><tr>
+        {th('id', 'ID')}{th('title', 'Title')}{th('status', 'Status')}{th('priority', 'Priority')}{th('assignee', 'Assignee')}
+        <Th>Project</Th>{th('dueAt', 'Due')}<Th>GitHub</Th>{th('updatedAt', 'Updated')}
+      </tr></thead>
+      <tbody>
+        {human.slice(0, limit).map(row)}
+        {showAuto && auto.map(row)}
+        {human.length > limit && <tr><td colSpan={9} className="tb-more-row">
+          <span role="status">Showing {limit} of {human.length}</span>{' '}
+          <button type="button" className="btn btn-small" onClick={() => setLimit((n) => n + LIST_PAGE)}>Show {Math.min(LIST_PAGE, human.length - limit)} more</button>
+        </td></tr>}
+        {items.length === 0 && <tr><td colSpan={9}>No items match these filters.</td></tr>}
+      </tbody>
+    </Table>
   )
 }

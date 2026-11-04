@@ -1,0 +1,110 @@
+{
+ "_note": "Dev-only synthetic rows to exercise A2A grouping and the stale/needs-triage flags. Not tracker data.",
+ "items": [
+  {
+   "id": "TRK-9101",
+   "kind": "task",
+   "title": "A2A task: nightly sync digest for harbor",
+   "body": "Automated handoff created by an agent.",
+   "status": "planned",
+   "priority": "low",
+   "assigneeId": "scout",
+   "labels": [
+    "a2a"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 1,
+   "createdAt": "2026-11-03T06:00:00Z",
+   "updatedAt": "2026-11-03T06:00:00Z",
+   "github": null,
+   "sync": {
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null,
+    "state": "unlinked"
+   },
+   "stale": false,
+   "needsTriage": false
+  },
+  {
+   "id": "TRK-9102",
+   "kind": "task",
+   "title": "A2A task: rotate preview screenshots",
+   "body": "Automated handoff created by an agent.",
+   "status": "in_progress",
+   "priority": "low",
+   "assigneeId": "pixel",
+   "labels": [
+    "a2a"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 1,
+   "createdAt": "2026-11-03T07:00:00Z",
+   "updatedAt": "2026-11-04T07:00:00Z",
+   "github": null,
+   "sync": {
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null,
+    "state": "unlinked"
+   },
+   "stale": false,
+   "needsTriage": false
+  },
+  {
+   "id": "TRK-9103",
+   "kind": "task",
+   "title": "A2A task: re-run axe on staging",
+   "body": "Automated handoff created by an agent.",
+   "status": "done",
+   "priority": "low",
+   "assigneeId": "quill",
+   "labels": [
+    "a2a",
+    "ui"
+   ],
+   "parentId": null,
+   "dueAt": null,
+   "points": 1,
+   "createdAt": "2026-11-02T07:00:00Z",
+   "updatedAt": "2026-11-02T09:00:00Z",
+   "github": null,
+   "sync": {
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null,
+    "state": "unlinked"
+   },
+   "stale": false,
+   "needsTriage": false
+  },
+  {
+   "id": "TRK-9104",
+   "kind": "issue",
+   "title": "Sample item: untouched for three weeks",
+   "body": "Synthetic stale row.",
+   "status": "planned",
+   "priority": "medium",
+   "assigneeId": "coda",
+   "labels": [
+    "db"
+   ],
+   "parentId": "TRK-9016",
+   "dueAt": null,
+   "points": 3,
+   "createdAt": "2026-10-01T12:00:00Z",
+   "updatedAt": "2026-10-12T12:00:00Z",
+   "github": null,
+   "sync": {
+    "lastSyncedAt": null,
+    "pendingSuggestionId": null,
+    "error": null,
+    "state": "unlinked"
+   },
+   "stale": true,
+   "needsTriage": false
+  }
+ ]
+}
