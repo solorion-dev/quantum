@@ -51,10 +51,24 @@ export default function App() {
   useEffect(() => {
     createClient().then(async (c) => { setClient(c); await refresh(c) }).catch((e) => setError(String(e.message ?? e))).finally(() => setLoading(false))
   }, [refresh])
+  // Scout B3: re-read hash-only changes (pasted link, Back/Forward) without a reload.
+  useEffect(() => {
+    const onNav = () => {
+      const h = parseHash()
+      setView(h.view); setFilters(h.filters); setOpenId(h.item)
+    }
+    window.addEventListener('hashchange', onNav)
+    window.addEventListener('popstate', onNav)
+    return () => { window.removeEventListener('hashchange', onNav); window.removeEventListener('popstate', onNav) }
+  }, [])
   useEffect(() => {
     const q = toQuery(filters)
     const h = `#/${view}${openId ? `/${openId}` : ''}${q ? `?${q}` : ''}`
-    if (location.hash !== h) history.replaceState(null, '', h)
+    if (location.hash === h) return
+    // New history entries for view/filter/item changes so Back works; search typing just replaces.
+    const prev = parseHash()
+    const onlySearch = prev.view === view && prev.item === openId && toQuery({ ...prev.filters, q: filters.q }) === q
+    if (onlySearch) history.replaceState(null, '', h); else history.pushState(null, '', h)
   }, [view, filters, openId])
 
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])

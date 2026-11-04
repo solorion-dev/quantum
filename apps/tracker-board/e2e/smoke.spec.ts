@@ -3,10 +3,12 @@ import AxeBuilder from '@axe-core/playwright'
 import { createHmac } from 'node:crypto'
 
 // Fake local-only secret from apps/tracker-api/README.md; never a real credential.
-const API = 'http://127.0.0.1:7656/api'
+const API = `http://127.0.0.1:${process.env.PW_API_PORT ?? '7656'}/api`
 const FAKE_SECRET = 'local-dev-fake-secret'
 
 const axe = async (page: Page, name: string) => {
+  // wait out dialog/sheet entry animations: mid-fade opacity makes axe report false contrast failures
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))))
   const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
   const summary = r.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.length} — ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`)
   test.info().annotations.push({ type: `axe:${name}`, description: summary.join('\n') || 'clean' })
@@ -37,11 +39,13 @@ test('board keyboard: arrows move focus, Shift+Right moves card (PATCH), Enter o
   const id = (await page.locator(':focus').getAttribute('data-id'))!
   await page.keyboard.press('Shift+ArrowRight')
   await expect(page.getByText(`${id} updated`)).toBeVisible()
-  // Pixel is an agent, so Volt's `automated` flag is now true: the card folds into In review's A2A group.
-  const grp = page.getByRole('button', { name: /^Show \d+ automated \(A2A\) in In review/ })
-  await expect(grp).toBeVisible()
-  await grp.press('Enter')
-  await expect(page.locator(`.tb-card[data-id="${id}"]`)).toHaveAttribute('data-col', '3')
+  // dac0650: `automated` = unattended write paths only. A board edit with X-Actor: pixel is a normal
+  // (non-automated) write, so the card shows inline in In review, not in the A2A group.
+  const moved = page.locator(`.tb-card[data-id="${id}"]`)
+  await expect(moved).toBeVisible()
+  await expect(moved).toHaveAttribute('data-col', '3')
+  const api = await (await page.request.get(`${API}/items/${id}`)).json()
+  expect(api.item.automated).toBe(false)
   await page.locator(`.tb-card[data-id="${id}"]`).focus()
   await page.keyboard.press('Enter')
   const dlg = page.getByRole('dialog')
@@ -76,14 +80,17 @@ test('shared filters: priority chip, flags, applies across tabs', async ({ page 
   await axe(page, 'projects')
 })
 
-test('list: sortable headers expose aria-sort', async ({ page }) => {
+test('list: sortable headers expose aria-sort', async ({ page, request }) => {
   await page.getByRole('tab', { name: /^List/ }).press('Enter')
   const th = page.getByRole('columnheader', { name: /^Sort: ID/ })
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'ascending')
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'descending')
-  await expect(page.locator('.tb-list tbody tr').first()).toContainText('TRK-9020')
+  // highest ID first; earlier create tests in the shared throwaway DB may have added items past the seed
+  const ids: string[] = (await (await request.get(`${API}/items?limit=1000`)).json()).items.map((i: { id: string }) => i.id)
+  const top = ids.sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))[0]
+  await expect(page.locator('.tb-list tbody tr').first()).toContainText(top)
 })
 
 test('suggestions inbox: real webhook → pending suggestion → accept', async ({ page, request, isMobile }) => {
@@ -198,4 +205,85 @@ test('forward-compatible fields: item.project groups, item.automated overrides h
   await expect(page.getByRole('heading', { name: 'Alpha · Alpha project' })).toBeVisible()
   await page.getByRole('tab', { name: /^List/ }).press('Enter')
   await expect(page.getByRole('button', { name: 'Show 1 automated (A2A) items' })).toBeVisible()
+})
+
+// ---- Scout QA fixes (f93ba2a report): run in both projects (1920 and 390) ----
+const SHOTS = '/workspace/tracker/ui/after/qa-fixes'
+
+test('QA B1: create dialog actions visible and tappable, sheet not shifted', async ({ page, isMobile, request }, info) => {
+  await page.getByRole('button', { name: 'New item', exact: true }).click()
+  const dlg = page.getByRole('dialog', { name: 'New item' })
+  await expect(dlg).toBeVisible()
+  await page.waitForTimeout(400) // let the sheet animation settle before measuring
+  const vp = page.viewportSize()!
+  const box = (await dlg.boundingBox())!
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(vp.width + 0.5)
+  const btn = dlg.getByRole('button', { name: 'Create item' })
+  const b = (await btn.boundingBox())!
+  expect(b.y + b.height).toBeLessThanOrEqual(vp.height)
+  await page.screenshot({ path: `${SHOTS}/after-create-${info.project.name}.png` })
+  const title = `QA B1 tap ${info.project.name} ${Date.now()}`
+  await dlg.getByLabel('Title (required)').fill(title)
+  // scroll the body to the end: the footer must stay pinned and visible
+  await dlg.locator('.dialog__body').evaluate((el) => { el.scrollTop = el.scrollHeight })
+  await expect(btn).toBeInViewport()
+  if (isMobile) await btn.tap(); else await btn.click()
+  await expect(page.getByText(/TRK-\d+ created/)).toBeVisible()
+  const id = (await page.getByText(/TRK-\d+ created/).textContent())!.match(/TRK-\d+/)![0]
+  expect((await (await request.get(`${API}/items/${id}`)).json()).item.title).toBe(title)
+})
+
+test('QA B3: hash-only filter changes and Back are re-read without reload', async ({ page }) => {
+  const tab = page.getByRole('tab', { name: /^Board · / })
+  const all = (await tab.textContent())!
+  await page.evaluate(() => { (window as unknown as { __marker: number }).__marker = 1 })
+  await page.evaluate(() => { location.hash = '#/board?priority=critical' })
+  await expect(page.getByRole('button', { name: /Remove filter .*Critical/i })).toBeVisible()
+  await expect(tab).not.toHaveText(all)
+  await page.goBack()
+  await expect(page.getByRole('button', { name: /Remove filter .*Critical/i })).toBeHidden()
+  await expect(tab).toHaveText(all)
+  await page.goForward()
+  await expect(page.getByRole('button', { name: /Remove filter .*Critical/i })).toBeVisible()
+  expect(await page.evaluate(() => (window as unknown as { __marker?: number }).__marker)).toBe(1) // no reload happened
+})
+
+test('QA B4: no page-level sideways scroll; summary strip shows Overdue or a scroll cue', async ({ page, isMobile }, info) => {
+  for (const v of ['Board', 'List', 'Projects']) {
+    await page.getByRole('tab', { name: new RegExp(`^${v}`) }).press('Enter')
+    const w = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, iw: window.innerWidth }))
+    expect(w.sw, `${v} scrollWidth`).toBeLessThanOrEqual(w.cw)
+    expect(w.iw, `${v} layout viewport`).toBe(page.viewportSize()!.width)
+  }
+  await page.getByRole('tab', { name: /^Board/ }).press('Enter')
+  const strip = page.getByRole('region', { name: 'Summary' })
+  const overdue = strip.getByText('Overdue')
+  if (isMobile) {
+    const more = await strip.evaluate((el) => el.scrollWidth > el.clientWidth)
+    if (more) {
+      await expect(page.getByText('Swipe for more →')).toBeVisible()
+      await expect(page.locator('.tb-summary-wrap')).toHaveAttribute('data-more-end', 'true')
+    }
+    await overdue.scrollIntoViewIfNeeded()
+  }
+  await expect(overdue).toBeInViewport({ ratio: 1 })
+  await page.screenshot({ path: `${SHOTS}/after-board-${info.project.name}.png` })
+  await axe(page, 'qa-b4-board')
+})
+
+test('QA B8: Tab and Shift+Tab never leave the create dialog (60 presses each)', async ({ page }) => {
+  await page.getByRole('button', { name: 'New item', exact: true }).press('Enter')
+  const dlg = page.getByRole('dialog', { name: 'New item' })
+  await expect(dlg.getByLabel('Title (required)')).toBeFocused()
+  for (const key of ['Tab', 'Shift+Tab']) {
+    for (let n = 0; n < 60; n++) {
+      await page.keyboard.press(key)
+      const inside = await dlg.evaluate((d) => d.contains(document.activeElement) && document.activeElement !== d)
+      expect(inside, `${key} press ${n + 1}`).toBe(true)
+    }
+  }
+  await axe(page, 'qa-b8-create')
+  await page.keyboard.press('Escape')
+  await expect(dlg).toBeHidden()
 })

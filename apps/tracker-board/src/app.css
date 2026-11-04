@@ -129,7 +129,6 @@
 /* Create item */
 .tb-col-headrow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .tb-col-add { min-width: 32px; min-height: 32px; font-size: 18px; line-height: 1; }
-.tb-create { width: min(640px, 100vw); }
 .tb-create-form { display: grid; gap: var(--space-3); }
 .tb-create-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
 .tb-create-labels { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
@@ -137,3 +136,27 @@
 .tb-check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
 .tb-create-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 @media (max-width: 720px) { .tb-create-row { grid-template-columns: 1fr; } }
+
+/* QA fixes (Scout B4): .sr-only spans are position:absolute; without a positioned ancestor inside the
+   board scroller they escaped it and widened the page to ~1800px at 390. Contain them. */
+.tb-board, .tb-col, .tb-card, .tb-list, .tb-list .tbl-scroll, .tb-projects { position: relative; }
+.tb-app { overflow-x: clip; }
+.tb-main > * { min-width: 0; }
+/* Summary strip on phones: scrolls sideways with a visible fade cue on the clipped edge(s). */
+.tb-summary-wrap { position: relative; min-width: 0; }
+@media (max-width: 720px) {
+  .tb-summary { scroll-snap-type: x proximity; scrollbar-width: thin; padding-bottom: 4px; }
+  .tb-summary-wrap::before, .tb-summary-wrap::after { content: ""; position: absolute; top: 0; bottom: 4px; width: 28px; pointer-events: none; opacity: 0; transition: opacity .15s; }
+  .tb-summary-wrap::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+  .tb-summary-wrap::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+  .tb-summary-wrap[data-more-start="true"]::before, .tb-summary-wrap[data-more-end="true"]::after { opacity: 1; }
+}
+.tb-summary-more { font-size: 12px; color: var(--fg-2); justify-self: end; }
+
+/* Create item (Scout B1): modal stays 640 on desktop; the sheet is full width, body scrolls,
+   actions sit in a sticky footer clear of the home indicator. */
+.modal.tb-create { width: min(640px, calc(100vw - 32px)); }
+.sheet.tb-create { width: 100%; max-width: 100%; inset-inline: 0; margin-inline: 0; max-height: calc(100dvh - 16px); }
+.tb-create .dialog__body { overscroll-behavior: contain; }
+.tb-create .dialog__foot { position: sticky; bottom: 0; background: var(--bg-2); flex: none; padding-bottom: calc(12px + var(--safe-bottom, env(safe-area-inset-bottom, 0px))); }
+.sheet.tb-create { padding-bottom: 0; }

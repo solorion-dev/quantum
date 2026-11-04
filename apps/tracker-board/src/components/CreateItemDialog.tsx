@@ -1,5 +1,6 @@
 // Create-item dialog (modal on desktop, bottom sheet on phones). POST /api/items via the client.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { trapTab } from '../lib/focusTrap'
 import { Button, Dialog, SelectField, TextArea, TextField } from '@dsect/ui'
 import type { Label, Person, Priority, Status, TrackerItem } from '../types'
 import type { ItemPatch } from '../lib/api'
@@ -21,6 +22,7 @@ export function CreateItemDialog({ open, initialStatus, onClose, onCreate, peopl
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
+  const formId = useId()
 
   useEffect(() => {
     if (!open) return
@@ -40,8 +42,13 @@ export function CreateItemDialog({ open, initialStatus, onClose, onCreate, peopl
   }
 
   return (
-    <Dialog open={open} onClose={onClose} variant={phone ? 'sheet' : 'modal'} title="New item" closeLabel="Close new item" className="tb-create">
-      <form className="tb-create-form" onSubmit={submit} noValidate aria-busy={busy}>
+    <Dialog open={open} onClose={onClose} variant={phone ? 'sheet' : 'modal'} title="New item" closeLabel="Close new item" className="tb-create"
+      onKeyDown={(e) => trapTab(e, e.currentTarget)}
+      footer={<div className="tb-create-actions">
+        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="submit" form={formId} disabled={busy}>{busy ? 'Creating…' : 'Create item'}</Button>
+      </div>}>
+      <form id={formId} className="tb-create-form" onSubmit={submit} noValidate aria-busy={busy}>
         <TextField ref={titleRef} label="Title (required)" value={title} required aria-required="true" error={error ?? undefined}
           onChange={(e) => { setTitle(e.target.value); if (error) setError(null) }} />
         <div className="tb-create-row">
@@ -72,10 +79,6 @@ export function CreateItemDialog({ open, initialStatus, onClose, onCreate, peopl
           {items.map((i) => <option key={i.id} value={i.id}>{i.id} · {i.title.slice(0, 60)}</option>)}
         </SelectField>
         <TextArea label="Description" rows={4} value={body} onChange={(e) => setBody(e.target.value)} />
-        <div className="tb-create-actions">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={busy}>{busy ? 'Creating…' : 'Create item'}</Button>
-        </div>
       </form>
     </Dialog>
   )

@@ -1,5 +1,6 @@
 // Local popover built from kit parts (btn + panel classes). Candidate to upstream to @dsect/ui.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { trapTab } from '../lib/focusTrap'
 
 export function Popover({ label, trigger, children, align = 'start', className = '' }: {
   label: string; trigger: ReactNode; children: ReactNode | ((close: () => void) => ReactNode); align?: 'start' | 'end'; className?: string
@@ -12,7 +13,7 @@ export function Popover({ label, trigger, children, align = 'start', className =
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => { if (root.current && !root.current.contains(e.target as Node)) setOpen(false) }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); close() } }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); close() } else trapTab(e, root.current) }
     document.addEventListener('mousedown', onDown)
     root.current?.addEventListener('keydown', onKey)
     const r = root.current

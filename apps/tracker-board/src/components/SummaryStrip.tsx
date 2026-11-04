@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { TrackerItem } from '../types'
 import { isOverdue, isStale, needsTriage } from '../lib/meta'
 
@@ -12,8 +13,21 @@ export function SummaryStrip({ items, onFlag }: { items: TrackerItem[]; onFlag: 
     { k: 'triage', label: 'Needs triage', v: items.filter(needsTriage).length, act: 'needs_triage' as const },
     { k: 'sync', label: 'Sync issues', v: items.filter((i) => i.sync.state === 'error' || i.sync.state === 'suggested').length, act: 'sync' as const },
   ]
+  // Phones: the strip scrolls sideways; fades + a text cue show there is more (Scout B4).
+  const ref = useRef<HTMLElement>(null)
+  const [edge, setEdge] = useState({ start: false, end: false })
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const upd = () => setEdge({ start: el.scrollLeft > 2, end: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 })
+    upd()
+    el.addEventListener('scroll', upd, { passive: true })
+    const ro = new ResizeObserver(upd); ro.observe(el)
+    return () => { el.removeEventListener('scroll', upd); ro.disconnect() }
+  }, [])
   return (
-    <section className="tb-summary" aria-label="Summary">
+    <div className="tb-summary-wrap" data-more-start={edge.start} data-more-end={edge.end}>
+    <section ref={ref} className="tb-summary" aria-label="Summary" tabIndex={edge.end || edge.start ? 0 : undefined}>
       {stat.map((s) => s.act ? (
         <button key={s.k} type="button" className="metric tb-metric tb-metric--btn" onClick={() => onFlag(s.act!)}
           aria-label={`${s.label}: ${s.v}. Filter to these`}>
@@ -23,5 +37,7 @@ export function SummaryStrip({ items, onFlag }: { items: TrackerItem[]; onFlag: 
         <div key={s.k} className="metric tb-metric"><span className="metric__label">{s.label}</span><span className="metric__value">{s.v}</span></div>
       ))}
     </section>
+    {edge.end && <p className="tb-summary-more" aria-hidden="true">Swipe for more →</p>}
+    </div>
   )
 }
