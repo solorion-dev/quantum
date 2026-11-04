@@ -11,8 +11,21 @@ class PeopleDisplay(unittest.TestCase):
 
 class Project(unittest.TestCase):
     def setUp(self): self.c = fresh()
-    def test_root_is_own_project(self):
+    def test_root_with_children_is_own_project(self):
         self.assertEqual(db.get_item(self.c, "TRK-9001")["project"]["id"], "TRK-9001")
+    def test_childless_root_has_no_project(self):
+        it = db.create_item(self.c, {"title": "loose"}, "human-x")
+        self.assertIsNone(it["project"])
+        kid = db.create_item(self.c, {"title": "kid", "parent_id": it["id"]}, "human-x")
+        self.assertEqual(kid["project"]["id"], it["id"])
+        self.assertEqual(db.get_item(self.c, it["id"])["project"]["id"], it["id"])
+    def test_projects_count_only_roots_with_children(self):
+        for n in range(5): db.create_item(self.c, {"title": f"loose {n}"}, "human-x")
+        ids = {r["id"] for r in self.c.execute("SELECT id FROM items")}
+        projs = {p["id"] for p in (db.get_item(self.c, i)["project"] for i in ids) if p}
+        roots_with_kids = {r[0] for r in self.c.execute(
+            "SELECT DISTINCT p.id FROM items p JOIN items k ON k.parent_id=p.id WHERE p.parent_id=''")}
+        self.assertEqual(projs, roots_with_kids)
     def test_child_and_grandchild_use_top_level(self):
         it = db.create_item(self.c, {"title": "grandchild", "parent_id": "TRK-9005"}, "human-x")
         p = it["project"]
@@ -23,7 +36,8 @@ class Project(unittest.TestCase):
         self.c.execute("UPDATE items SET parent_id='TRK-9002' WHERE id='TRK-9003'")
         self.assertIn(db.get_item(self.c, "TRK-9002")["project"]["id"], ("TRK-9002", "TRK-9003"))
         self.c.execute("UPDATE items SET parent_id='TRK-0404' WHERE id='TRK-9004'")
-        self.assertEqual(db.get_item(self.c, "TRK-9004")["project"]["id"], "TRK-9004")
+        p = db.get_item(self.c, "TRK-9004")["project"]
+        self.assertTrue(p is None or p["id"] == "TRK-9004")
     def test_explicit_column_wins_and_proposed_002_applies(self):
         sql = open("migrations/002_project_column.sql").read()
         self.c.executescript(sql)

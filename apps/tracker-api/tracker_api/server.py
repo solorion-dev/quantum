@@ -62,6 +62,9 @@ class App:
                     return 200, sync.run_outbound(c, self.adapter, dry=q.get("dry") in ("1", "true"))
                 if method == "POST" and path == "/webhooks/github":
                     return 202, sync.handle_webhook(c, self.adapter, self.secret, headers, body or b"")
+                if method == "DELETE" and re.fullmatch(r"/items/(TRK-\d+)", path):
+                    return 501, {"error": "delete is out of scope: items are never deleted. "
+                                          "Set status to 'cancelled' instead (PATCH /api/items/:id)."}
                 return 404, {"error": "no route"}
             except db.ValidationError as e: return 400, {"error": str(e)}
             except KeyError as e: return 404, {"error": f"not found: {e}"}
@@ -89,8 +92,18 @@ def make_handler(app, cors_origin):
         def do_GET(self): self._go("GET")
         def do_POST(self): self._go("POST")
         def do_PATCH(self): self._go("PATCH")
+        def do_DELETE(self): self._go("DELETE")
         def log_message(self, fmt, *a): pass  # never log bodies/headers (signatures)
     return H
+
+class ConfigError(SystemExit): pass
+
+def load_webhook_secret(env=None):
+    v = (os.environ if env is None else env).get("TRACKER_WEBHOOK_SECRET", "")
+    if not v.strip():
+        raise ConfigError("tracker-api: TRACKER_WEBHOOK_SECRET is not set; refusing to start. "
+                          "Set it explicitly (use a throwaway value for local/test runs).")
+    return v.encode()
 
 def main():
     import argparse
@@ -102,13 +115,14 @@ def main():
     ap.add_argument("--reset", action="store_true", help="delete and reseed the local DB")
     ap.add_argument("--cors", default=os.environ.get("CORS_ORIGIN", "http://localhost:5173"))
     a = ap.parse_args()
+    load_webhook_secret()  # fail fast, before creating or seeding any DB
     os.makedirs(os.path.dirname(os.path.abspath(a.db)), exist_ok=True)
     if a.reset and os.path.exists(a.db): os.remove(a.db)
     fresh = not os.path.exists(a.db)
     c = db.connect(a.db); db.migrate(c)
     if fresh: print(f"seeded {db.seed(c, a.fixture)} fixture items into {a.db}")
-    # Fake local secret by default; a real one only ever comes from Tritium env (Scotty's install).
-    secret = os.environ.get("TRACKER_WEBHOOK_SECRET", "local-dev-fake-secret").encode()
+    # No default: refuse to start without an explicit secret (a missing env var must never accept forged webhooks).
+    secret = load_webhook_secret()
     app = App(c, MockGraphQLAdapter(), secret)
     print(f"tracker-api on http://{a.host}:{a.port}/api  (adapter=mock, db={a.db})")
     ThreadingHTTPServer((a.host, a.port), make_handler(app, a.cors)).serve_forever()

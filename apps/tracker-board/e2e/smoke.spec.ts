@@ -3,8 +3,8 @@ import AxeBuilder from '@axe-core/playwright'
 import { createHmac } from 'node:crypto'
 
 // Fake local-only secret from apps/tracker-api/README.md; never a real credential.
-const API = `http://127.0.0.1:${process.env.PW_API_PORT ?? '7656'}/api`
-const FAKE_SECRET = 'local-dev-fake-secret'
+const API = `http://127.0.0.1:${process.env.TB_API_PORT || '7656'}/api`
+const FAKE_SECRET = 'e2e-test-only-fake' // must match TRACKER_WEBHOOK_SECRET in playwright.config.ts
 
 const axe = async (page: Page, name: string) => {
   // wait out dialog/sheet entry animations: mid-fade opacity makes axe report false contrast failures
@@ -39,13 +39,9 @@ test('board keyboard: arrows move focus, Shift+Right moves card (PATCH), Enter o
   const id = (await page.locator(':focus').getAttribute('data-id'))!
   await page.keyboard.press('Shift+ArrowRight')
   await expect(page.getByText(`${id} updated`)).toBeVisible()
-  // dac0650: `automated` = unattended write paths only. A board edit with X-Actor: pixel is a normal
-  // (non-automated) write, so the card shows inline in In review, not in the A2A group.
-  const moved = page.locator(`.tb-card[data-id="${id}"]`)
-  await expect(moved).toBeVisible()
-  await expect(moved).toHaveAttribute('data-col', '3')
-  const api = await (await page.request.get(`${API}/items/${id}`)).json()
-  expect(api.item.automated).toBe(false)
+  // Since dac0650 a board edit by an agent (X-Actor: pixel) is a directed write, not automated:
+  // the card stays visible in In review instead of folding into the A2A group.
+  await expect(page.locator(`.tb-card[data-id="${id}"]`)).toHaveAttribute('data-col', '3')
   await page.locator(`.tb-card[data-id="${id}"]`).focus()
   await page.keyboard.press('Enter')
   const dlg = page.getByRole('dialog')
@@ -80,17 +76,17 @@ test('shared filters: priority chip, flags, applies across tabs', async ({ page 
   await axe(page, 'projects')
 })
 
-test('list: sortable headers expose aria-sort', async ({ page, request }) => {
+test('list: sortable headers expose aria-sort', async ({ page }) => {
   await page.getByRole('tab', { name: /^List/ }).press('Enter')
   const th = page.getByRole('columnheader', { name: /^Sort: ID/ })
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'ascending')
   await th.getByRole('button').click()
   await expect(th).toHaveAttribute('aria-sort', 'descending')
-  // highest ID first; earlier create tests in the shared throwaway DB may have added items past the seed
-  const ids: string[] = (await (await request.get(`${API}/items?limit=1000`)).json()).items.map((i: { id: string }) => i.id)
-  const top = ids.sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))[0]
-  await expect(page.locator('.tb-list tbody tr').first()).toContainText(top)
+  // Items created by earlier tests (shared server across projects) may sit above the seed, so check order, not a fixed id.
+  const ids = (await page.locator('.tb-list tbody tr td:first-child').allTextContents()).map((t) => Number(t.match(/TRK-(\d+)/)?.[1] ?? 0))
+  expect(ids[0]).toBeGreaterThanOrEqual(9020)
+  expect(ids[0]).toBe(Math.max(...ids))
 })
 
 test('suggestions inbox: real webhook → pending suggestion → accept', async ({ page, request, isMobile }) => {

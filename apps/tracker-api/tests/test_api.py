@@ -67,3 +67,27 @@ class Http(unittest.TestCase):
             srv.shutdown()
 
 if __name__ == "__main__": unittest.main()
+
+class Config(unittest.TestCase):
+    def test_missing_webhook_secret_refuses_to_start(self):
+        from tracker_api.server import load_webhook_secret, ConfigError
+        for env in ({}, {"TRACKER_WEBHOOK_SECRET": ""}, {"TRACKER_WEBHOOK_SECRET": "  "}):
+            with self.assertRaises(ConfigError) as cm: load_webhook_secret(env)
+            self.assertIn("refusing to start", str(cm.exception.code))
+        self.assertEqual(load_webhook_secret({"TRACKER_WEBHOOK_SECRET": "test-only-fake"}), b"test-only-fake")
+    def test_main_exits_nonzero_without_secret(self):
+        import os, subprocess, sys, tempfile
+        env = {k: v for k, v in os.environ.items() if k != "TRACKER_WEBHOOK_SECRET"}
+        db = os.path.join(tempfile.mkdtemp(), "x.db")
+        p = subprocess.run([sys.executable, "-m", "tracker_api", "--db", db, "--port", "0"], env=env,
+                           capture_output=True, text=True, timeout=20)
+        self.assertNotEqual(p.returncode, 0); self.assertIn("TRACKER_WEBHOOK_SECRET", p.stderr)
+        self.assertFalse(os.path.exists(db))
+    def test_no_hardcoded_default_secret(self):
+        import inspect, tracker_api.server as s
+        self.assertNotIn("local-dev-fake-secret", inspect.getsource(s))
+
+class Delete(unittest.TestCase):
+    def test_delete_is_501_with_message(self):
+        st, out = app().handle("DELETE", "/api/items/TRK-9001", {}, {}, b"")
+        self.assertEqual(st, 501); self.assertIn("cancelled", out["error"])
