@@ -114,5 +114,108 @@ class AuditTests(unittest.TestCase):
             self.assertEqual([p.name for p in found], ["demo-skill"])
 
 
+class HostScopedTests(unittest.TestCase):
+    """Host-scoped declarations (evolution 2026-11-04, TRK-0608).
+
+    A path that lives only on another host can be declared host-scoped —
+    inline via <!-- skill-audit: host-scoped --> on the reference's own
+    line, or per-skill via .skill-audit-ignore — and then a missing local
+    copy classifies unverified instead of dead.
+    """
+
+    def test_inline_directive_marks_only_its_own_line(self):
+        text = ("Tritium only: ~/.cloudflared/config.yml <!-- skill-audit: host-scoped -->\n"
+                "Everywhere: ~/.cloudflared/other.yml\n")
+        refs = sa.extract_references(text, "SKILL.md")
+        by_value = {r.value: r for r in refs if r.kind == "path"}
+        self.assertTrue(by_value["~/.cloudflared/config.yml"].host_scoped)
+        self.assertFalse(by_value["~/.cloudflared/other.yml"].host_scoped)
+
+    def test_declared_missing_path_is_unverified_not_dead(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(
+                root,
+                "Tritium only: ~/.cloudflared/config.yml <!-- skill-audit: host-scoped -->\n")
+            report = sa.audit_skill(skill, home=root)
+            self.assertEqual(report.dead, [])
+            ref = report.references[0]
+            self.assertEqual(ref.status, "unverified")
+            self.assertIn("host-scoped", ref.detail)
+            self.assertIn("skill-audit: host-scoped", ref.detail)
+
+    def test_declared_missing_path_exits_zero_via_cli(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            write_skill(
+                root,
+                "Tritium only: ~/.cloudflared/config.yml <!-- skill-audit: host-scoped -->\n")
+            self.assertEqual(sa.main([str(root)]), 0)
+
+    def test_undeclared_missing_path_is_dead_and_exits_one(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(root, "Missing: ~/.cloudflared/config.yml\n")
+            report = sa.audit_skill(skill, home=root)
+            self.assertEqual([r.value for r in report.dead], ["~/.cloudflared/config.yml"])
+            self.assertEqual(sa.main([str(root)]), 1)
+
+    def test_directive_on_another_line_does_not_rescue(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(
+                root,
+                "<!-- skill-audit: host-scoped -->\n"
+                "Missing: ~/.cloudflared/config.yml\n")
+            report = sa.audit_skill(skill, home=root)
+            self.assertEqual([r.value for r in report.dead], ["~/.cloudflared/config.yml"])
+
+    def test_declared_path_that_exists_is_ok(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(
+                root,
+                "Here: ~/present.txt <!-- skill-audit: host-scoped -->\n",
+                extra={})
+            (root / "present.txt").write_text("x", encoding="utf-8")
+            report = sa.audit_skill(skill, home=root)
+            ref = [r for r in report.references if r.value == "~/present.txt"][0]
+            self.assertEqual(ref.status, "ok")
+            self.assertEqual(report.dead, [])
+
+    def test_ignore_file_missing_match_is_unverified_not_dead(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(
+                root,
+                "Tritium only: ~/.cloudflared/config.yml\n",
+                extra={".skill-audit-ignore": "~/.cloudflared/ # Tritium host only\n"})
+            report = sa.audit_skill(skill, home=root)
+            self.assertEqual(report.dead, [])
+            ref = report.references[0]
+            self.assertEqual(ref.status, "unverified")
+            self.assertIn(".skill-audit-ignore", ref.detail)
+            self.assertIn("Tritium host only", ref.detail)
+
+    def test_ignore_file_non_match_still_dead_and_match_that_exists_is_ok(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            skill = write_skill(
+                root,
+                "Gone: ~/gone.txt\nHere: ~/present.txt\n",
+                extra={".skill-audit-ignore": "~/present.txt # declared but present\n"})
+            (root / "present.txt").write_text("x", encoding="utf-8")
+            report = sa.audit_skill(skill, home=root)
+            by_value = {r.value: r for r in report.references}
+            self.assertEqual(by_value["~/gone.txt"].status, "dead")
+            self.assertEqual(by_value["~/present.txt"].status, "ok")
+
+    def test_parse_ignore_text(self):
+        entries = sa.parse_ignore_text(
+            "# comment only\n\n~/.cloudflared/ # Tritium only\n/opt/other/\n")
+        self.assertEqual(entries, [("~/.cloudflared/", "Tritium only"),
+                                   ("/opt/other/", "")])
+
+
 if __name__ == "__main__":
     unittest.main()

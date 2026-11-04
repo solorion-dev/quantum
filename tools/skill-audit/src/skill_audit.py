@@ -17,6 +17,19 @@ With no roots, defaults to ~/workspace/custom-skills and /opt/muse/skills
 (whichever exist). Exit code: 0 = clean, 1 = dead references found
 (or any finding at all with --strict), 2 = usage error.
 
+Host-scoped references: a path that legitimately lives only on another
+host can be declared host-scoped, so a missing copy here classifies as
+`unverified` instead of `dead`:
+
+  * Inline: put `<!-- skill-audit: host-scoped -->` on the same source
+    line as the reference.
+  * Per-skill: list path prefixes (as written, one per line, with an
+    optional `# reason`) in a `.skill-audit-ignore` file in the skill
+    root.
+
+A declared path that DOES exist here still classifies `ok`; an
+undeclared missing path still classifies `dead`.
+
 Stdlib only. No network access except the optional `gh` repo check.
 """
 
@@ -81,6 +94,9 @@ def _looks_like_repo(owner: str, name: str) -> bool:
         return False
     return True
 
+HOST_SCOPED_MARKER = "<!-- skill-audit: host-scoped -->"
+IGNORE_FILENAME = ".skill-audit-ignore"
+
 PLACEHOLDER_HINTS = ("{{", "<", ">", "*", "$", "://")
 DATE_PLACEHOLDER_RE = re.compile(r"YYYY|XXXX|MM-DD")
 REMOTE_HOME_RE = re.compile(r"^/home/([^/]+)/")
@@ -94,6 +110,7 @@ class Reference:
     line: int
     status: str = "unchecked"   # ok | dead | unverified | skipped
     detail: str = ""
+    host_scoped: bool = False   # declared host-scoped on its source line
 
 
 @dataclass
@@ -127,7 +144,7 @@ def extract_references(text: str, source_file: str) -> list[Reference]:
     refs: list[Reference] = []
     seen: set[tuple[str, str, int]] = set()
 
-    def add(kind: str, value: str, line: int):
+    def add(kind: str, value: str, line: int, host_scoped: bool = False):
         value = _clean(value)
         if not value:
             return
@@ -135,13 +152,15 @@ def extract_references(text: str, source_file: str) -> list[Reference]:
         if key in seen:
             return
         seen.add(key)
-        refs.append(Reference(kind=kind, value=value, source_file=source_file, line=line))
+        refs.append(Reference(kind=kind, value=value, source_file=source_file,
+                              line=line, host_scoped=host_scoped))
 
     for lineno, line in enumerate(text.splitlines(), start=1):
+        host_scoped = HOST_SCOPED_MARKER in line
         for m in PATH_RE.finditer(line):
-            add("path", m.group(1), lineno)
+            add("path", m.group(1), lineno, host_scoped)
         for m in REL_REF_RE.finditer(line):
-            add("relative", m.group(1), lineno)
+            add("relative", m.group(1), lineno, host_scoped)
         for m in LINK_RE.finditer(line):
             target = m.group(1)
             if target.startswith(("http://", "https://", "mailto:", "#")):
@@ -149,7 +168,7 @@ def extract_references(text: str, source_file: str) -> list[Reference]:
                 if gh:
                     add("repo", f"{gh.group(1)}/{gh.group(2)}", lineno)
                 continue
-            add("link", target.split("#")[0], lineno)
+            add("link", target.split("#")[0], lineno, host_scoped)
         for m in GH_URL_RE.finditer(line):
             add("repo", f"{m.group(1)}/{m.group(2)}", lineno)
         for m in GH_CLI_RE.finditer(line):
@@ -164,9 +183,47 @@ def extract_references(text: str, source_file: str) -> list[Reference]:
 # Verification
 # ---------------------------------------------------------------------------
 
+def parse_ignore_text(text: str) -> list[tuple[str, str]]:
+    """Parse a `.skill-audit-ignore` file: (prefix, reason) pairs.
+
+    One entry per line: a path prefix exactly as references are written
+    (e.g. `~/.cloudflared/`), optionally followed by `# reason`. Blank
+    lines and comment-only lines are ignored.
+    """
+    entries: list[tuple[str, str]] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        prefix, _, reason = line.partition("#")
+        prefix = prefix.strip()
+        if prefix:
+            entries.append((prefix, reason.strip()))
+    return entries
+
+
+def load_ignore_file(skill_dir: Path) -> list[tuple[str, str]]:
+    """Load the per-skill `.skill-audit-ignore` entries, if present."""
+    ignore_path = skill_dir / IGNORE_FILENAME
+    try:
+        return parse_ignore_text(ignore_path.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return []
+
+
+def _ignore_match(value: str,
+                  ignore_prefixes: tuple[tuple[str, str], ...] | list[tuple[str, str]]
+                  ) -> tuple[str, str] | None:
+    for prefix, reason in ignore_prefixes:
+        if value.startswith(prefix):
+            return (prefix, reason)
+    return None
+
+
 def verify_path(ref: Reference, base_dir: Path, home: Path,
                 remote_prefixes: tuple[str, ...] = ("/mnt/",),
-                current_user: str | None = None) -> None:
+                current_user: str | None = None,
+                ignore_prefixes: tuple[tuple[str, str], ...] | list[tuple[str, str]] = ()) -> None:
     if _is_placeholder(ref.value):
         ref.status, ref.detail = "skipped", "template/placeholder reference"
         return
@@ -197,9 +254,27 @@ def verify_path(ref: Reference, base_dir: Path, home: Path,
         target = Path(raw)
     else:  # relative / link kinds resolve against the file's directory
         target = base_dir / raw
-    ref.status = "ok" if target.exists() else "dead"
-    if ref.status == "dead":
-        ref.detail = f"not found: {target}"
+    if target.exists():
+        ref.status, ref.detail = "ok", ""
+        return
+    # Missing locally. A host-scoped declaration (inline directive on the
+    # source line, or a matching .skill-audit-ignore prefix) means the
+    # path is expected on another host — unverified here, not dead.
+    if ref.host_scoped:
+        ref.status = "unverified"
+        ref.detail = (f"host-scoped: declared with '{HOST_SCOPED_MARKER}' on the "
+                      f"source line; not found on this host: {target}")
+        return
+    match = _ignore_match(raw, ignore_prefixes)
+    if match is not None:
+        prefix, reason = match
+        ref.status = "unverified"
+        ref.detail = (f"host-scoped: declared in {IGNORE_FILENAME} "
+                      f"(prefix '{prefix}'" + (f": {reason}" if reason else "") +
+                      f"); not found on this host: {target}")
+        return
+    ref.status = "dead"
+    ref.detail = f"not found: {target}"
 
 
 def make_gh_checker():
@@ -238,6 +313,7 @@ def audit_skill(skill_dir: Path, repo_checker=None, home: Path | None = None,
                 remote_prefixes: tuple[str, ...] = ("/mnt/",)) -> SkillReport:
     home = home or Path.home()
     report = SkillReport(name=skill_dir.name, root=str(skill_dir))
+    ignore_prefixes = load_ignore_file(skill_dir)
     md_files = sorted(skill_dir.rglob("*.md"))
     report.files_scanned = len(md_files)
     for md in md_files:
@@ -251,7 +327,8 @@ def audit_skill(skill_dir: Path, repo_checker=None, home: Path | None = None,
                 # relative to the skill root; markdown links are relative to
                 # the file that contains them.
                 base = skill_dir if ref.kind == "relative" else md.parent
-                verify_path(ref, base, home, remote_prefixes=remote_prefixes)
+                verify_path(ref, base, home, remote_prefixes=remote_prefixes,
+                            ignore_prefixes=ignore_prefixes)
             elif ref.kind == "repo":
                 if _is_placeholder(ref.value):
                     ref.status, ref.detail = "skipped", "template/placeholder reference"
