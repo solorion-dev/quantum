@@ -10,9 +10,10 @@ class Migrations(unittest.TestCase):
         # A DB shaped like today's live tracker (base tables, existing rows) keeps every row and column.
         c = db.connect(":memory:"); name, sql = db.MIGRATIONS[0]
         for s in [x for x in sql.split(";") if x.strip()]: c.execute(s)
-        c.execute("INSERT INTO people(handle, display) VALUES('cooper','Cooper')")
-        c.execute("INSERT INTO items(id,title,assignee,created_at,updated_at) VALUES('TRK-0001','old','cooper','t','t')")
-        c.execute("INSERT INTO tags VALUES('TRK-0001','legacy')")
+        c.execute("INSERT INTO people(handle, name, github) VALUES('cooper','Cooper','fake-login')")
+        c.execute("INSERT INTO items(id,kind,title,assignee,created_at,updated_at) VALUES('TRK-0001','task','old','cooper','2026-10-18T05:00:00','2026-10-18T05:00:00')")
+        c.execute("INSERT INTO items(id,kind,title,created_at,updated_at) VALUES('TRK-0002','task','unassigned','2026-10-18T05:00:00','2026-10-18T05:00:00')")
+        c.execute("INSERT INTO item_tags VALUES('TRK-0001','legacy')")
         before = {r[1] for r in c.execute("PRAGMA table_info(items)")}
         c.execute("CREATE TABLE schema_migrations(name TEXT PRIMARY KEY, at TEXT NOT NULL)")
         c.execute("INSERT INTO schema_migrations VALUES('001_base','t')")
@@ -22,6 +23,18 @@ class Migrations(unittest.TestCase):
         r = c.execute("SELECT * FROM items WHERE id='TRK-0001'").fetchone()
         self.assertEqual((r["title"], r["assignee"], r["assignee_id"]), ("old", "cooper", "cooper"))
         self.assertEqual(db.labels_of(c, "TRK-0001"), ["legacy"])
+        self.assertEqual(db.get_item(c, "TRK-0002")["assigneeId"], None)          # live '' -> null
+        self.assertEqual(db.get_item(c, "TRK-0002")["parentId"], None)
+        self.assertIn("legacy", [r[0] for r in c.execute("SELECT name FROM tags")])
+
+    def test_001_matches_live_schema_exactly(self):
+        norm = lambda s: " ".join(s.replace("IF NOT EXISTS ", "").split()).rstrip(";")
+        live_path = os.path.join(os.path.dirname(__file__), "live_schema_20261104.sql")
+        live = sorted(norm(x) for x in open(live_path).read().split(";\n") if x.strip())
+        c = db.connect(":memory:")
+        for s in [x for x in db.MIGRATIONS[0][1].split(";") if x.strip()]: c.execute(s)
+        ours = sorted(norm(r[0]) for r in c.execute("SELECT sql FROM sqlite_master WHERE sql IS NOT NULL"))
+        self.assertEqual(ours, live)
 
     def test_no_drop_or_destructive_sql(self):
         for _, sql in db.MIGRATIONS[1:]:
