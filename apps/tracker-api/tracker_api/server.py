@@ -37,7 +37,9 @@ class App:
                 if m and method == "POST":
                     return 201, db.add_comment(c, m[1], actor, js().get("body"))
                 if method == "GET" and path == "/people":
-                    return 200, {"people": [{"id": r["handle"], "name": r["name"], "kind": r["kind"],
+                    return 200, {"people": [{"id": r["handle"], "display": r["name"],
+                                             "name": r["name"],  # DEPRECATED alias of display; removed next release
+                                             "kind": r["kind"],
                                              "githubLogin": r["github"] or None, "active": bool(r["active"])}
                                             for r in c.execute("SELECT * FROM people ORDER BY handle")]}
                 if method == "GET" and path == "/labels":

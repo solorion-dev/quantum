@@ -227,12 +227,57 @@ def item_json(c, row):
             "priority": row["priority"], "assigneeId": row["assignee_id"] or None, "labels": labels_of(c, row["id"]),
             "parentId": row["parent_id"] or None, "dueAt": row["due_at"] or None, "points": row["points"],
             "externalRef": row["external_ref"] or None, "source": row["source"],
-            "createdAt": row["created_at"], "updatedAt": row["updated_at"], **flags(c, row), "github": link[0] if link else None,
+            "createdAt": row["created_at"], "updatedAt": row["updated_at"], **flags(c, row),
+            "project": project_of(c, row), "automated": is_automated(c, row), "github": link[0] if link else None,
             "sync": {"state": state, "lastSyncedAt": link[1]["last_synced_at"] if link else None,
                      "pendingSuggestionId": f"SUG-{sug['id']}" if sug else None,
                      "error": last_err["detail"] if state == "error" else None}}
 
 STALE_DAYS = 14
+
+def _has_col(c, table, col):
+    return any(r[1] == col for r in c.execute(f"PRAGMA table_info({table})"))
+
+def project_of(c, row):
+    """Item's project. Live schema has no project column, so unless an explicit items.project column exists
+    (proposed in migrations/002_project_column.sql, not applied) it's the top-level ancestor via parent_id.
+    A root item is its own project. Cycles/missing parents stop at the last reachable item."""
+    if "project" in row.keys() and row["project"]:
+        return {"id": row["project"], "title": None, "derived": False}
+    cur, seen = row, {row["id"]}
+    while cur["parent_id"] and cur["parent_id"] not in seen:
+        nxt = c.execute("SELECT id, title, parent_id FROM items WHERE id=?", (cur["parent_id"],)).fetchone()
+        if not nxt: break
+        seen.add(nxt["id"]); cur = nxt
+    return {"id": cur["id"], "title": cur["title"], "derived": True}
+
+# `automated` rule: true when the item's CREATOR or its LAST WRITER is an automated actor.
+#   creator     = actor of the item's 'created' event (else items.source if it is an automated source)
+#   last writer = the field_clock entry with the latest `at` (per-field provenance)
+#   automated actor = provenance source in AUTOMATED_SOURCES, OR the actor's people.kind in AUTOMATED_KINDS,
+#                     OR the handle itself is a sync/A2A system actor. Humans (people.kind='human') and unknown
+#                     UI actors are not automated. Accepting a GitHub suggestion is a human write.
+AUTOMATED_SOURCES = {"sync", "github", "github-sync", "webhook", "a2a", "agent", "automation"}
+AUTOMATED_KINDS = {"agent", "bot", "a2a", "sync", "system"}
+SYSTEM_ACTORS = {"sync", "github-sync", "a2a", "webhook"}
+
+def _actor_automated(c, actor, source=None):
+    if source and source in AUTOMATED_SOURCES: return True
+    if not actor: return False
+    if actor in SYSTEM_ACTORS: return True
+    r = c.execute("SELECT kind FROM people WHERE handle=?", (actor,)).fetchone()
+    return bool(r and r["kind"] in AUTOMATED_KINDS)
+
+def is_automated(c, row):
+    ev = c.execute("SELECT actor FROM events WHERE item_id=? AND kind='created' ORDER BY id LIMIT 1",
+                   (row["id"],)).fetchone()
+    if _actor_automated(c, ev["actor"] if ev else None, row["source"]): return True
+    try: clock = json.loads(row["field_clock"] or "{}")
+    except ValueError: clock = {}
+    if clock:
+        last = max(clock.values(), key=lambda v: v.get("at") or "")
+        if _actor_automated(c, last.get("writer"), last.get("source")): return True
+    return False
 
 def flags(c, row, now_ts=None):
     ref = now_ts or dt.datetime.now(dt.timezone.utc)
