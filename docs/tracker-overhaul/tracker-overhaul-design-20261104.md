@@ -23,13 +23,13 @@ Author: Volt (Harbor). Date: 2026-11-04. Status: draft for Helm/Scotty. Read-onl
 - `labels`(id, name, color) and `item_labels`(item_id, label_id). Existing tags migrate into them.
 - `status_history`(id, item_id, from, to, actor, at, source {ui,cli,mcp,github-suggest}).
 - `github_links`(item_id, repo, number, type {issue,pr}, project_id, project_item_id, node_id, etag, remote_updated_at, last_synced_at, UNIQUE(repo, number), UNIQUE(item_id, repo)).
-- `sync_suggestions`(id, item_id, field, proposed_value, remote_actor, delivery_id, state {open,accepted,rejected}, decided_by, at).
+- `suggested_changes`(id, item_id, field, proposed_value, remote_actor, delivery_id, state {open,accepted,rejected}, decided_by, at).
 - `sync_log`(id, run_id, direction {out,in}, item_id, action, result, delivery_id, error, at).
 - `webhook_deliveries`(delivery_id PK, event, received_at). Used for dedupe.
 
 ## 3. Sync direction and conflict rule (interim defaults)
 - **Tracker DB is the source of truth. GitHub Projects mirrors it outward.** An outbound run pushes title, status→Project Status field, priority/points/due→custom fields, and labels.
-- **Inbound changes never write directly.** A GitHub close/reopen, field edit, or assignee change creates a `sync_suggestions` row for a human to accept in the board.
+- **Inbound changes never write directly.** A GitHub close/reopen, field edit, or assignee change creates a `suggested_changes` row for a human to accept in the board.
 - **Assignees:** only `people` decides. GitHub assignee changes are suggestions, mapped through `people.github_login`.
 - **Conflict:** `field_clock` records the last writer per field. Outbound skips a field if the remote `updated_at`/etag moved since the last sync and the remote value differs; that case becomes a suggestion instead of an overwrite.
 - **Idempotent upsert keyed by TRK id:** the Project item carries a `TRK` text field, and `github_links` is unique on (item_id, repo). A rerun produces no diff.
@@ -52,13 +52,15 @@ Author: Volt (Harbor). Date: 2026-11-04. Status: draft for Helm/Scotty. Read-onl
 | Method | Path | Purpose |
 |---|---|---|
 | GET | /api/items?status&kind&label&assignee&q&cursor | list (replaces snapshot) |
-| GET | /api/items/:id | item + comments + history + github link |
+| GET | /api/items/:id | `{item, comments, statusHistory, changes, relations, links, githubLink}` in one payload |
 | POST | /api/items | create |
 | PATCH | /api/items/:id | whitelisted field edit, writes field_clock + status_history |
 | POST | /api/items/:id/comments | comment |
 | GET | /api/people, /api/labels | registries |
 | GET | /api/sync/status, /api/sync/log | sync health |
-| GET | /api/sync/suggestions; POST /api/sync/suggestions/:id/{accept,reject} | inbound review |
+| GET | /api/suggestions?state=pending | inbound review (state: pending/accepted/rejected/all) |
+| POST | /api/suggestions/:id/accept | applies the change via normal update; logged to status history/events |
+| POST | /api/suggestions/:id/reject | body `{reason?}` |
 | POST | /api/sync/run?dry=1 | outbound mirror (mock until install) |
 | POST | /webhooks/github | signed receiver |
 
@@ -73,10 +75,15 @@ export interface GitHubLink { repo: string; number: number; type: 'issue'|'pull_
 export interface TrackerItem { id: `TRK-${string}`; kind: Kind; title: string; body: string
   status: Status; priority: Priority; assigneeId: string|null; labels: string[]
   parentId: string|null; dueAt: string|null; points: number|null
-  createdAt: string; updatedAt: string; github: GitHubLink|null
+  createdAt: string; updatedAt: string
+  readonly stale: boolean        // computed: not done/cancelled and no update in 14 days
+  readonly needsTriage: boolean  // computed: no assignee, or priority 'none', or backlog with no labels
+  github: GitHubLink|null
   sync: { state: SyncState; lastSyncedAt: string|null; pendingSuggestionId: string|null; error: string|null } }
 ```
-Fixture (20 fake items, TRK-9001..9020, fake repo `solorion-dev/sandbox`): `docs/tracker-overhaul/fixture.json`.
+Fixture (20 fake items, TRK-9001..9020, fake repo `solorion-dev/sandbox`): `docs/tracker-overhaul/fixture.json` (exact `GET /api/items` shape). Seed source: `apps/tracker-api/fixtures/items.json`.
+Detail payload adds `comments[{id,actor,body,at}]`, `statusHistory[{fromStatus,toStatus,actor,source,at}]`, `relations[{rel,itemId,direction}]`, `links[{kind,target,label}]`, `githubLink`. Suggestions: `{id:'SUG-n', itemId, field, currentValue, proposedValue, remoteActor, reason, state:'pending'|'accepted'|'rejected', decidedBy, decisionReason, decidedAt, createdAt}`.
+Backend implemented in `apps/tracker-api` (see its README).
 
 ## 7. Test plan
 - Unit tests: status/priority mapping, field_clock conflict, upsert idempotency (run twice, zero diff), and HMAC verify (good, bad, and missing signatures).
