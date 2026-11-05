@@ -47,6 +47,22 @@ import {
  *    allowlisted), guarded by the same 390px row-geometry contract as
  *    the inbox rows: no row element may overflow the viewport.
  *
+ * Part 3 (2026-11-05, TRK-0609) — the last two tabs, completing the
+ * every-tab live-mode coverage (Home/Create Parts 1-2, Services/Mail
+ * in the Part 2 block above):
+ *  - Chat rides the Sol gateway base URL (settings.sol), a different
+ *    settings field than hub/nebula: the Chat pane renders the stub
+ *    gateway's model list and streams a fixture reply through the
+ *    SSE completions endpoint; Chat -> Agents renders the stub fleet
+ *    snapshot (roster, shared desk, DM thread).
+ *  - Collab rides the hub base URL like Part 1: goal cards render
+ *    from /api/collab/goals, expanding one fetches its detail
+ *    (sub-goals + tasks), and the Board view renders the stub kanban
+ *    columns plus the Recent activity feed.
+ *  - A dead Sol gateway (models + agents -> 500) degrades only Chat,
+ *    and dead Collab endpoints degrade only Collab — in both cases
+ *    the /api-backed Home dashboard in the same boot stays live.
+ *
  * Screenshots continue the app-shell numbering under e2e/screenshots/.
  */
 
@@ -85,6 +101,22 @@ async function openLive(page: Page, opts: StubApiOptions = {}) {
 async function openLiveMcp(page: Page, opts: StubApiOptions = {}) {
   await installStubApi(page, opts);
   await seedLiveSettings(page, { mcpKey: STUB_MCP_KEY });
+  await page.goto('/');
+  await expect(page.getByText('Quantum · DSECT')).toBeVisible();
+  await expect(tabBar(page).getByRole('button', { name: 'Home', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+}
+
+/**
+ * Boot live AND Sol-configured: settings.sol.baseUrl is what flips
+ * the Chat tab from "isn't connected" to live (ChatScreen reads the
+ * sol field only — the hub URL does not configure Chat).
+ */
+async function openLiveSol(page: Page, opts: StubApiOptions = {}) {
+  await installStubApi(page, opts);
+  await seedLiveSettings(page, { solBase: true });
   await page.goto('/');
   await expect(page.getByText('Quantum · DSECT')).toBeVisible();
   await expect(tabBar(page).getByRole('button', { name: 'Home', exact: true })).toHaveAttribute(
@@ -348,4 +380,179 @@ test('Create → Gallery list rows stay inside the 390px viewport (TRK-0498)', a
   expect(geometry.outside).toEqual([]);
 
   await shot(page, '20-create-gallery-list-live-mobile.png');
+});
+
+test('Chat renders live Sol models and streams a fixture reply', async ({ page }) => {
+  await openLiveSol(page);
+
+  await openTab(page, 'Chat');
+
+  // Live, not demo: the pane connected to the stub gateway.
+  await expect(page.getByText("Chat isn't connected")).toHaveCount(0);
+  await expect(page.getByText('Demo mode')).toHaveCount(0);
+
+  // The model picker offers exactly the models the gateway reported
+  // (GET /api/sol/v1/models -> { data: [{ id }] }).
+  const modelSelect = page.getByLabel('Model');
+  await expect(modelSelect).toBeVisible();
+  await expect(modelSelect.locator('option')).toHaveText(['stub-sol-pro', 'stub-sol-lite']);
+  await expect(modelSelect).toHaveValue('stub-sol-pro');
+
+  // A full round trip: new thread, send, and the SSE-streamed fixture
+  // reply (POST /api/sol/v1/chat/completions) lands in the thread.
+  await page.getByRole('button', { name: 'New conversation' }).click();
+  await expect(page.getByText('Say hello to Sol')).toBeVisible();
+  await page.getByPlaceholder('Message Sol…').fill('Hello from the fixture test');
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  // The sent text shows twice by design: the thread title is derived
+  // from the first user message, and the bubble renders it too.
+  await expect(page.getByRole('heading', { name: 'Hello from the fixture test' })).toBeVisible();
+  await expect(page.getByText('Fixture reply: Sol is rendering live tokens.')).toBeVisible();
+  await expect(page.getByText('Demo mode')).toHaveCount(0);
+
+  await shot(page, '21-chat-live-mobile.png');
+});
+
+test('Chat → Agents renders the live fleet snapshot and a DM thread', async ({ page }) => {
+  await openLiveSol(page);
+
+  await openTab(page, 'Chat');
+  await page.getByRole('tab', { name: 'Agents' }).click();
+
+  // GET /api/sol/agents -> { agents, desk }: the shared-desk card
+  // renders the desk line for holder_kind 'human'.
+  await expect(page.getByText('Shared desk')).toBeVisible();
+  await expect(page.getByText('You have the desk.')).toBeVisible();
+  await expect(page.getByText('Fleet not connected')).toHaveCount(0);
+  await expect(page.getByText('Demo mode')).toHaveCount(0);
+
+  // The Part 1 roster with gateway states and activity lines:
+  // status.text wins for Cooper and Helm, last_action for Qubit.
+  for (const name of ['Cooper', 'Qubit', 'Helm']) {
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
+  }
+  await expect(page.getByText('Working', { exact: true })).toBeVisible();
+  await expect(page.getByText('Wiring the live-mode fixtures')).toBeVisible();
+  await expect(page.getByText(/Triaged the fixture inbox · 5m ago/)).toBeVisible();
+  await expect(page.getByText('Waiting on the OVMS docket review')).toBeVisible();
+
+  // Opening Cooper's row polls GET /api/sol/dm/cooper and renders
+  // the fixture DM history in the sheet.
+  await page.getByRole('button', { name: /Cooper/ }).click();
+  await expect(page.getByText('DM · Cooper')).toBeVisible();
+  await expect(page.getByText('Fixture DM: the fleet view is live.')).toBeVisible();
+  await expect(page.getByText('Fixture DM: looking good from the desk.')).toBeVisible();
+
+  await shot(page, '22-chat-agents-live-mobile.png');
+});
+
+test('Collab renders live goals and expands fixture sub-goals and tasks', async ({ page }) => {
+  await openLive(page);
+
+  await openTab(page, 'Collab');
+
+  // GET /api/collab/goals: both fixture goals as cards, with the
+  // progress the payload reports — no not-connected state.
+  await expect(page.getByText('Collaboration is not connected')).toHaveCount(0);
+  await expect(page.getByText('Ship live-mode coverage')).toBeVisible();
+  await expect(page.getByText('Fox portrait render')).toBeVisible();
+  await expect(page.getByText('50%').first()).toBeVisible();
+  await expect(page.getByText('25%').first()).toBeVisible();
+
+  // Expanding a goal fetches GET /api/collab/goals/{id}: description,
+  // the sub-goal block, and its task rows with assignee badges.
+  await page.getByRole('button', { name: /Ship live-mode coverage/ }).click();
+  await expect(page.getByText('Fixture goal: every tab renders live data.')).toBeVisible();
+  await expect(page.getByText('Chat and Collab fixtures')).toBeVisible();
+  await expect(page.getByText('Stub the Sol and Collab endpoints')).toBeVisible();
+  await expect(page.getByText('Ship live-mode part 3')).toBeVisible();
+
+  await shot(page, '23-collab-simple-live-mobile.png');
+});
+
+test('Collab → Board renders the fixture kanban and activity feed', async ({ page }) => {
+  await openLive(page);
+
+  await openTab(page, 'Collab');
+  await page.getByRole('tab', { name: 'Board' }).click();
+
+  // GET /api/collab/board: the three columns with the stub counts
+  // (1 todo / 1 doing / 2 done, derived client-side from the columns).
+  for (const column of ['To do', 'Doing', 'Done']) {
+    await expect(
+      page.getByRole('region', { name: `${column} column` }),
+    ).toBeVisible();
+  }
+  const board = page.locator('section');
+  await expect(board.getByText('Ship live-mode part 3')).toBeVisible();
+  await expect(board.getByText('Stub the Sol and Collab endpoints')).toBeVisible();
+  await expect(board.getByText('Ship live-mode part 2 fixtures')).toBeVisible();
+  await expect(board.getByText('Finish the stub harbour render')).toBeVisible();
+  // Board-enriched context line: goal title › sub-goal title.
+  await expect(
+    board.getByText('Ship live-mode coverage › Chat and Collab fixtures').first(),
+  ).toBeVisible();
+
+  // GET /api/collab/activity feeds the Recent activity card: the
+  // newest event renders its kind label ("task move" from task.move).
+  await expect(page.getByText('Recent activity')).toBeVisible();
+  await expect(page.getByText('task move').first()).toBeVisible();
+  await expect(page.getByText('task create').first()).toBeVisible();
+
+  await shot(page, '24-collab-board-live-mobile.png');
+});
+
+test('a dead Sol gateway degrades only Chat', async ({ page }) => {
+  await openLiveSol(page, {
+    fail: { '/api/sol/v1/models': 500, '/api/sol/agents': 500 },
+  });
+
+  await openTab(page, 'Chat');
+
+  // The pane's own honest failure state, naming the gateway's HTTP
+  // 500 (sol.ts toHttpError) — no fake models, no demo labelling.
+  await expect(page.getByText("Can't reach the Sol gateway")).toBeVisible();
+  await expect(page.getByText(/The Sol gateway returned HTTP 500/)).toBeVisible();
+  await expect(page.getByText("Chat isn't connected")).toHaveCount(0);
+
+  await shot(page, '25-chat-sol-failure-mobile.png');
+
+  // The rest of the app in the same boot is unaffected: Home is still
+  // live off the (healthy) stub hub /api endpoints.
+  await openTab(page, 'Home');
+  await expect(page.getByTestId('services-summary')).toContainText('2/4');
+  await expect(page.getByText('OVMS kit for Jinx')).toBeVisible();
+  await expect(page.getByText('Demo mode')).toHaveCount(0);
+});
+
+test('dead Collab endpoints degrade only Collab', async ({ page }) => {
+  await openLive(page, {
+    fail: {
+      '/api/collab/goals': 500,
+      '/api/collab/board': 500,
+      '/api/collab/tags': 500,
+      '/api/collab/activity': 500,
+    },
+  });
+
+  await openTab(page, 'Collab');
+
+  // Every Collab call failed, so the screen invents nothing: the
+  // Simple view's honest empty state, and no fixture goal anywhere.
+  // (The screen's error card only engages on its refresh path —
+  // the Board view's "Board unavailable" is the other honest state.)
+  await expect(page.getByText('No goals yet')).toBeVisible();
+  await expect(page.getByText('Ship live-mode coverage')).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Board' }).click();
+  await expect(page.getByText('Board unavailable')).toBeVisible();
+  await expect(page.getByText('Ship live-mode part 3')).toHaveCount(0);
+
+  await shot(page, '26-collab-failure-mobile.png');
+
+  // The rest of the app in the same boot is unaffected: Home is still
+  // live off the (healthy) stub hub /api endpoints.
+  await openTab(page, 'Home');
+  await expect(page.getByTestId('services-summary')).toContainText('2/4');
+  await expect(page.getByText('OVMS kit for Jinx')).toBeVisible();
+  await expect(page.getByText('Demo mode')).toHaveCount(0);
 });

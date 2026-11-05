@@ -58,6 +58,24 @@ import type { Page } from '@playwright/test';
  * credential.
  */
 
+/**
+ * Part 3 (2026-11-05, TRK-0609): the last two tabs get live fixtures.
+ *  - Collab (src/screens/Collab/* over src/api/collab.ts) rides the HUB
+ *    base URL like Part 1: plain GETs under /api/collab/* — goals list,
+ *    goal detail (nested subgoals + tasks), board ({ goalId, columns }),
+ *    tags, and the activity feed. Goal-detail paths carry the goal id,
+ *    so the routes table keys them by their full fixture pathnames.
+ *  - Chat (src/screens/Chat/* over src/api/sol.ts) rides the SOL base
+ *    URL — a different settings field than hub/nebula, which is why
+ *    `seedLiveSettings` grows a `solBase` option. Its surfaces:
+ *    GET /api/sol/v1/models ({ data: [{ id }] }) for the model picker,
+ *    POST /api/sol/v1/chat/completions answering SSE deltas for the
+ *    conversation view, GET /api/sol/agents ({ agents, desk }) for the
+ *    fleet view, and GET /api/sol/dm/{agentId} ({ messages }) for DMs.
+ *    The completions + DM paths are answered specially in
+ *    installStubApi (a stream and a path parameter, not table rows).
+ */
+
 /** Must match the preview port in playwright.config.ts. */
 export const STUB_ORIGIN = 'http://127.0.0.1:5199';
 
@@ -373,6 +391,295 @@ export const STUB_MAIL_READ: Record<number, Record<string, unknown>> = {
   },
 };
 
+
+/**
+ * GET /api/sol/v1/models (Sol gateway) — the Chat pane's model picker
+ * only ever offers what this list reports (ChatPane.tsx over sol.ts
+ * `fetchModels`, which reads `{ data: [{ id }] }`).
+ */
+export const STUB_SOL_MODELS = {
+  data: [{ id: 'stub-sol-pro' }, { id: 'stub-sol-lite' }],
+};
+
+/** The streamed reply the stub gateway sends for any chat completion. */
+export const STUB_SOL_REPLY = 'Fixture reply: Sol is rendering live tokens.';
+
+/**
+ * GET /api/sol/agents (Sol gateway) — the Chat -> Agents fleet snapshot
+ * (`fetchFleetSnapshot` reads `{ agents, desk }`). The roster is the
+ * Part 1 crew — Cooper, Qubit, Helm — and the desk is Scotty's
+ * (`holder_kind: 'human'` renders "You have the desk."). Activity lines
+ * lean on the earlier fixture story: Cooper is wiring these very
+ * fixtures, Qubit triaged the fixture inbox, Helm waits on the docket.
+ */
+export const STUB_SOL_AGENTS = {
+  agents: [
+    {
+      id: 'cooper',
+      name: 'Cooper',
+      workspace: 'ws-cooper',
+      state: 'working',
+      status: { text: 'Wiring the live-mode fixtures' },
+      last_action: { action: 'Ran the E2E suite' },
+      last_action_age_s: 120,
+      relay_seen_age_s: 60,
+    },
+    {
+      id: 'qubit',
+      name: 'Qubit',
+      workspace: 'ws-qubit',
+      state: 'idle',
+      last_action: { action: 'Triaged the fixture inbox' },
+      last_action_age_s: 300,
+      relay_seen_age_s: 240,
+    },
+    {
+      id: 'helm',
+      name: 'Helm',
+      workspace: 'ws-helm',
+      state: 'blocked',
+      status: { text: 'Waiting on the OVMS docket review' },
+      relay_seen_age_s: 900,
+    },
+  ],
+  desk: { holder_kind: 'human', holder: null, handoff: null },
+};
+
+/**
+ * GET /api/sol/dm/{agentId} — DM history per agent (`fetchDm` reads
+ * `{ messages }`; rows render via author/text). Keyed by agent id;
+ * unknown ids fall back to Cooper's thread in installStubApi rather
+ * than inventing a roster.
+ */
+export const STUB_SOL_DM: Record<string, { author: string; text: string; ts: number }[]> = {
+  cooper: [
+    { author: 'Cooper', text: 'Fixture DM: the fleet view is live.', ts: 1760000000 },
+    { author: 'you', text: 'Fixture DM: looking good from the desk.', ts: 1760000060 },
+  ],
+  qubit: [{ author: 'Qubit', text: 'Fixture DM: inbox triage is done.', ts: 1760000000 }],
+  helm: [{ author: 'Helm', text: 'Fixture DM: the OVMS kit is still queued.', ts: 1760000000 }],
+};
+
+/**
+ * GET /api/collab/goals — the Collab tab's goal list (collab.ts
+ * `goals()` -> normalizeGoal: id/title required, progress clamped to
+ * 0..1, unknown statuses fall back to 'active'). Owners are the
+ * Part 1 roster slugs.
+ */
+export const STUB_COLLAB_GOALS = [
+  {
+    id: 'goal-live-e2e',
+    title: 'Ship live-mode coverage',
+    description: 'Fixture goal: every tab renders live data.',
+    status: 'active',
+    owner: 'cooper',
+    tags: ['e2e', 'quantum'],
+    progress: 0.5,
+  },
+  {
+    id: 'goal-fox-portrait',
+    title: 'Fox portrait render',
+    description: 'Fixture goal: the stub Nebula render from Part 1.',
+    status: 'paused',
+    owner: 'qubit',
+    tags: ['nebula'],
+    progress: 0.25,
+  },
+];
+
+/**
+ * GET /api/collab/goals/{id} — goal detail with nested sub-goals +
+ * tasks, the payload SimpleView expands into (goalDetail ->
+ * normalizeGoal, which normalizes the nested rows). Keyed by goal id;
+ * rows mirror STUB_COLLAB_GOALS and the board below exactly.
+ */
+export const STUB_COLLAB_GOAL_DETAILS: Record<string, Record<string, unknown>> = {
+  'goal-live-e2e': {
+    id: 'goal-live-e2e',
+    title: 'Ship live-mode coverage',
+    description: 'Fixture goal: every tab renders live data.',
+    status: 'active',
+    owner: 'cooper',
+    tags: ['e2e', 'quantum'],
+    progress: 0.5,
+    subgoals: [
+      {
+        id: 'sub-chat-collab',
+        goalId: 'goal-live-e2e',
+        title: 'Chat and Collab fixtures',
+        status: 'open',
+        owner: 'cooper',
+        tags: ['e2e'],
+        progress: 0.5,
+        tasks: [
+          {
+            id: 'task-stub-endpoints',
+            subGoalId: 'sub-chat-collab',
+            title: 'Stub the Sol and Collab endpoints',
+            status: 'doing',
+            assignee: 'cooper',
+            tags: ['e2e'],
+            dueDate: '2026-10-24',
+            notes: null,
+          },
+          {
+            id: 'task-ship-part3',
+            subGoalId: 'sub-chat-collab',
+            title: 'Ship live-mode part 3',
+            status: 'todo',
+            assignee: 'cooper',
+            tags: ['e2e'],
+            dueDate: '2026-11-06',
+            notes: null,
+          },
+        ],
+      },
+    ],
+  },
+  'goal-fox-portrait': {
+    id: 'goal-fox-portrait',
+    title: 'Fox portrait render',
+    description: 'Fixture goal: the stub Nebula render from Part 1.',
+    status: 'paused',
+    owner: 'qubit',
+    tags: ['nebula'],
+    progress: 0.25,
+    subgoals: [
+      {
+        id: 'sub-render-queue',
+        goalId: 'goal-fox-portrait',
+        title: 'Render queue',
+        status: 'open',
+        owner: 'qubit',
+        tags: ['nebula'],
+        progress: 1,
+        tasks: [
+          {
+            id: 'task-harbour-render',
+            subGoalId: 'sub-render-queue',
+            title: 'Finish the stub harbour render',
+            status: 'done',
+            assignee: 'qubit',
+            tags: ['nebula'],
+            dueDate: null,
+            notes: null,
+          },
+        ],
+      },
+    ],
+  },
+};
+
+/**
+ * GET /api/collab/board — the kanban snapshot (collab.ts `board()`
+ * reads `{ goalId, columns: { todo, doing, done } }` and derives its
+ * counts from the columns). The cards are the goal-detail tasks above,
+ * board-enriched with subGoalTitle/goalTitle, plus one done card for
+ * the Part 2 fixture work: 1 todo / 1 doing / 2 done.
+ */
+export const STUB_COLLAB_BOARD = {
+  goalId: null,
+  columns: {
+    todo: [
+      {
+        id: 'task-ship-part3',
+        subGoalId: 'sub-chat-collab',
+        title: 'Ship live-mode part 3',
+        status: 'todo',
+        assignee: 'cooper',
+        tags: ['e2e'],
+        dueDate: '2026-11-06',
+        notes: null,
+        subGoalTitle: 'Chat and Collab fixtures',
+        goalTitle: 'Ship live-mode coverage',
+      },
+    ],
+    doing: [
+      {
+        id: 'task-stub-endpoints',
+        subGoalId: 'sub-chat-collab',
+        title: 'Stub the Sol and Collab endpoints',
+        status: 'doing',
+        assignee: 'cooper',
+        tags: ['e2e'],
+        dueDate: '2026-10-24',
+        notes: null,
+        subGoalTitle: 'Chat and Collab fixtures',
+        goalTitle: 'Ship live-mode coverage',
+      },
+    ],
+    done: [
+      {
+        id: 'task-part2-fixtures',
+        subGoalId: 'sub-services-mail',
+        title: 'Ship live-mode part 2 fixtures',
+        status: 'done',
+        assignee: 'helm',
+        tags: ['e2e'],
+        dueDate: null,
+        notes: null,
+        subGoalTitle: 'Services and Mail fixtures',
+        goalTitle: 'Ship live-mode coverage',
+      },
+      {
+        id: 'task-harbour-render',
+        subGoalId: 'sub-render-queue',
+        title: 'Finish the stub harbour render',
+        status: 'done',
+        assignee: 'qubit',
+        tags: ['nebula'],
+        dueDate: null,
+        notes: null,
+        subGoalTitle: 'Render queue',
+        goalTitle: 'Fox portrait render',
+      },
+    ],
+  },
+};
+
+/** GET /api/collab/tags — labels double as BoardView filter values. */
+export const STUB_COLLAB_TAGS = [
+  { id: 'tag-e2e', label: 'e2e', color: '#2563EB', uses: 4 },
+  { id: 'tag-quantum', label: 'quantum', color: '#7C3AED', uses: 2 },
+  { id: 'tag-nebula', label: 'nebula', color: '#059669', uses: 2 },
+];
+
+/**
+ * GET /api/collab/activity?limit=20 — the Board view's Recent activity
+ * feed (collab.ts `activity()` keeps id/at/actor/kind/entity/detail).
+ * Details name the fixture tasks above so the feed tells the same
+ * story as the board.
+ */
+export const STUB_COLLAB_ACTIVITY = [
+  {
+    id: 'act-3',
+    at: '2026-10-20T13:05:00Z',
+    actor: 'cooper',
+    kind: 'task.move',
+    entityType: 'task',
+    entityId: 'task-stub-endpoints',
+    detail: 'Stub the Sol and Collab endpoints',
+  },
+  {
+    id: 'act-2',
+    at: '2026-10-20T12:40:00Z',
+    actor: 'helm',
+    kind: 'task.create',
+    entityType: 'task',
+    entityId: 'task-part2-fixtures',
+    detail: 'Ship live-mode part 2 fixtures',
+  },
+  {
+    id: 'act-1',
+    at: '2026-10-19T16:20:00Z',
+    actor: 'qubit',
+    kind: 'task.move',
+    entityType: 'task',
+    entityId: 'task-harbour-render',
+    detail: 'Finish the stub harbour render',
+  },
+];
+
 export interface StubMcpOptions {
   /**
    * HTTP status for EVERY /mcp request — the way to prove a dead MCP
@@ -410,6 +717,14 @@ function routes(opts: StubApiOptions): Record<string, unknown> {
     '/api/jobs': STUB_JOBS,
     '/api/workflows': STUB_WORKFLOWS,
     '/api/gallery': STUB_GALLERY,
+    '/api/collab/goals': STUB_COLLAB_GOALS,
+    '/api/collab/goals/goal-live-e2e': STUB_COLLAB_GOAL_DETAILS['goal-live-e2e'],
+    '/api/collab/goals/goal-fox-portrait': STUB_COLLAB_GOAL_DETAILS['goal-fox-portrait'],
+    '/api/collab/board': STUB_COLLAB_BOARD,
+    '/api/collab/tags': STUB_COLLAB_TAGS,
+    '/api/collab/activity': STUB_COLLAB_ACTIVITY,
+    '/api/sol/v1/models': STUB_SOL_MODELS,
+    '/api/sol/agents': STUB_SOL_AGENTS,
   };
 }
 
@@ -423,18 +738,22 @@ function routes(opts: StubApiOptions): Record<string, unknown> {
  * hub base URL (see mcpConfigured / mailConfigured in the app). Pass
  * STUB_MCP_KEY to boot those screens live; the default '' keeps the
  * Part 1 behaviour for the hub /api-backed screens.
+ *
+ * `solBase` (Part 3): the Chat tab reads settings.sol.baseUrl, not the
+ * hub URL — pass true to point Sol at the stub origin too, so Chat
+ * (models, completions, fleet, DMs) boots live alongside the rest.
  */
 export async function seedLiveSettings(
   page: Page,
-  seedOpts: { mcpKey?: string } = {},
+  seedOpts: { mcpKey?: string; solBase?: boolean } = {},
 ): Promise<void> {
   await page.addInitScript(
-    ({ origin, mcpKey }) => {
+    ({ origin, mcpKey, solBase }) => {
       const settings = {
         hub: { baseUrl: origin },
         nebula: { baseUrl: origin },
         relay: { baseUrl: '' },
-        sol: { baseUrl: '' },
+        sol: { baseUrl: solBase ? origin : '' },
         mcpKey,
         nebulaPassphrase: '',
       };
@@ -445,7 +764,7 @@ export async function seedLiveSettings(
         // settings — there is nothing honest to fall back to in a fixture.
       }
     },
-    { origin: STUB_ORIGIN, mcpKey: seedOpts.mcpKey ?? '' },
+    { origin: STUB_ORIGIN, mcpKey: seedOpts.mcpKey ?? '', solBase: seedOpts.solBase ?? false },
   );
 }
 
@@ -638,6 +957,36 @@ export async function installStubApi(page: Page, opts: StubApiOptions = {}): Pro
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
           'base64',
         ),
+      });
+      return;
+    }
+    // Sol chat completions stream SSE, not JSON (sol.ts readSse):
+    // two content deltas, then [DONE]. The fail override above runs
+    // first, so a test can still kill this endpoint.
+    if (pathname === '/api/sol/v1/chat/completions') {
+      const half = Math.ceil(STUB_SOL_REPLY.length / 2);
+      const chunk = (content: string) =>
+        `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body:
+          chunk(STUB_SOL_REPLY.slice(0, half)) +
+          chunk(STUB_SOL_REPLY.slice(half)) +
+          'data: [DONE]\n\n',
+      });
+      return;
+    }
+    // Sol DM history carries the agent id in the path itself
+    // (GET /api/sol/dm/{agentId}); sends (POST, same path) get the
+    // same payload back — the thread view re-reads after sending.
+    if (pathname.startsWith('/api/sol/dm/')) {
+      const agentId = decodeURIComponent(pathname.slice('/api/sol/dm/'.length));
+      const messages = STUB_SOL_DM[agentId] ?? STUB_SOL_DM['cooper'] ?? [];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ messages }),
       });
       return;
     }
