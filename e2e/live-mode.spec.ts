@@ -62,6 +62,8 @@ import {
  *  - A dead Sol gateway (models + agents -> 500) degrades only Chat,
  *    and dead Collab endpoints degrade only Collab — in both cases
  *    the /api-backed Home dashboard in the same boot stays live.
+ *    (TRK-0610, 2026-11-06: the dead-Collab case now also asserts the
+ *    screen's error card on initial load, not only its empty states.)
  *
  * Screenshots continue the app-shell numbering under e2e/screenshots/.
  */
@@ -537,13 +539,26 @@ test('dead Collab endpoints degrade only Collab', async ({ page }) => {
 
   await openTab(page, 'Collab');
 
-  // Every Collab call failed, so the screen invents nothing: the
-  // Simple view's honest empty state, and no fixture goal anywhere.
-  // (The screen's error card only engages on its refresh path —
-  // the Board view's "Board unavailable" is the other honest state.)
-  await expect(page.getByText('No goals yet')).toBeVisible();
+  // Every Collab call failed on the INITIAL load, so the screen's
+  // error card engages immediately (TRK-0610: the initial load now
+  // applies the same all-four-failed semantics as refresh()) — the
+  // backend-unreachable message with a Retry, not just the empty
+  // states. No fixture goal is invented anywhere.
+  await expect(
+    page.getByText(
+      'Could not reach the collaboration backend. Check the tailnet connection.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
   await expect(page.getByText('Ship live-mode coverage')).toHaveCount(0);
   await page.getByRole('tab', { name: 'Board' }).click();
+  // The error card stays up in Board view too, above its own
+  // "Board unavailable" empty state.
+  await expect(
+    page.getByText(
+      'Could not reach the collaboration backend. Check the tailnet connection.',
+    ),
+  ).toBeVisible();
   await expect(page.getByText('Board unavailable')).toBeVisible();
   await expect(page.getByText('Ship live-mode part 3')).toHaveCount(0);
 
