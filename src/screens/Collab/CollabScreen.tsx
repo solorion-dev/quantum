@@ -66,6 +66,7 @@ export function CollabScreen() {
     if (!client.configured) return;
     let cancelled = false;
     setLoading(true);
+    setError(null);
     Promise.allSettled([client.goals(), client.board(goalId ?? undefined), client.tags(), client.activity(20)])
       .then(([g, b, t, a]) => {
         if (cancelled) return;
@@ -73,6 +74,13 @@ export function CollabScreen() {
         if (b.status === 'fulfilled') setBoard(b.value);
         if (t.status === 'fulfilled') setTags(t.value);
         if (a.status === 'fulfilled') setActivity(a.value);
+        // Same total-failure semantics as refresh() (TRK-0610): only
+        // when all four calls fail is the backend unreachable — partial
+        // failure still degrades per section with no error card.
+        const failures = [g, b, t, a].filter((r) => r.status === 'rejected');
+        if (failures.length === 4) {
+          setError('Could not reach the collaboration backend. Check the tailnet connection.');
+        }
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
