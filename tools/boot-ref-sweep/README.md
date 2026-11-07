@@ -74,6 +74,41 @@ list of `{value, kind, source_device, field}` objects plus an
 `"explicit+device"`). When `--from-device` is absent, output is
 exactly as in v1.
 
+## Harvesting live from a device (`--live-device`, v3)
+
+v3 removes the pre-capture step: the tool runs `lsblk` itself —
+read-only, it never writes, mounts, or probes with anything else —
+and feeds the JSON through the exact same harvest path as
+`--from-device`:
+
+```sh
+# the pre-wipe invocation: name the drive, sweep the live root
+python3 src/boot_ref_sweep.py --root / --live-device /dev/sda
+
+# a bare device name works too (normalised to /dev/sda):
+python3 src/boot_ref_sweep.py --root / --live-device sda --json
+```
+
+- The command run is
+  `lsblk -J -o NAME,UUID,PARTUUID,LABEL,PARTLABEL,SERIAL,WWN,TYPE <device>`
+  (children are included, as `lsblk -J` does by default), executed as
+  an argv list with no shell. The subtree rooted at the named device
+  is harvested; the loop/ram/squashfs pruning and merge rules are
+  identical to `--from-device`, and explicit `--uuid` / `--id` values
+  still win on duplicates.
+- `--live-device` and `--from-device` are mutually exclusive
+  (usage error, exit 2).
+- **Failure semantics — every failure is `INCOMPLETE` (exit 2), never
+  a verdict from an untrusted identifier set:** the `lsblk` binary is
+  missing, `lsblk` exits non-zero, its stdout is not valid JSON, the
+  device is absent from the `lsblk` output, or the harvest yields
+  zero identifiers. Each failure reports its own distinct reason.
+- In `--json` mode, live runs add
+  `"identifier_source": {"kind": "live-device", "device": "/dev/sda", "harvested": N}`;
+  human output prints one extra `live-device:` line naming the device
+  and the harvested count. When `--live-device` is absent, output is
+  byte-identical to v2.
+
 ## Verdicts & exit codes
 
 - `CLEAN` (0) — no references anywhere scanned.
@@ -103,7 +138,7 @@ for zstd images.
 ## Tests
 
 ```sh
-python3 -m pytest tests/ -q   # 38 tests: every surface, the gzip-hook
+python3 -m pytest tests/ -q   # 50 tests: every surface, the gzip-hook
                               # outage shape, early-cpio+main images,
                               # undecodable image = INCOMPLETE, WARN vs
                               # BLOCKED classification, decoder segment
@@ -114,7 +149,14 @@ python3 -m pytest tests/ -q   # 38 tests: every surface, the gzip-hook
                               # --device filter + unknown device,
                               # zero-harvest = INCOMPLETE, explicit-wins
                               # merge, stdin, and end-to-end BLOCKED
-                              # from harvested identifiers alone
+                              # from harvested identifiers alone; plus
+                              # v3 --live-device: mocked-lsblk harvest
+                              # incl. children, bare-name normalisation,
+                              # missing/non-zero/invalid/absent/zero
+                              # failures = INCOMPLETE, --from-device
+                              # conflict, explicit-wins dedupe, live
+                              # BLOCKED end-to-end, and v2 output
+                              # unchanged without the flag
 ```
 
 ## Field check (Oct 25, 2026, Tritium after recovery)
