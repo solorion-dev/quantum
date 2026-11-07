@@ -30,6 +30,14 @@ harvests UUID/PARTUUID (uuid-class) plus LABEL/PARTLABEL/SERIAL/WWN
 file that yields zero identifiers is INCOMPLETE, never a clean verdict:
 "sweep nothing, find nothing" must not clear a drive for removal.
 
+v3: `--live-device /dev/<name>` (a bare name such as `sda` is also
+accepted) runs `lsblk` itself — read-only — and feeds its JSON output
+through the same v2 harvest path, so no pre-captured file is needed.
+Every live-probe failure (lsblk missing, non-zero exit, invalid JSON,
+device absent from the output, zero identifiers harvested) is
+INCOMPLETE with exit 2; a failed probe never falls through to CLEAN.
+`--live-device` and `--from-device` are mutually exclusive.
+
 Verdicts:
   BLOCKED    a live (non-backup) surface references an identifier
   INCOMPLETE a surface that should have been scanned could not be
@@ -240,6 +248,73 @@ def harvest_identifiers(text: str, device: str | None = None) -> list:
     return harvest_blkid(text, device)
 
 
+# --- live device harvesting (--live-device, v3) -------------------------
+LSBLK_COLUMNS = "NAME,UUID,PARTUUID,LABEL,PARTLABEL,SERIAL,WWN,TYPE"
+
+
+def normalize_live_device(device: str) -> str:
+    """Normalise a --live-device argument to a full /dev/ path.
+
+    'sda' -> '/dev/sda'; '/dev/sda' is returned unchanged.
+    """
+    device = str(device).strip()
+    if device.startswith("/"):
+        return device
+    return "/dev/" + device
+
+
+def run_lsblk(device_path: str):
+    """Run lsblk (read-only) for one device; the injectable seam.
+
+    Returns (returncode, stdout, stderr). Tests monkeypatch this
+    module-level function to simulate lsblk without a real device.
+    argv list only — never shell=True.
+    """
+    proc = subprocess.run(
+        ["lsblk", "-J", "-o", LSBLK_COLUMNS, device_path],
+        capture_output=True, text=True)
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def harvest_live_device(device: str, runner=None) -> list:
+    """Harvest identifiers by running lsblk live on `device`.
+
+    Raises HarvestError with a distinct reason for every failure:
+    lsblk missing, lsblk non-zero exit, invalid JSON output, device
+    absent from the lsblk output. A successful run may still return
+    an empty list — the caller treats zero harvest as INCOMPLETE.
+    """
+    if runner is None:
+        runner = run_lsblk
+    device_path = normalize_live_device(device)
+    try:
+        returncode, stdout, stderr = runner(device_path)
+    except FileNotFoundError as exc:
+        raise HarvestError(
+            "lsblk binary not found: install util-linux or use "
+            f"--from-device with a pre-captured dump ({exc})") from exc
+    if returncode != 0:
+        detail = (stderr or "").strip()
+        raise HarvestError(
+            f"lsblk exited {returncode} for {device_path}"
+            + (f": {detail}" if detail else ""))
+    try:
+        data = json.loads(stdout)
+    except (ValueError, TypeError) as exc:
+        raise HarvestError(
+            f"lsblk output for {device_path} was not valid JSON: "
+            f"{exc}") from exc
+    if not isinstance(data, dict) or \
+            not isinstance(data.get("blockdevices"), list):
+        raise HarvestError(
+            f"lsblk output for {device_path} has no 'blockdevices' list")
+    wanted = _device_name(device_path)
+    if _find_lsblk_node(data["blockdevices"], wanted) is None:
+        raise HarvestError(
+            f"device {device_path} not present in lsblk output")
+    return harvest_lsblk(data, device=wanted)
+
+
 @dataclass
 class Sweep:
     hits: list = field(default_factory=list)
@@ -437,9 +512,15 @@ def main(argv: list[str] | None = None) -> int:
                     help="label, serial, or by-id fragment (repeatable)")
     ap.add_argument("--efibootmgr", metavar="FILE",
                     help="file containing `efibootmgr -v` output to scan")
-    ap.add_argument("--from-device", metavar="FILE", dest="from_device",
+    source = ap.add_mutually_exclusive_group()
+    source.add_argument("--from-device", metavar="FILE", dest="from_device",
                     help="harvest identifiers from an `lsblk -J` JSON or "
                          "`blkid -o export` dump ('-' reads stdin)")
+    source.add_argument("--live-device", metavar="DEVICE",
+                        dest="live_device",
+                        help="run lsblk live (read-only) on this device "
+                             "(/dev/sda or bare sda) and harvest its "
+                             "identifiers")
     ap.add_argument("--device", metavar="NAME",
                     help="with --from-device: harvest only this device's "
                          "subtree (e.g. sda)")
@@ -449,7 +530,52 @@ def main(argv: list[str] | None = None) -> int:
     explicit = list(args.uuid) + list(args.extra_ids)
     harvested: list = []
     identifiers_source = "explicit"
-    if args.from_device:
+    live_device_path = None
+    live_error = None
+    if args.live_device:
+        if args.device:
+            print("error: --device cannot be combined with "
+                  "--live-device (the live device is the subtree root)",
+                  file=sys.stderr)
+            return 2
+        live_device_path = normalize_live_device(args.live_device)
+        identifiers_source = "explicit+live-device" if explicit \
+            else "live-device"
+        try:
+            harvested = harvest_live_device(args.live_device)
+        except HarvestError as exc:
+            live_error = str(exc)
+            harvested = []
+        if live_error is not None or not harvested:
+            # Every live-probe failure — and a zero harvest — is
+            # INCOMPLETE (exit 2), never a verdict from an empty or
+            # untrusted identifier set.
+            reason = live_error or (
+                f"--live-device {live_device_path} yielded zero "
+                "identifiers; no sweep was run and nothing is cleared")
+            if args.json:
+                print(json.dumps({
+                    "root": args.root, "identifiers": explicit,
+                    "verdict": "INCOMPLETE",
+                    "harvested": [],
+                    "identifiers_source": identifiers_source,
+                    "identifier_source": {
+                        "kind": "live-device",
+                        "device": live_device_path, "harvested": 0},
+                    "hits": [], "unverified": [reason], "scanned": [],
+                }, indent=2))
+            else:
+                print(f"boot-ref-sweep: root={args.root} "
+                      f"identifiers={', '.join(explicit)}")
+                print(f"  live-device: {live_device_path} "
+                      f"(harvested 0 identifier(s))")
+                print("  harvested: (none)")
+                print(f"  UNVERIFIED: {reason}")
+                print("VERDICT: INCOMPLETE")
+                print("Removal is NOT cleared: some surfaces could not "
+                      "be verified.")
+            return EXIT["INCOMPLETE"]
+    elif args.from_device:
         identifiers_source = "explicit+device" if explicit else "device"
         try:
             if args.from_device == "-":
@@ -523,11 +649,20 @@ def main(argv: list[str] | None = None) -> int:
         if args.from_device:
             payload["harvested"] = [vars(h) for h in harvested]
             payload["identifiers_source"] = identifiers_source
+        if live_device_path is not None:
+            payload["harvested"] = [vars(h) for h in harvested]
+            payload["identifiers_source"] = identifiers_source
+            payload["identifier_source"] = {
+                "kind": "live-device", "device": live_device_path,
+                "harvested": len(harvested)}
         print(json.dumps(payload, indent=2))
     else:
         print(f"boot-ref-sweep: root={args.root} "
               f"identifiers={', '.join(identifiers)}")
-        if args.from_device:
+        if live_device_path is not None:
+            print(f"  live-device: {live_device_path} "
+                  f"(harvested {len(harvested)} identifier(s))")
+        if args.from_device or live_device_path is not None:
             print(f"  harvested ({identifiers_source}): "
                   + ", ".join(f"{h.value} [{h.kind}:{h.field} "
                               f"from {h.source_device}]"

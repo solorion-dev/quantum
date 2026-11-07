@@ -507,3 +507,179 @@ class FromDeviceCliTests(unittest.TestCase):
         p = cli_device(self.root, os.path.join(self.tmp, "nope.json"))
         self.assertEqual(p.returncode, 2)
         self.assertNotIn("VERDICT:", p.stdout)
+
+
+# --- v3: --live-device harvesting -----------------------------------------
+
+import contextlib  # noqa: E402
+import io  # noqa: E402
+from unittest import mock  # noqa: E402
+
+
+def run_main(argv, runner):
+    """Run brs.main() in-process with run_lsblk monkeypatched."""
+    out, err = io.StringIO(), io.StringIO()
+    with mock.patch.object(brs, "run_lsblk", runner):
+        with contextlib.redirect_stdout(out), \
+                contextlib.redirect_stderr(err):
+            try:
+                rc = brs.main(argv)
+            except SystemExit as exc:  # argparse usage errors
+                rc = exc.code
+    return rc, out.getvalue(), err.getvalue()
+
+
+def fake_lsblk(payload, returncode=0, stderr=""):
+    def runner(device_path):
+        runner.seen.append(device_path)
+        text = payload if isinstance(payload, str) else json.dumps(payload)
+        return returncode, text, stderr
+    runner.seen = []
+    return runner
+
+
+class LiveDeviceTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.root = self.tmp
+
+    # (a) live harvest incl. children/partitions, loop pruning as in v2
+    def test_live_harvest_children_and_loop_pruning(self):
+        runner = fake_lsblk(lsblk_sample())
+        got = brs.harvest_live_device("/dev/sda", runner=runner)
+        values = [h.value for h in got]
+        self.assertIn(GHOST_BOOT, values)
+        self.assertIn(OTHER_UUID, values)  # nested crypt child of sda2
+        self.assertIn(SERIAL, values)
+        self.assertNotIn("LOOPUUID-SKIP", values)
+        self.assertNotIn("LOOPCHILD-SKIP", values)
+        self.assertEqual(runner.seen, ["/dev/sda"])
+
+    def test_live_end_to_end_clean_and_source_field(self):
+        # empty root: no surface references any harvested identifier
+        # (a fixture fstab would false-hit the short partlabel "boot")
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "/dev/sda", "--json"],
+            fake_lsblk(lsblk_sample()))
+        self.assertEqual(rc, 0, out)
+        data = json.loads(out)
+        self.assertEqual(data["verdict"], "CLEAN")
+        self.assertEqual(data["identifier_source"],
+                         {"kind": "live-device", "device": "/dev/sda",
+                          "harvested": len(data["harvested"])})
+        self.assertGreater(data["identifier_source"]["harvested"], 0)
+        self.assertIn(GHOST_BOOT, data["identifiers"])
+
+    # (b) bare name normalization
+    def test_bare_name_normalized_to_dev_path(self):
+        self.assertEqual(brs.normalize_live_device("sda"), "/dev/sda")
+        self.assertEqual(brs.normalize_live_device("/dev/sda"), "/dev/sda")
+        runner = fake_lsblk(lsblk_sample())
+        brs.harvest_live_device("sda", runner=runner)
+        self.assertEqual(runner.seen, ["/dev/sda"])
+
+    # (c) lsblk missing -> INCOMPLETE exit 2
+    def test_lsblk_missing_is_incomplete(self):
+        def missing(device_path):
+            raise FileNotFoundError(2, "No such file or directory", "lsblk")
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"], missing)
+        self.assertEqual(rc, 2)
+        self.assertIn("VERDICT: INCOMPLETE", out)
+        self.assertIn("lsblk binary not found", out)
+        self.assertNotIn("VERDICT: CLEAN", out)
+
+    # (d) lsblk non-zero -> exit 2
+    def test_lsblk_nonzero_is_incomplete(self):
+        runner = fake_lsblk("", returncode=1, stderr="lsblk: /dev/sda: "
+                                                     "not a block device")
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"], runner)
+        self.assertEqual(rc, 2)
+        self.assertIn("VERDICT: INCOMPLETE", out)
+        self.assertIn("lsblk exited 1", out)
+
+    # (e) invalid JSON -> exit 2
+    def test_lsblk_invalid_json_is_incomplete(self):
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"],
+            fake_lsblk("this is not json {"))
+        self.assertEqual(rc, 2)
+        self.assertIn("VERDICT: INCOMPLETE", out)
+        self.assertIn("not valid JSON", out)
+
+    # (f) device not in output -> exit 2
+    def test_device_absent_from_output_is_incomplete(self):
+        only_sdb = {"blockdevices": [
+            {"name": "sdb", "type": "disk", "serial": "OTHER-SERIAL"}]}
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"],
+            fake_lsblk(only_sdb))
+        self.assertEqual(rc, 2)
+        self.assertIn("VERDICT: INCOMPLETE", out)
+        self.assertIn("not present in lsblk output", out)
+
+    # (g) zero harvest -> exit 2
+    def test_live_zero_harvest_is_incomplete(self):
+        empty = {"blockdevices": [
+            {"name": "sda", "type": "disk", "uuid": None, "label": "  ",
+             "children": [{"name": "sda1", "type": "part"}]}]}
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"],
+            fake_lsblk(empty))
+        self.assertEqual(rc, 2)
+        self.assertIn("VERDICT: INCOMPLETE", out)
+        self.assertIn("yielded zero identifiers", out)
+
+    # (h) --live-device + --from-device conflict rejected
+    def test_live_and_from_device_conflict_rejected(self):
+        dev = device_file(self.tmp, lsblk_sample())
+        p = subprocess.run([sys.executable, SRC, "--root", self.root,
+                            "--live-device", "sda",
+                            "--from-device", dev],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("not allowed with", p.stderr)
+
+    # (i) explicit --uuid wins dedupe over live-harvested duplicate
+    def test_live_explicit_wins_on_dedupe(self):
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda",
+             "--uuid", GHOST_ESP.lower(), "--json"],
+            fake_lsblk(lsblk_sample()))
+        self.assertEqual(rc, 0, out)
+        data = json.loads(out)
+        lowered = [i.lower() for i in data["identifiers"]]
+        self.assertEqual(lowered.count(GHOST_ESP.lower()), 1)
+        self.assertIn(GHOST_ESP.lower(), data["identifiers"])
+        self.assertNotIn(GHOST_ESP, data["identifiers"])
+        self.assertEqual(data["identifiers_source"],
+                         "explicit+live-device")
+
+    # (j) BLOCKED end-to-end: harvested id referenced by fixture fstab
+    def test_live_blocked_end_to_end(self):
+        write(self.root, "etc/fstab",
+              f"UUID={GHOST_BOOT} /boot ext4 defaults 0 2\n")
+        rc, out, _ = run_main(
+            ["--root", self.root, "--live-device", "sda"],
+            fake_lsblk(lsblk_sample()))
+        self.assertEqual(rc, 1, out)
+        self.assertIn("VERDICT: BLOCKED", out)
+        self.assertIn("live-device: /dev/sda", out)
+        self.assertIn("harvested", out)
+
+    # (k) without the flag, v2 golden behavior is unchanged
+    def test_no_live_flag_output_has_no_identifier_source(self):
+        write(self.root, "etc/fstab",
+              f"UUID={LIVE_BOOT} /boot ext4 defaults 0 2\n")
+        p = cli(self.root, GHOST_BOOT, extra=("--json",))
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        data = json.loads(p.stdout)
+        self.assertEqual(data["verdict"], "CLEAN")
+        self.assertNotIn("identifier_source", data)
+        self.assertNotIn("harvested", data)
+        dev = device_file(self.tmp, lsblk_sample())
+        data2 = json.loads(cli_device(self.root, dev,
+                                      extra=("--json",)).stdout)
+        self.assertNotIn("identifier_source", data2)
+        self.assertEqual(data2["identifiers_source"], "device")
