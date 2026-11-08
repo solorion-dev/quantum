@@ -36,6 +36,7 @@ export function CollabScreen() {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!client.configured) return;
@@ -90,12 +91,15 @@ export function CollabScreen() {
     const title = newTitle.trim();
     if (!title || creating) return;
     setCreating(true);
+    setCreateError(null);
     try {
       await client.createGoal({ title, description: newDesc.trim() || undefined });
       setNewTitle('');
       setNewDesc('');
       setShowNewGoal(false);
       await refresh();
+    } catch {
+      setCreateError('Could not create the goal. Check the connection and try again.');
     } finally {
       setCreating(false);
     }
@@ -136,7 +140,7 @@ export function CollabScreen() {
             <KanbanSquare size={14} /> Board
           </Button>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setShowNewGoal(true)}>
+        <Button size="sm" variant="outline" onClick={() => { setShowNewGoal(true); setCreateError(null); }}>
           <Plus size={14} /> Goal
         </Button>
       </div>
@@ -184,6 +188,9 @@ export function CollabScreen() {
             placeholder="Description (optional)"
             rows={3}
           />
+          {createError && (
+            <p className="text-sm text-[var(--red)]" role="alert">{createError}</p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setShowNewGoal(false)}>Cancel</Button>
             <Button onClick={createGoal} disabled={creating || !newTitle.trim()}>

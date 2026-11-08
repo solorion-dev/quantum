@@ -11,7 +11,7 @@
  * HomeScreen.test.tsx pattern: real payloads in, rendered states out.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { CollabScreen } from './CollabScreen';
 import { SETTINGS_KEY } from '../../lib/settings';
 
@@ -102,5 +102,101 @@ describe('CollabScreen initial load', () => {
     expect(await screen.findByText('Ship live-mode coverage')).toBeInTheDocument();
     expect(screen.queryByText(ERROR_TEXT)).not.toBeInTheDocument();
     expect(screen.queryByText('Collaboration is not connected')).not.toBeInTheDocument();
+  });
+});
+
+const CREATE_ERROR_TEXT =
+  'Could not create the goal. Check the connection and try again.';
+
+const NEW_GOAL = {
+  id: 'g2',
+  title: 'Brand new goal',
+  description: null,
+  status: 'active',
+  owner: null,
+  tags: [],
+  progress: 0,
+};
+
+function mockFetchWithMethod(
+  handler: (url: string, method: string) => Response | Promise<Response>,
+) {
+  const fn = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) =>
+    handler(String(input), init?.method ?? 'GET'),
+  );
+  vi.stubGlobal('fetch', fn);
+  return fn;
+}
+
+
+// jsdom does not implement the native <dialog> showModal()/close() that
+// the @dsect/ui Dialog drives its open state through; stand-ins toggle
+// the `open` property, which is what the creation tests assert on.
+HTMLDialogElement.prototype.showModal = function showModal() {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function close() {
+  this.open = false;
+};
+
+describe('CollabScreen goal creation (TRK-0616)', () => {
+  it('shows an inline error in the dialog and preserves input when create fails', async () => {
+    setHubUrl(BASE);
+    mockFetchWithMethod((url, method) => {
+      if (method === 'POST' && url.includes('/api/collab/goals'))
+        return json({ error: 'boom' }, 500);
+      return healthy(url);
+    });
+    render(<CollabScreen />);
+
+    expect(await screen.findByText('Ship live-mode coverage')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Goal' }));
+    const titleField = await screen.findByLabelText('Title');
+    fireEvent.change(titleField, { target: { value: 'A goal that will fail' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create goal' }));
+
+    expect(await screen.findByText(CREATE_ERROR_TEXT)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(CREATE_ERROR_TEXT);
+    // Dialog stays open and the typed title is preserved for retry.
+    expect(screen.getByLabelText('Title')).toHaveValue('A goal that will fail');
+    expect(screen.getByLabelText('Title').closest('dialog')?.open).toBe(true);
+    // The global initial-load error card must not appear as a duplicate.
+    expect(screen.queryByText(ERROR_TEXT)).not.toBeInTheDocument();
+  });
+
+  it('closes the dialog and refreshes the list when create succeeds', async () => {
+    setHubUrl(BASE);
+    let created = false;
+    let goalGets = 0;
+    mockFetchWithMethod((url, method) => {
+      if (method === 'POST' && url.includes('/api/collab/goals')) {
+        created = true;
+        return json(NEW_GOAL, 201);
+      }
+      if (url.includes('/api/collab/goals')) {
+        goalGets += 1;
+        return json(created ? [GOAL, NEW_GOAL] : [GOAL]);
+      }
+      return healthy(url);
+    });
+    render(<CollabScreen />);
+
+    expect(await screen.findByText('Ship live-mode coverage')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Goal' }));
+    const titleField = await screen.findByLabelText('Title');
+    fireEvent.change(titleField, { target: { value: 'Brand new goal' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create goal' }));
+
+    // Dialog closes (the native dialog's open flag drops; the closed
+    // dialog is not presented) and no create error is shown.
+    const dialog = titleField.closest('dialog');
+    await waitFor(() => expect(dialog?.open).toBe(false));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(screen.queryByText(CREATE_ERROR_TEXT)).not.toBeInTheDocument();
+    // Refresh re-fetched the list and the created goal now renders.
+    expect(goalGets).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText('Brand new goal')).toBeInTheDocument();
   });
 });
