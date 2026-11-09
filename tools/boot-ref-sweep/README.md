@@ -121,6 +121,33 @@ python3 src/boot_ref_sweep.py --root / --live-device sda --json
   `--from-device` harvest yielded zero identifiers. Removal is
   **not** cleared; an unscanned image is never reported as clean.
 
+## Drive-removal checklist
+
+The short operator sequence this tool exists to serve — run it in
+order, and treat anything other than `CLEAN`/`WARN` as a stop:
+
+1. **Name the drive by hard identifiers, never by position.** With
+   v3 you no longer capture them by hand:
+   `python3 src/boot_ref_sweep.py --root / --live-device /dev/sdX`
+   (a bare `sdX` works too). The sweep harvests the drive's own
+   UUID/PARTUUID/LABEL/PARTLABEL/SERIAL/WWN from live `lsblk` output.
+2. **Read the verdict before touching hardware:**
+   - `BLOCKED` (exit 1) — a live surface still references the drive.
+     Fix each listed reference, then re-run until it clears.
+   - `INCOMPLETE` (exit 2) — something could not be verified (a
+     failed `lsblk` probe, an undecodable or unreadable initramfs —
+     re-run with sufficient privileges). Removal is **not** cleared;
+     an unverified surface is never a pass.
+   - `WARN` (exit 0) — only backup/historical files mention the
+     drive. Safe to remove; remember a restore could resurrect them.
+   - `CLEAN` (exit 0) — no references anywhere scanned. Proceed.
+3. **Check firmware entries too** when the drive ever held an ESP:
+   add `--efibootmgr /tmp/efibootmgr.txt` (a captured
+   `efibootmgr -v` dump) to the same sweep.
+4. **After removal,** reboot (or run the fleet bootcheck) and confirm
+   the machine comes up clean before wiping or reusing the drive —
+   the sweep clears references, the boot proves it.
+
 ## Usage
 
 ```sh
