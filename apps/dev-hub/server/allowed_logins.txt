@@ -1,0 +1,9 @@
+# Developer Hub allowlist — tailnet logins admitted to dev.dsect.net.
+# One login per line; '#' lines are comments. Matched against the
+# Tailscale LoginName resolved by `tailscale whois` for the peer IP.
+#
+# An empty / missing file means NOBODY passes — fail closed, never open.
+# Seeded 2026-10-25 (slice 1): Scotty's login (also the only entry in
+# hub-api's on-box allowed_logins.txt, checked read-only) + Cooper's.
+scottyvenable@gmail.com
+cooper@dsect.net
