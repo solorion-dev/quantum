@@ -127,6 +127,35 @@ export class Registry {
           "codex-care": { minTier: 3, requiresApproval: false },
         },
       },
+      {
+        agentId: "grok-tessa",
+        adapter: "inbox",
+        cardSpec: {
+          name: "Tessa",
+          description:
+            "Grok-side agent participating in the Quantum A2A network at Scotty's direction. Hosted endpoint: tasks are queued to Tessa's inbox and worked in session (asynchronous by design — a session-based agent, like Cooper).",
+          providerOrg: "DSECT / Team Quantum",
+          providerUrl: "https://dsect.net",
+          documentationUrl: `${base}/docs`,
+          baseUrl: `${base}/agents/grok-tessa`,
+          oidcDiscoveryUrl: this.config.oidcDiscoveryUrl,
+          streaming: true,
+          pushNotifications: true,
+          skills: [
+            {
+              id: "coordination-notes",
+              name: "Coordination notes",
+              description:
+                "Leave a structured note/request for Tessa (tasking, questions, handoffs). Delivered to Tessa's A2A inbox; replies come back as task artifacts.",
+              tags: ["coordination", "async", "notes"],
+              examples: ["Note for Tessa: check the coordination thread."],
+            },
+          ],
+        },
+        skillMeta: {
+          "coordination-notes": { minTier: 3, requiresApproval: false },
+        },
+      },
     ];
     for (const seed of seeds) {
       const card = buildCard(seed.cardSpec);

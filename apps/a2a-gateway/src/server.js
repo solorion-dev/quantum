@@ -47,6 +47,7 @@ const adapters = new Map();
 adapters.set("qubit", new HermesAdapter(config, tasks));
 adapters.set("cooper", new InboxAdapter(store, tasks, "cooper"));
 adapters.set("bookkeeper", new InboxAdapter(store, tasks, "bookkeeper"));
+adapters.set("grok-tessa", new InboxAdapter(store, tasks, "grok-tessa"));
 const core = new GatewayCore({
   config,
   registry,
