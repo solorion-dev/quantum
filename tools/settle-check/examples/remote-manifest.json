@@ -1,0 +1,1 @@
+{"claim":"Example v2 remote claim: TRK-0123 is done and quantum PR #363 merged at the expected head","remote_claims":[{"expect_status":"done","id":"TRK-0123","type":"tracker_status"},{"expect_head_sha":"aaaaaaa","expect_merged":true,"expect_state":"closed","number":363,"repo":"solorion-dev/quantum","type":"github_pr"}],"remote_snapshot":"remote-snapshot.json","settle_seconds":0}
