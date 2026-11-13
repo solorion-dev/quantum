@@ -1,0 +1,1 @@
+{"comment":"Files larger than 1 MB that are explicitly allowed in the skills tree, keyed by '<skill>/<path>'. Each entry needs a note saying why the file must ship with the skill. Empty at seed time: the largest seeded file is wroc/assets/c36.png at ~893 KB, under the limit.","files":{}}

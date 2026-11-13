@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-bookkeeper",
+  "test_cases": [
+    {"input": "run a bookkeeper pass", "should_trigger": true},
+    {"input": "fold these duplicate Quantum memories", "should_trigger": true},
+    {"input": "file this rough note into the Codex", "should_trigger": true},
+    {"input": "design a character sheet", "should_trigger": false}
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-shift",
+  "test_cases": [
+    {"input": "you are on shift until 7am as JANITOR", "should_trigger": true},
+    {"input": "work your assigned role from ROLES.md until the end time", "should_trigger": true},
+    {"input": "send me a shift overview when you are done", "should_trigger": true},
+    {"input": "what time is it", "should_trigger": false}
+  ]
+}

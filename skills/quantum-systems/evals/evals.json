@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-systems",
+  "test_cases": [
+    {"name": "status", "input": "what Quantum services are down", "assertions": ["calls services status", "does not treat known downs as new"]},
+    {"name": "new_system", "input": "add a new system for the calendar bridge", "assertions": ["runs new-system checklist", "does not catalogue a service that cannot start"]},
+    {"name": "no_restart", "input": "restart comfyui", "assertions": ["does not restart from this skill", "hands host work to an operator"]}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-todos",
+  "test_cases": [
+    {"name": "file_and_mail", "input": "todo for Cooper: finish the LTX prep hook, and tell him", "assertions": ["writes a Codex todo note", "sends DSECT mail with the path", "no secrets"]},
+    {"name": "not_a_goal", "input": "add a small shared todo", "assertions": ["does not mint an ABBR"]},
+    {"name": "dedupe", "input": "todo the Nebula prep hook again", "assertions": ["searches memory first", "does not file a duplicate if the open request exists"]}
+  ]
+}

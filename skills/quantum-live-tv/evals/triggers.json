@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-live-tv",
+  "test_cases": [
+    {"input": "refresh the Jellyfin guide", "should_trigger": true},
+    {"input": "Live TV still shows dead channels", "should_trigger": true},
+    {"input": "M3U tuner change", "should_trigger": true},
+    {"input": "what's on Netflix", "should_trigger": false}
+  ]
+}

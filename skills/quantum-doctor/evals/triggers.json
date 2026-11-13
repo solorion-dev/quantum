@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-doctor",
+  "test_cases": [
+    {"input": "doctor Nebula, login failed", "should_trigger": true},
+    {"input": "why is Quantum memory empty", "should_trigger": true},
+    {"input": "something on the hub is broken", "should_trigger": true},
+    {"input": "doctor a character backstory", "should_trigger": false}
+  ]
+}

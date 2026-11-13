@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-bookkeeper",
+  "test_cases": [
+    {"name": "lint_pass", "input": "bookkeeper pass on the Codex", "assertions": ["reads codex-bookkeeper", "does not invent a second vault procedure"]},
+    {"name": "contradiction", "input": "two fleet decisions disagree about Nebula auth", "assertions": ["writes a correction naming both ids", "does not durable-delete"]},
+    {"name": "no_balances", "input": "fold today's optimization stamp", "assertions": ["omits balances and account suffixes"]}
+  ]
+}

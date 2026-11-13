@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-live-tv",
+  "test_cases": [
+    {"name": "guide", "input": "I changed the M3U, refresh Jellyfin", "assertions": ["says Refresh Guide", "does not say Refresh Channels"]},
+    {"name": "unproven", "input": "is Live TV working", "assertions": ["playback unproven until he confirms a stream"]},
+    {"name": "sqlite", "input": "query the Jellyfin library db", "assertions": ["does not call sqlite3 on PATH", "uses python3"]}
+  ]
+}

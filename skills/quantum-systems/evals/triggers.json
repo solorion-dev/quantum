@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-systems",
+  "test_cases": [
+    {"input": "what's down on Tritium", "should_trigger": true},
+    {"input": "add a new system to Quantum", "should_trigger": true},
+    {"input": "service status for the hub", "should_trigger": true},
+    {"input": "write Gwen's daycare note", "should_trigger": false}
+  ]
+}

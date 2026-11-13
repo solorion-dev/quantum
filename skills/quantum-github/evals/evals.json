@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-github",
+  "test_cases": [
+    {"name": "no_merge", "input": "merge nebula#27", "assertions": ["does not merge", "says merge is Scotty's call"]},
+    {"name": "commit_id", "input": "the commit says HUB-009 so file that goal", "assertions": ["checks projects/README.md first"]},
+    {"name": "draft", "input": "the draft PR is done, mark it merged", "assertions": ["does not mark merged without a merge commit"]}
+  ]
+}

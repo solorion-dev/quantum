@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-nebula",
+  "test_cases": [
+    {"input": "/quantum work on Nebula", "should_trigger": true},
+    {"input": "queue an LTX-2.5 video", "should_trigger": true},
+    {"input": "Nebula login failed", "should_trigger": true},
+    {"input": "write a song", "should_trigger": false}
+  ]
+}

@@ -1,0 +1,65 @@
+# WROC week file. One file per week, e.g. week-2026-09-21.yaml
+# program_code "33" = Home Support, "36" = Community Membership.
+# The week-level program_code is the default; any day may override it with its
+# own program_code (a Friday Community day renders on the 36 form).
+program_code: "33"
+week_ending: "9/26/26"
+printed_name: "Scott Venable"
+
+days:
+  - date: "9/21/26"
+    shift1: {start: "7:30 AM", end: "8:30 AM"}
+    shift2: {start: "2:30 PM", end: "8:00 PM"}
+    marks_left:  ["PA", "VP", "VP", "VP", "VP", "VP", "VP", "D"]
+    marks_right: ["VP", "VP", "VP", "VP", "VP", "PA", "D", "PA"]
+    narrative: >-
+      REPLACE with the day's Describe-services narrative, about 500-660
+      characters, fresh wording each week, no em dashes. Mention any 0.25 hr
+      paperwork block here; it stays out of the shift totals.
+    goal: >-
+      REPLACE with the day's goal-progress text.
+
+  # Community 36 day example (7 marks per side, three narrative sections):
+  # - date: "10/2/26"
+  #   program_code: "36"
+  #   shift1: {start: "2:30 PM", end: "8:00 PM"}
+  #   shift2: null
+  #   marks_left:  ["VP", "VP", "VP", "VP", "VP", "PA", "D"]
+  #   marks_right: ["VP", "VP", "VP", "VP", "VP", "VP", "PA"]
+  #   narrative_services: >-
+  #     REPLACE: Describe services provided/location/events/growth,
+  #     about 300-620 characters, fresh wording, no em dashes.
+  #     Mention any 0.25 hr paperwork block here.
+  #   narrative_job: >-
+  #     REPLACE: Job exploration skills worked on, about 60-340 characters.
+  #   narrative_choices: >-
+  #     REPLACE: What choices the individual made / what was offered,
+  #     about 60-340 characters.
+  #   goal: >-
+  #     REPLACE with the day's goal-progress text.
+
+  # - date: "9/22/26"
+  #   shift1: {start: "10:00 AM", end: "8:00 PM"}
+  #   shift2: null
+  #   ...
+program_code: "33"
+week_ending: "9/26/26"
+printed_name: "Scott Venable"
+
+days:
+  - date: "9/21/26"
+    shift1: {start: "7:30 AM", end: "8:30 AM"}
+    shift2: {start: "2:30 PM", end: "8:00 PM"}
+    marks_left:  ["PA", "VP", "VP", "VP", "VP", "VP", "VP", "D"]
+    marks_right: ["VP", "VP", "VP", "VP", "VP", "PA", "D", "PA"]
+    narrative: >-
+      REPLACE with the day's Describe-services narrative, about 500-660
+      characters, fresh wording each week, no em dashes. Mention any 0.25 hr
+      paperwork block here; it stays out of the shift totals.
+    goal: >-
+      REPLACE with the day's goal-progress text.
+
+  # - date: "9/22/26"
+  #   shift1: {start: "10:00 AM", end: "8:00 PM"}
+  #   shift2: null
+  #   ...
