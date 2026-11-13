@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-todos",
+  "test_cases": [
+    {"input": "make a Quantum todo Cooper can see", "should_trigger": true},
+    {"input": "send this task to another agent", "should_trigger": true},
+    {"input": "shared todolist for the fleet", "should_trigger": true},
+    {"input": "my grocery list", "should_trigger": false}
+  ]
+}

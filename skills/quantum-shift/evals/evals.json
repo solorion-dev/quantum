@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-shift",
+  "test_cases": [
+    {"name": "until", "input": "you are on OPS until 8am, ROLES.md is the role", "assertions": ["reads ROLES.md", "works until 8am", "does not stop when the queue is empty"]},
+    {"name": "park", "input": "the deploy is blocked, end the shift", "assertions": ["parks the deploy", "finds other role work", "does not treat the block as the end"]},
+    {"name": "close", "input": "shift over, send the overview", "assertions": ["audits done and parked", "emails an overview", "does not claim unverified checks"]}
+  ]
+}

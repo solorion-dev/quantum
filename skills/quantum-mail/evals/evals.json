@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-mail",
+  "test_cases": [
+    {"name": "triage", "input": "check my dsect mail", "assertions": ["lists INBOX", "uses HERALD summary", "does not mark read"]},
+    {"name": "send", "input": "mail Cooper that the Nebula hook is next", "assertions": ["sends from own mailbox", "no secrets in body"]},
+    {"name": "not_gmail", "input": "read my Gmail", "assertions": ["does not use dsect mail tools for Gmail"]}
+  ]
+}

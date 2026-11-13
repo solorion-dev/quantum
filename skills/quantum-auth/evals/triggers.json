@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-auth",
+  "test_cases": [
+    {"input": "Nebula login asked for a passphrase", "should_trigger": true},
+    {"input": "why can't I open the hub off tailnet", "should_trigger": true},
+    {"input": "set the dsect auth password", "should_trigger": true},
+    {"input": "log into my bank", "should_trigger": false}
+  ]
+}

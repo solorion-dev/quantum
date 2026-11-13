@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-goals",
+  "test_cases": [
+    {"input": "create a Quantum goal for this", "should_trigger": true},
+    {"input": "mint a codename and file it in the Codex", "should_trigger": true},
+    {"input": "organize the open goals", "should_trigger": true},
+    {"input": "what's my goal this year personally", "should_trigger": false}
+  ]
+}

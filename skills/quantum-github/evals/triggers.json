@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-github",
+  "test_cases": [
+    {"input": "open a draft PR for this", "should_trigger": true},
+    {"input": "merge the Nebula auth fix", "should_trigger": true},
+    {"input": "what issue tracks the Codex sync", "should_trigger": true},
+    {"input": "star a random public repo", "should_trigger": false}
+  ]
+}

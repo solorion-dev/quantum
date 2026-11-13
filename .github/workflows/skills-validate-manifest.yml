@@ -1,0 +1,42 @@
+name: Skills — validate & manifest
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - "tools/skill-bundle/**"
+      - ".github/workflows/skills-validate-manifest.yml"
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "tools/skill-bundle/**"
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate skills tree
+        run: node tools/skill-bundle/validate.mjs
+      - name: Regenerate manifest (push to main only)
+        if: github.event_name == 'push'
+        run: node tools/skill-bundle/build-manifest.mjs
+        env:
+          BUNDLE_COMMIT: ${{ github.sha }}
+      - name: Commit regenerated manifest (push to main only)
+        if: github.event_name == 'push'
+        run: |
+          if ! git diff --quiet -- skills/manifest.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add skills/manifest.json
+            git commit -m "chore(skills): regenerate manifest for ${GITHUB_SHA} [skip ci]"
+            git push
+          fi

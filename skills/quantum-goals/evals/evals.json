@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-goals",
+  "test_cases": [
+    {"name": "mint", "input": "create a goal for the Nebula LTX prep hook", "assertions": ["reads projects/README.md", "does not reuse an id", "filename has no brackets"]},
+    {"name": "existing", "input": "file TRI-018 again", "assertions": ["recalls the existing goal", "does not mint a second id"]},
+    {"name": "register", "input": "the commit already says HUB-009", "assertions": ["checks the register before trusting the commit"]}
+  ]
+}

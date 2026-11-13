@@ -1,0 +1,9 @@
+{
+  "skill": "quantum",
+  "test_cases": [
+    {"input": "/quantum I would like to work on Nebula", "should_trigger": true},
+    {"input": "what is Tritium in this fleet", "should_trigger": true},
+    {"input": "check Quantum memory and start on the hub", "should_trigger": true},
+    {"input": "write a poem about coffee", "should_trigger": false}
+  ]
+}

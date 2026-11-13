@@ -1,0 +1,3312 @@
+{
+  "schema": 1,
+  "generated_at": "2026-11-13T04:33:48.143Z",
+  "bundle_commit": "851f3ff39670ab5f198f403c0bffcfb7315a5192",
+  "bundle_version": "v2026.11.0",
+  "bundle_tag": "v2026.11.0",
+  "skills": [
+    {
+      "name": "agentic-eval",
+      "version": "1.0.0",
+      "description": "Patterns and techniques for evaluating and improving AI agent outputs — self-critique/reflection loops, evaluator-optimizer pipelines, test-driven code refinement, rubric/LLM-as-judge evaluation, iterative improvement.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-agentic-eval"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ff465eb9ce857ac4c1fb95af5632d427b0b2043db4e9c29baa9845a807e2f8b7",
+          "bytes": 2444
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "9853342a8e99ebaf5726a65d884850d1d0fe484475f754b6a8f91502af248553",
+          "bytes": 2359
+        }
+      ],
+      "total_bytes": 4803
+    },
+    {
+      "name": "brandkit",
+      "version": "1.0.0",
+      "description": "Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, identity decks, and visual-world presentations. Trained for minimalist, cinematic, editorial, dark-tech, luxury, cultural, security, gaming, developer-tool, and consumer-app brand systems.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3511c7690c69a2ffd83b348fc47803efb6dffc8d59b153fd8aefed06767ec41e",
+          "bytes": 6708
+        }
+      ],
+      "total_bytes": 6708
+    },
+    {
+      "name": "canned-refusal-recovery",
+      "version": "1.0.0",
+      "description": "Respond to a safety refusal that cites no rule by naming it as unverified, waiting for the user's re-ask instead of re-routing the attempt, then doing the work solo and verifying it.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local_canned_refusal_recovery",
+        "local-canned-refusal-recovery"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "5618bd3941cd74f49c0ded63edde367097ee940e7811c831fa87dd577e0ab0fe",
+          "bytes": 2763
+        }
+      ],
+      "total_bytes": 2763
+    },
+    {
+      "name": "chat-interface-design",
+      "version": "1.0.0",
+      "description": "Use when designing a chat/conversational or AI-assistant interface — synthesizing reference app screenshots (ChatGPT, Grok, Muse, Claude, etc.) into a concrete design spec (palette, type scale, spacing, message-bubble/input-bar/streaming-state conventions) before or during implementation with a component library and.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a8f4b9faa60de2aea350fb3d886ce4882a1d11dad929161a0dba4e729f499722",
+          "bytes": 5443
+        }
+      ],
+      "total_bytes": 5443
+    },
+    {
+      "name": "codebase-design",
+      "version": "1.0.0",
+      "description": "Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "5cea7ba4f89793cf7903e79b966ae0e04c3331f42153954cbfb605e1d130b04b",
+          "bytes": 3602
+        }
+      ],
+      "total_bytes": 3602
+    },
+    {
+      "name": "codex-bookkeeper",
+      "version": "1.0.0",
+      "description": "Act as the Bookkeeper (librarian and custodian) of the Quantum Codex, Scott's Obsidian vault in Google Drive that holds DSECT's documentation and the fleet's shared memory. Use whenever you are asked to organize, tidy, file, audit, lint, index, triage or \\\"keep the books\\\" on the Codex; to turn rough notes, spills or.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-codex-bookkeeper"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "9c135f23941cf4f554b5fac893dd6a412ea8d0b3eb3ed5ae76a75fce55c1653a",
+          "bytes": 12517
+        },
+        {
+          "path": "references/access-modes.md",
+          "sha256": "9b1e2af08fc59fae33dfd5d685966b9aec280d9970438513c36a2b76dcd76082",
+          "bytes": 2532
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "2255054222ba6789e90d5bd66c13e86a4be581f39ae8b11b25e3a21fde6d85d8",
+          "bytes": 7404
+        },
+        {
+          "path": "references/note-types.md",
+          "sha256": "3b4b172bfd1e0c7c62c15ef5944456691a7a3ecc84bd8ad9b406d44b3ae7ca9d",
+          "bytes": 3560
+        },
+        {
+          "path": "scripts/PROVENANCE.md",
+          "sha256": "aad221ecac34a3b9ec0c93e83a41500419c26bf5408c92834a106066ccf6e5ad",
+          "bytes": 2376
+        },
+        {
+          "path": "scripts/codex_fetch.py",
+          "sha256": "00e50ac2d427f47162e89901c2fbc8806196d590af724637fbe08d22d81578de",
+          "bytes": 21397
+        },
+        {
+          "path": "scripts/codex_lint.py",
+          "sha256": "f8b5cd34f88346408e9df4a62d14e05e0bb8a0c80c922b918a159c061e19c6f7",
+          "bytes": 13179
+        },
+        {
+          "path": "scripts/test_codex_lint.py",
+          "sha256": "95a184bef4c645fe85e284d9858f24691dd16ca825731516b2373d62569f7808",
+          "bytes": 10069
+        }
+      ],
+      "total_bytes": 73034
+    },
+    {
+      "name": "credential-vault-verification",
+      "version": "1.0.0",
+      "description": "Save credentials to the intended vault, organization and collection and verify visibility, username and live login before reporting them saved, including accounts Muse creates itself.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local_credential_vault_verification",
+        "local-credential-vault-verification"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "2c557354e3d88a9b04f022c73521bc81164bb51d17d7b365d0954d68351ce945",
+          "bytes": 3245
+        }
+      ],
+      "total_bytes": 3245
+    },
+    {
+      "name": "domain-dns-audit",
+      "version": "1.0.0",
+      "description": "Use when a *.dsect.net or *.solorion.dev name stops resolving, when auditing DNS records across Scotty's zones, before or after a Solorion migration tranche, or when checking whether a subdomain's tunnel/proxy wiring is intact. Distinguishes a missing record (NXDOMAIN) from a dead origin, with control names in every.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-domain-dns-audit"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [
+          "dsect-net/quantum"
+        ],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e26e5f9069f15801252068cfd2783d55b82b58b864429d66beb354a3a1c3e158",
+          "bytes": 3476
+        }
+      ],
+      "total_bytes": 3476
+    },
+    {
+      "name": "domain-modeling",
+      "version": "1.0.0",
+      "description": "Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a CONTEXT.md, or recording or editing an ADR.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0f32561ee77456405488feb954795f9246686e50b33867a8f8656188aff00cf5",
+          "bytes": 3371
+        }
+      ],
+      "total_bytes": 3371
+    },
+    {
+      "name": "draft-gumroad-listing-copy-and-pricing-page",
+      "version": "1.0.0",
+      "description": "Draft Gumroad listing copy and pricing page",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "ROUTINE.json",
+          "sha256": "b9f1bf3345c6c9a3c55057a536faa9c0c22ffcd5c880923ed9baffea47a1135f",
+          "bytes": 4046
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "3afac30c94a469b88ec8e08eced067b9e2f9d3485282e6af6b2b2d972cb5d484",
+          "bytes": 4042
+        }
+      ],
+      "total_bytes": 8088
+    },
+    {
+      "name": "dsp-wroc-notes",
+      "version": "1.0.0",
+      "description": "Compile, draft, duplicate, and fill weekly DSP WROC Google Slides for Joshua Chirnitch (JC) — Paycom punch check, Home Support code 33, Community Membership code 36, Personal Onsite Development Mon/Wed, STRIVE Thursday, Sunday extra Home Support, EVV hours, and Saturday paperwork.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d9f795c1c1a15580ad04bd032a8c8ccdcd10a7afcf956326d4c4a7d481d5b6e9",
+          "bytes": 3202
+        }
+      ],
+      "total_bytes": 3202
+    },
+    {
+      "name": "embedder-resilience",
+      "version": "1.0.0",
+      "description": "Use when Quantum Memory adds or searches fail, memory_health_check reports degraded, an agent says \\\"EMBEDDER DOWN\\\", llama-embed is down, memory writes are blocked, or tracker records come out unembedded. Covers diagnosing the dead embedder on Tritium, pinning the embedding model's exact provenance, the.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-embedder-resilience"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3277e4329e354fc8a5c27b611a02046b786c27716f9b7b83b0a0c42c707b9cc2",
+          "bytes": 4452
+        }
+      ],
+      "total_bytes": 4452
+    },
+    {
+      "name": "ender3-printer",
+      "version": "1.0.0",
+      "description": "Operating Scotty's 3D printer: ORIGINAL Creality Ender 3 driven by OctoPrint 1.11.8 on scottypi3, controlled through the quantum_printer_* Quantum MCP tools, Home Assistant, and PrusaSlicer with the checked-in Ender 3 + Geeetech PLA profile. Use whenever the work mentions the Ender 3, OctoPrint, 3D printing, slicing.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-ender3-printer"
+      ],
+      "dependencies": {
+        "tools": [
+          "quantum_printer_connect",
+          "quantum_printer_cooldown",
+          "quantum_printer_delete_file",
+          "quantum_printer_files",
+          "quantum_printer_home",
+          "quantum_printer_job",
+          "quantum_printer_move",
+          "quantum_printer_set_temps",
+          "quantum_printer_slice",
+          "quantum_printer_start_print",
+          "quantum_printer_status",
+          "quantum_printer_upload"
+        ],
+        "repos": [
+          "dsect-net/hub-api"
+        ],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6a6041731100bf697abdae00b608236631cc7a1d86e7213305097525e1701e83",
+          "bytes": 8444
+        }
+      ],
+      "total_bytes": 8444
+    },
+    {
+      "name": "filled-form-pdf-verification",
+      "version": "1.0.0",
+      "description": "Verify filled-form PDFs (WROC sheets and other pre-printed forms) at zoomed-crop resolution and deliver every revision under a fresh filename, so field-placement defects and stale cached attachments never reach the user.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-filled-form-pdf-verification"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "bbe681baef3e330586b114a6a51d0af6ae7f635e5e066f623197b197595feec5",
+          "bytes": 3138
+        }
+      ],
+      "total_bytes": 3138
+    },
+    {
+      "name": "financial-advisor",
+      "version": "1.0.0",
+      "description": "Run Scotty's money operations: verify bill and debt status at the issuer, position Chime cash so payments never bounce, prepare and submit approved payments, keep due dates on his calendar, and log every payment in the finance ledger.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-financial-advisor"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "81f4ac5c4b38344db89d0b696491dc2c10a46a86e09dc5244da56533e9df019e",
+          "bytes": 7801
+        }
+      ],
+      "total_bytes": 7801
+    },
+    {
+      "name": "find-skills",
+      "version": "1.0.0",
+      "description": "Helps users discover and install agent skills when they ask questions like \\\"how do I do X\\\", \\\"find a skill for X\\\", \\\"is there a skill that can...\\\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-find-skills"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f8a4918170f95eeb442fc4b9e96c43dab04d5f0c02b40fd7eac9fb2bff3f9ef2",
+          "bytes": 4588
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "6a815f7715cb510141b4a2643503131cc745e08c8e49c2a5fee7e1304e023d30",
+          "bytes": 4414
+        }
+      ],
+      "total_bytes": 9002
+    },
+    {
+      "name": "frontend-design",
+      "version": "1.0.0",
+      "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "5969e74eb54ec66743f461c78a5681176c07a7b124c4006b8d1c2c2b15f7cef1",
+          "bytes": 3722
+        }
+      ],
+      "total_bytes": 3722
+    },
+    {
+      "name": "grill-me",
+      "version": "1.0.0",
+      "description": "A relentless interview to sharpen a plan or design.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-grill-me"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "e3d95d77669e7cbde538086848ebedfbfbc9a38dfdd966df9256d0106ea96049",
+          "bytes": 376
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+          "bytes": 137
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "f5a78f192ed0246fd2ccb816e33eac786b859df15a06d5cee3818109a3cb3fcc",
+          "bytes": 803
+        }
+      ],
+      "total_bytes": 1316
+    },
+    {
+      "name": "grill-with-docs",
+      "version": "1.0.0",
+      "description": "A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6deba90d7c6cc9a3d59ff5c83c70b2d34281afb619dd28a143a058fc3835c308",
+          "bytes": 431
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+          "bytes": 145
+        }
+      ],
+      "total_bytes": 576
+    },
+    {
+      "name": "grilling",
+      "version": "1.0.0",
+      "description": "Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-grilling"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "a10171e1b9bc240fc2ec0f3d314cfc55bcb0e18383cadfc524d2269ee5b28226",
+          "bytes": 2151
+        },
+        {
+          "path": "agents/openai.yaml",
+          "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+          "bytes": 113
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "612ae3e1c415b3125b5a593d50bf503c493aa768c1de7c7a200198a964ade7cd",
+          "bytes": 2620
+        }
+      ],
+      "total_bytes": 4884
+    },
+    {
+      "name": "guided-journaling",
+      "version": "1.0.0",
+      "description": "Interactive journaling assistant with multiple counseling modes (CBT therapy, reflective counseling, relationship counseling, life coaching). Supports session continuity through structured history. Use when the user wants to journal, reflect, process emotions, discuss relationships, get unstuck, or asks for.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e992c867954a077343dd77e2091d46a5fc9ae9b6fcae4332b170ecf64e8edc66",
+          "bytes": 7849
+        }
+      ],
+      "total_bytes": 7849
+    },
+    {
+      "name": "handoff",
+      "version": "1.0.0",
+      "description": "Compact the current conversation into a handoff document for another agent to pick up.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-handoff"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "258521f0fb7e93dd4ca260823399affc6ad4f28a4a069d838f51fa310c7b11f1",
+          "bytes": 969
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "8466c17d9993f56f941643696049adce23caef0db5819515d9590e463cae8c40",
+          "bytes": 1018
+        }
+      ],
+      "total_bytes": 1987
+    },
+    {
+      "name": "humanizer",
+      "version": "1.0.0",
+      "description": "Rewrite AI-sounding text so it reads like the writer without changing what it says. Use when editing or reviewing prose for AI tells: not-X-but-Y contrasts, one-line closers, staged openers, forced triads, dashes everywhere, inflated claims, sales language, stock AI words, bold labels, or filler. Based on Wikipedia's.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0b0fa335259456bc348ec727790c830e04966c40462cd92540fdd3c3a4ed0b6e",
+          "bytes": 28806
+        }
+      ],
+      "total_bytes": 28806
+    },
+    {
+      "name": "improve-codebase-architecture",
+      "version": "1.0.0",
+      "description": "Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0734ec0643ec94485b60a42fc616eea4e336cc6a7c7db4f3a19f6a9db3bfce79",
+          "bytes": 2560
+        }
+      ],
+      "total_bytes": 2560
+    },
+    {
+      "name": "journal-reflection",
+      "version": "1.0.0",
+      "description": "Guide Ane through structured reflection at end of day, end of week, after a decision, or after new learning material, producing Obsidian-compatible markdown and writing to the vault journal when the path is reachable. Use on ''journal'', ''reflect on today'', ''weekly review'', ''after-action review'', or asks that.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ba1932080e79cf5f0131c5277e38e163876724ba857c77b5b926e1f1f8043433",
+          "bytes": 6023
+        }
+      ],
+      "total_bytes": 6023
+    },
+    {
+      "name": "mcp-builder",
+      "version": "1.0.0",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-mcp-builder"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "07f294e8a4791d20bb52b95228e637abef1e56616fa84642d8126f611dcb5848",
+          "bytes": 2577
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "d79e14832b1d8dd16b0c18c24edab0be6669d1b767ff07ea51a06cee5ab824dc",
+          "bytes": 2435
+        }
+      ],
+      "total_bytes": 5012
+    },
+    {
+      "name": "minecraft-ci-release",
+      "version": "1.0.0",
+      "description": "Set up and review CI, artifact publishing, versioning, and release management for Minecraft 26.x or legacy 1.21.x mods and Paper plugins. Use for pipelines and releases, not gameplay implementation or server operations.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "7d5cb3ad9b41251872b4cd32e0e2f4a771ec43160f2144b11ec40522da109e31",
+          "bytes": 14697
+        }
+      ],
+      "total_bytes": 14697
+    },
+    {
+      "name": "minecraft-companions",
+      "version": "1.0.0",
+      "description": "Operating the AI Companion mod (Fabric 1.20.1) in Scotty's live Minecraft instance: companion brains on Tritium Ollama, aicompanion.json config, skins, personas, and log-based diagnostics. Use whenever the work mentions the AI Companion mod, Minecraft companions, Vetta, Rook, companion brains/skins/personas/voices, or.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-minecraft-companions"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "8e1d4e34c615daf6ed63fb3e37c6b2ab7464936ae2805723297be87fc06ff60c",
+          "bytes": 12897
+        }
+      ],
+      "total_bytes": 12897
+    },
+    {
+      "name": "minecraft-datapack",
+      "version": "1.0.0",
+      "description": "Create, edit, and debug vanilla Minecraft 26.x and 1.21.x datapacks, including functions, advancements, recipes, loot tables, predicates, tags, and pack metadata. Use when the deliverable is a datapack file tree without Java or loader APIs.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b07846c6c0bffeaa900e933729916ebd2b2fe6c8118c5fbf949b418dead0eed9",
+          "bytes": 11238
+        }
+      ],
+      "total_bytes": 11238
+    },
+    {
+      "name": "minecraft-forge-modding",
+      "version": "1.0.0",
+      "description": "Minecraft Forge mod development for Scotty's Off To Market (MC 1.19.2, Forge 43.x, Java 17, ForgeGradle). Use for any work on Off To Market or other Forge mods: registries, capabilities/saved data, GUIs/containers, networking, datapack JSON/datagen, JEI/REI, GameTests, CurseForge/Modrinth publishing, and version.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-minecraft-modding"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "57cb069cb56faf8b3ac9b7fdf98998b536a62fbf3797eb55a94927a417908391",
+          "bytes": 12892
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "439e8dcccb70b50e54de8b9bb0589d07f693304853312560d1a817bb07c7b44f",
+          "bytes": 13560
+        }
+      ],
+      "total_bytes": 26452
+    },
+    {
+      "name": "minecraft-modding",
+      "version": "1.0.0",
+      "description": "Create, modify, debug, or migrate Minecraft mods for current NeoForge or Fabric 26.x, legacy 1.21.x, and Forge 1.20.1. Use for loader-based gameplay code and assets; use minecraft-multiloader when one codebase must target both modern loaders.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "5df550bfc378cddc53f30eadd02b33edfdd5cfcdc33f33c0f9d5fa107b51d4d1",
+          "bytes": 16651
+        }
+      ],
+      "total_bytes": 16651
+    },
+    {
+      "name": "minecraft-resource-pack",
+      "version": "1.0.0",
+      "description": "Create and debug Minecraft 26.x and 1.21.x resource packs, including pack metadata, textures, models, blockstates, item definitions, sounds, fonts, animations, and shaders. Use for client-side visual or audio assets without gameplay code.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "0b6797d158e19dfe51ecb5b07f5e2eeb3861d65e847d6f458420bafd3976e028",
+          "bytes": 13492
+        }
+      ],
+      "total_bytes": 13492
+    },
+    {
+      "name": "minecraft-testing",
+      "version": "1.0.0",
+      "description": "Design and implement automated tests for current Minecraft 26.x or legacy 1.21.x mods and plugins using JUnit, MockBukkit, NeoForge Game Tests, or Fabric Game Tests. Use for test code and test execution, not release publishing or gameplay implementation.",
+      "tags": [
+        "minecraft",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "1ba800d0a98a598c896e3659e43868ebe90feddae105f9545b395f141bfa14c5",
+          "bytes": 15592
+        }
+      ],
+      "total_bytes": 15592
+    },
+    {
+      "name": "nebula-deploy",
+      "version": "1.0.0",
+      "description": "Deploy the Nebula web UI to Tritium: pull latest main, rebuild the React bundle, update the index shim, verify live. Use whenever Nebula frontend changes need to go live on the server.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-nebula-deploy"
+      ],
+      "dependencies": {
+        "tools": [
+          "dev_shell"
+        ],
+        "repos": [
+          "dsect-net/nebula"
+        ],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "579e1bde26f0225ad0a431d184106bd056eb120ba28d3a7b2120eceb01ebc986",
+          "bytes": 2971
+        }
+      ],
+      "total_bytes": 2971
+    },
+    {
+      "name": "night-wave",
+      "version": "1.0.0",
+      "description": "Use when Scotty asks to slam out work, run a wave of parallel agents, work the board down overnight, or triage a backlog into delegated workstreams. Covers census → triage against the fences → tight per-workstream subagent briefs → handoff integration with artifact verification → UPDATES.md detail + headline-only chat.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-night-wave"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "c3514d2c893a51ee87c2c992391eb868f45eda2fcfd538256cbde58a3dacd17f",
+          "bytes": 3942
+        }
+      ],
+      "total_bytes": 3942
+    },
+    {
+      "name": "playwright-cli",
+      "version": "1.0.0",
+      "description": "Automate browser interactions, test web pages and work with Playwright tests.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-playwright-cli"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f7b48ab19fb0345e5a118373281fa879d1dd6f408308d37df4d6b9e668f0390d",
+          "bytes": 2934
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "d849c6936e7c1ff991eca285d77d59e20d51ecff77a63948bf17d17b514c7590",
+          "bytes": 2992
+        }
+      ],
+      "total_bytes": 5926
+    },
+    {
+      "name": "project-codex",
+      "version": "1.0.0",
+      "description": "Plan, organise and track project work in the Quantum Codex — the shared Obsidian vault in Google Drive. Use this whenever you are given a substantial goal, start or pick up a project, need to know what work is already in flight, or are about to write a plan, roadmap, overview or status document. Also use it before.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-project-codex"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "9e71b3cc517c778c005dbb908193af16184289a0b7e474f88bde75ecd7308a60",
+          "bytes": 10789
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "e9fbd1774a577d8224c4e58e5375080e113efd6fb4f4f7775dc5bf294c41613e",
+          "bytes": 10606
+        }
+      ],
+      "total_bytes": 21395
+    },
+    {
+      "name": "quantum",
+      "version": "1.0.0",
+      "description": "Core Quantum skill. Use on /quantum, Quantum, Tritium, DSECT, Nebula, Sol, Codex, hub, or fleet work. Loads rules, product map, and the memory open/close protocol, then routes to quantum-systems, quantum-doctor, quantum-mail, quantum-goals, quantum-todos, or quantum-bookkeeper.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum"
+      ],
+      "dependencies": {
+        "tools": [
+          "list_memories",
+          "search_memory"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "9b93bf93a3e11430ad01a7f6f18aff185f67396afd17c1a8060a1ccfd3ab2cd9",
+          "bytes": 136
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "e7addb5eb230daf04a5d53b0a2045438aeef278f3d09630982704b513fe227ce",
+          "bytes": 2911
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "4cbc60f970f3e064c2e825bd9fe7ee203eaac242477a37e3b1dd43b64acc4224",
+          "bytes": 620
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "dc011a916d7c34b42696b8de37fb50963dd37d4c023a8783b74c3c3e72c6d88d",
+          "bytes": 354
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "3760181e6cfe9edbc54a2598c4c6cb4ebc0e986ae0230aaf82e8edf6391cce0f",
+          "bytes": 2943
+        },
+        {
+          "path": "references/map.md",
+          "sha256": "56743d1646a47b9e209cec40c96b61f7c76cd247eaebd5c1a6336b614846208a",
+          "bytes": 2352
+        }
+      ],
+      "total_bytes": 9316
+    },
+    {
+      "name": "quantum-auth",
+      "version": "1.0.0",
+      "description": "Quantum auth skill. Use when a dsect.net login fails, a tunnel is confused with the tailnet, or a password needs setting. Never store or retrieve a password. Hub stays tailnet-only.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-auth"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "e70c74672aba51fdd76f49db9fe8aadca208a05b9bf179a5fa1dd2023a1a0e1e",
+          "bytes": 97
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "ac928595132cca03766db5f3608f55a1dc5922d960f966dfa5b1aac94d983967",
+          "bytes": 1228
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "038e76fb9ffe0cb9b846f393e2c35e0967080227cd00ed0e759a9778de35b88b",
+          "bytes": 460
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "298741bf19b8c4f21e138a7a1fff5ec02a402aadc7116d19a3277ce20ed51e00",
+          "bytes": 339
+        }
+      ],
+      "total_bytes": 2124
+    },
+    {
+      "name": "quantum-bookkeeper",
+      "version": "1.0.0",
+      "description": "Quantum Bookkeeper entry. Use to file, lint, or fold Codex notes, or to fold Quantum Memory dupes. Canonical vault work is Skills/codex-bookkeeper. Do not durable-delete memory.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-bookkeeper"
+      ],
+      "dependencies": {
+        "tools": [
+          "list_memories"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "c8489a36b72cf4b2e52f440200fb0a39f7721ce6ac13b0a5cd050d8c6544db0b",
+          "bytes": 149
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "919a2b6820d3b9ef5ba8a95ea1b940d951c999bc37b5eff2ee4618b3ace1e8f5",
+          "bytes": 1438
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "514ff7422572af32d09078d82f2e99123fd858a9c1ca79248cdbf216f986c9b6",
+          "bytes": 512
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "96a5732d4e56199b49748ee62ceff05420a053de2ce7f47a52347d5cabd296eb",
+          "bytes": 348
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "311f25551773c60c4b4d99041db6fd0dfa444afb2cfc75bcf1647f6b6f21f5b9",
+          "bytes": 862
+        }
+      ],
+      "total_bytes": 3309
+    },
+    {
+      "name": "quantum-credits",
+      "version": "1.0.0",
+      "description": "Reference for designing, building, reviewing, or extending the Quantum Credits economy — Scotty's simulated-blockchain internal currency for Quantum (bounty board, real proof-of-work + proof-of-useful-work mining, bounded Fed agent, founder paycheck, AI-verified knowledge quests, Quantum Finance). Use whenever work.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-credits"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [
+          "dsect-net/quantum"
+        ],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "65dc25ef2cc7eec06a706a0f1b40207d6de30d01fa5822c5463be1dc237640e8",
+          "bytes": 6772
+        },
+        {
+          "path": "references/parameters.md",
+          "sha256": "b828af005c5132bb9c55a49a2f947d8182c8ab068b905350e93752b0dd9a5a05",
+          "bytes": 3201
+        }
+      ],
+      "total_bytes": 9973
+    },
+    {
+      "name": "quantum-doctor",
+      "version": "1.0.0",
+      "description": "Quantum doctor skill. Use when a Quantum service, login, memory recall, or site looks broken. Diagnose with status, memory health, and the last signed note. Do not restart or deploy.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-doctor"
+      ],
+      "dependencies": {
+        "tools": [
+          "dsect_services_status"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "1647e7cc5a1c443997ede498fcf33c4d006cc1a39348bfb59e93164c15d3588b",
+          "bytes": 57
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "df9535ad3ceaed8ad3a31fa40482f14969af9dffba97adc1ba44305031e30f64",
+          "bytes": 1304
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "132da2f9d097775c2bdb56717fc996d9ae4c94d664458d2f056a44e6064d8caa",
+          "bytes": 502
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "2987a915b7b18cd9eac060c89dd192a559876a10d5050fe00f29587522fd66c5",
+          "bytes": 339
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "286964aaa521c3db88470979ed7f06ec4925e9dd7679e1d07fb6f00049a7d7d6",
+          "bytes": 1229
+        }
+      ],
+      "total_bytes": 3431
+    },
+    {
+      "name": "quantum-github",
+      "version": "1.0.0",
+      "description": "Quantum GitHub skill. Use for dsect-net issues, draft PRs, or merge talk, and for checking that scheduled GitHub work uses an unattended auth path.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-github"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "0e39d50ea746cb7967d7f3365e1bb71543800f1b9ed96015f1f02379f29facd5",
+          "bytes": 90
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "fb8930fbcb560f07a0fda8a4ea3f726cc55c91be696e1bfac0cc4f1573ba3da2",
+          "bytes": 2681
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "c655a2af5a1a5455f0a68e24c3275ff1395c5c809b355dc8ce98dbc96d2bd748",
+          "bytes": 440
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "a89eaacb5df0f09fdcc8306acae35478f1e4024334ef2dbfc61bd6c116f3ebc1",
+          "bytes": 333
+        }
+      ],
+      "total_bytes": 3544
+    },
+    {
+      "name": "quantum-goals",
+      "version": "1.0.0",
+      "description": "Quantum goal skill. Use to create, name, or file a Codex goal. Reads projects/README.md before minting an ID. Filename drops brackets and quotes.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-goals"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "36bbd8cbf4a2cbdd8c63c7649cfba20e058b93f8b8614678722e9b4c05da097c",
+          "bytes": 104
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "1d6704fcc9f940a7712e06bdc875973afd71f73ca0ac3306acde0275221e3c48",
+          "bytes": 1348
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "91db104786f9a3e35177e53efa78a2f85ddf6b239db71eda63ac0b0ec5c03546",
+          "bytes": 493
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "dd349a2e31c66ce087c17fdbba3dc181528d62450b944707e6ac73c7b97c3a8c",
+          "bytes": 354
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "56ad3d333c0f58b24411b61873765f36e12b24bf6adebac821994eb6df07ffd6",
+          "bytes": 1331
+        }
+      ],
+      "total_bytes": 3630
+    },
+    {
+      "name": "quantum-live-tv",
+      "version": "1.0.0",
+      "description": "Jellyfin Live TV skill. Use after a tuner or M3U change. Run Refresh Guide, not Refresh Channels. Playback is unproven until Scotty confirms a Guide Refresh and a real stream.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-live-tv"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "6b7ca7cbe6298e7e030a16a6d3700ee2d0b3a630d948a829631c5634be9e140d",
+          "bytes": 77
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "9ef5f29a0298ed5ae9746254d9dd38a9e5fb0713a9bdccbdaa62247b0d36fd9f",
+          "bytes": 1204
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "b9b6519394733e3c7f7b122f90c8d9dbb9c48fff57d2efc6f83504129ab327e5",
+          "bytes": 449
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "3cfe21a4fa96329fa29191156d64a476af7806e997b5e431c37b37ee9d2d456b",
+          "bytes": 320
+        }
+      ],
+      "total_bytes": 2050
+    },
+    {
+      "name": "quantum-mail",
+      "version": "1.0.0",
+      "description": "DSECT mail skill. Use for @dsect.net inbox, triage, read, or send. Sends only from the agent's own mailbox. Refuses secrets. Not Gmail.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-mail"
+      ],
+      "dependencies": {
+        "tools": [
+          "dsect_mail_list",
+          "dsect_mail_read",
+          "dsect_mail_send"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "fab047b89b879df175efe93fe1f1c251bd8c7e0880d4fa94e2371eb306df01ed",
+          "bytes": 75
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "e4d9af042fd75e424dff9ea5e234a0a3ade4cb99445c717f0c4f918e2076da33",
+          "bytes": 1228
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "438ed5019a50e9a736a306d844ed31cdc9540f58bd29668e99a16a786d8fb80a",
+          "bytes": 435
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "774882118447444ceecd9cf2bae27f2e81b6521bde45058fd9b70d1a55ff6299",
+          "bytes": 325
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "60392779b39700e1535069628e42ccbd96245e50ba547cd528f03c6afa013137",
+          "bytes": 1346
+        }
+      ],
+      "total_bytes": 3409
+    },
+    {
+      "name": "quantum-nebula",
+      "version": "1.0.0",
+      "description": "Nebula skill for Quantum. Use for nebula.dsect.net, LTX-2.5, ComfyUI video queue, or Nebula login. Do not deploy from main while nebula#27 is the live auth fix. Do not call LTX working until a generation completes.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-nebula"
+      ],
+      "dependencies": {
+        "tools": [
+          "search_memory"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "d260bdaebdeb54b570d9bf01ef6556dba9dee2e33688fd0032c072fdc4081243",
+          "bytes": 123
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "fad7e36de630e8b7cd56d2c5879d16c994468f13e1de0170599d94c6be6f8919",
+          "bytes": 1701
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "b9d2367340b457eabb16026cd49aa07ea688d59525155029f143f5e99814305c",
+          "bytes": 536
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "ebcc1a84c6e3529434473d84d6ce1cbfdc1ec85b4124ede056ef6cbb0f95169b",
+          "bytes": 303
+        }
+      ],
+      "total_bytes": 2663
+    },
+    {
+      "name": "quantum-os-workstation",
+      "version": "1.0.0",
+      "description": "Create, operate and troubleshoot Quantum OS workstations — the per-agent tailnet-connected Linux sandboxes on Tritium — and request extra RAM through the STEWARD broker. Use when asked to give an agent a computer, spin up a sandbox or desktop for computer-use work, put a workstation on the tailnet, or when an agent.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-os-workstation"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f644df6023a69bc34cec5b228991d51b68e42b9af784a3fcdd010e863c34e1d4",
+          "bytes": 4610
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "4efdeb7cf0b866e41279f383f76877dbe1163ac60efe0a39bffbb60ad428c432",
+          "bytes": 4417
+        }
+      ],
+      "total_bytes": 9027
+    },
+    {
+      "name": "quantum-shift",
+      "version": "1.0.0",
+      "description": "Quantum shift skill. Use when an agent is on duty until a set time, assigned a role from ROLES.md, and must keep working, email progress, park blockers, and send a shift overview at the end.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-shift"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "1cd1610dff4aa21c193101e32e30eb4b553e62a0aee27a538709ce04bd614282",
+          "bytes": 117
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "e161a9054f94af441b8d3e866cb9e38143eb9721a497b90ac703bcc850fa8b24",
+          "bytes": 2434
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "20bd898c8336f3aa3cc027c1fd2b676d08b381aa5d6056e8d329f170a85a210e",
+          "bytes": 565
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "1942f5abe98af29e05e2db2ba09954b83e856d5425f4f1e5325b5c1eca1f2152",
+          "bytes": 376
+        },
+        {
+          "path": "references/roles.md",
+          "sha256": "1fc68ecece84e0a5b0f179dfac61e9101efd4711f612650e954a15c6aa5f0fde",
+          "bytes": 682
+        }
+      ],
+      "total_bytes": 4174
+    },
+    {
+      "name": "quantum-systems",
+      "version": "1.0.0",
+      "description": "Quantum systems skill. Use for Tritium service status, known downs, or adding a new system. Includes the new-system checklist. Read-only on host services unless an operator was handed the restart.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-systems"
+      ],
+      "dependencies": {
+        "tools": [
+          "dsect_services_status"
+        ],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "828017712a584de2d07473d1e9683a17ab449a580278996df69058874d720498",
+          "bytes": 93
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "5371ea72cb571d1a9597c735ef63d5d6c7fb3442e7aaa083d5cf000e7de6ac13",
+          "bytes": 1471
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "cb54f05f27d6589080b11e4dfe115858ac16410e56657dce9a102a1aa3034d11",
+          "bytes": 518
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "6b3135e7af6648535ecc9a551110e2925af248f9ba77fe8f6b761a026caa5f7f",
+          "bytes": 328
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "f05cbdde7b666a01fb1621f95288d8b15cb62c1f5dbab7bad6bb064e0baca9ba",
+          "bytes": 3224
+        }
+      ],
+      "total_bytes": 5634
+    },
+    {
+      "name": "quantum-todos",
+      "version": "1.0.0",
+      "description": "Shared Quantum todo skill. Use to file a fleet-visible task and notify another agent by DSECT mail. Others read the Codex note. Does not replace goals.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-quantum-todos"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "e6e43a0bb9fbb25eedc27b335f92c93e9c99e111d54d3697316ec17e596e0494",
+          "bytes": 109
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "d8e13c99a067c51a019536a491d4a915c9d43cd95ea4f5a1b459750ac8531cad",
+          "bytes": 1132
+        },
+        {
+          "path": "evals/evals.json",
+          "sha256": "83e595e7ad09f0efa86013096cab2f53373ffb3c4afb51141e5ff4bffade5cd1",
+          "bytes": 514
+        },
+        {
+          "path": "evals/triggers.json",
+          "sha256": "c149d567aa72c62d4607ab302285664b4e0ed9c79f2cacd7f67dea3a6e9eceb9",
+          "bytes": 335
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "f875404f4c077fbed03170acdd9195bd993a572cdce67e725fb7da54d8a5878e",
+          "bytes": 1109
+        }
+      ],
+      "total_bytes": 3199
+    },
+    {
+      "name": "research",
+      "version": "1.0.0",
+      "description": "Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-research"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6dd1e76e54c867a754f14fc7f258901454bf53f2516a5b72fbeb04748551bb4a",
+          "bytes": 958
+        },
+        {
+          "path": "references/cooper-local-twin.md",
+          "sha256": "68d739e03ab682da6ad8ebe8824a6c61c032ac931cc9b2365b31055fccd4ab45",
+          "bytes": 855
+        }
+      ],
+      "total_bytes": 1813
+    },
+    {
+      "name": "service-chain-diagnosis",
+      "version": "1.0.0",
+      "description": "Use when a named fleet service or site is reported down — a 502, an unreachable *.dsect.net name, \\\"the hub/board/Jellyfin isn't working\\\" — before asserting any root cause. Traces the user's real path hop by hop (DNS → edge/tunnel → proxy → listener → process → logs/deps) and names each surface checked, avoiding.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-service-chain-diagnosis"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "59a6fd04e4b0c40348141b71cc916d244b967a1e211ec0afb9f967fe4c50194e",
+          "bytes": 4075
+        }
+      ],
+      "total_bytes": 4075
+    },
+    {
+      "name": "suno-music-creator",
+      "version": "1.0.0",
+      "description": "Professional music creation with Suno AI V5 and Suno Studio. Use this skill when users want to create songs, playlists, corporate anthems, jingles, workout music, ambient soundscapes, or any AI-generated music. Triggers on requests mentioning Suno, music creation, playlist generation, song composition, or specific.",
+      "tags": [
+        "music",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d3441c6cb4cf63c328a778735058d7840c2d56986c462b8eb204be747be8c956",
+          "bytes": 7418
+        }
+      ],
+      "total_bytes": 7418
+    },
+    {
+      "name": "suno-songwriting",
+      "version": "1.0.0",
+      "description": "Generate, revise, translate, and adapt song lyrics plus compact style prompts for Suno or similar AI music generators. Use when the user wants ready-to-paste AI music generation lyrics, lyric tags, Suno/Udio-style prompts, vocal direction, instrumentation, genre/style wording, song structure, multilingual singable.",
+      "tags": [
+        "music",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "a8bae2fd0264351098564387bc493b3ec549e27fb3a1bedd515f9220607fde23",
+          "bytes": 12968
+        }
+      ],
+      "total_bytes": 12968
+    },
+    {
+      "name": "tailscale-docs",
+      "version": "1.0.0",
+      "description": "Look up current Tailscale documentation for Serve, Funnel, ACLs, MagicDNS, HTTPS certs, and home-lab patterns. Use when planning Tailscale work, verifying CLI syntax, or answering how-to questions about tailnet services.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-tailscale-docs"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b3da0feb0423478ddbe00394c08986a6a0b37f33134e1fa3cb44f0c73e3dae10",
+          "bytes": 2917
+        },
+        {
+          "path": "references/acls.md",
+          "sha256": "3e7f12f32e0921b2f9990907ad2447045bc4dc026c7c105e1f2a7aaa63c9c3b0",
+          "bytes": 1831
+        },
+        {
+          "path": "references/funnel.md",
+          "sha256": "2fa384d41c32fa7b4af46a1c9db620c9c464bff36d783d802e6fce77890cfb4f",
+          "bytes": 1399
+        },
+        {
+          "path": "references/homelab.md",
+          "sha256": "e712b29681a39038198501b131b23e1cf97cc6faf24046bcca5ae419f6a94064",
+          "bytes": 1612
+        },
+        {
+          "path": "references/magicdns-https.md",
+          "sha256": "7ad907da87d77af4d3676b1019a6bd5264ab165edeee1eab6bd3eddbd3718630",
+          "bytes": 1164
+        },
+        {
+          "path": "references/serve.md",
+          "sha256": "6861d6c4fb6cc081fcfb4093c763c577d78fdf73c1e986d692b404f3717d35f7",
+          "bytes": 1598
+        }
+      ],
+      "total_bytes": 10521
+    },
+    {
+      "name": "tracker-github-sync",
+      "version": "1.0.0",
+      "description": "Use when running, planning, resuming, or reporting the Tracker→GitHub sync — mirroring Tracker records to GitHub issues, doing a sync dry-run or apply, handling close-pending items, or checking what a sync run did. The Tracker on Tritium is the source of truth; GitHub is a one-way mirror.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-tracker-github-sync"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [
+          "dsect-net/quantum"
+        ],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "88dfe9765e422d2cebe9d3f13763cfd68a42145ae3f760c54127fa33cbb20fa8",
+          "bytes": 3968
+        }
+      ],
+      "total_bytes": 3968
+    },
+    {
+      "name": "ue-actor-component-architecture",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Actor and component design in Unreal Engine. Triggers on: Actor, component, BeginPlay, Tick, SpawnActor, lifecycle, CreateDefaultSubobject, composition, EndPlay, PostInitializeComponents, UActorComponent, USceneComponent, UINTERFACE, attachment, spawn, interface. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "2f8f27d6667ef0f6041b04492277f0b3be8ef8418514727d19b5250d78613e7f",
+          "bytes": 15976
+        },
+        {
+          "path": "references/actor-lifecycle.md",
+          "sha256": "d5dc0aaa84272e2fa97c828647cde6e07f12c5e9c25b0a8b3c8821e9901c6e9e",
+          "bytes": 12441
+        },
+        {
+          "path": "references/component-types.md",
+          "sha256": "8d3b9e56f5431b8e1354d5a4eeac59ea4212c23132c2192aa898e305fae3d4ba",
+          "bytes": 20768
+        }
+      ],
+      "total_bytes": 49185
+    },
+    {
+      "name": "ue-ai-navigation",
+      "version": "1.0.0",
+      "description": "Use this skill when implementing AI, AIController, behavior tree, blackboard, AI perception, NavMesh, EQS, navigation, pathfinding, State Tree, or Smart Objects in Unreal Engine. See references/behavior-tree-patterns.md for BT patterns and references/eqs-reference.md for EQS configuration. For AI ability use, see.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d40c2e1c3cf04175994e2b722a3dc8b7824e257e2df3ef06d6fdc9e9a0438b2e",
+          "bytes": 19919
+        },
+        {
+          "path": "references/behavior-tree-patterns.md",
+          "sha256": "640ea8302d1e206541216e44e06f3d7742f5a4cc819ee9cf740f30141a0b6f45",
+          "bytes": 13671
+        },
+        {
+          "path": "references/eqs-reference.md",
+          "sha256": "17c58d2b3f75693a238a6a25974dca1e7ac31dc01b8161b08901d5df9529e17e",
+          "bytes": 14081
+        }
+      ],
+      "total_bytes": 47671
+    },
+    {
+      "name": "ue-animation-system",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Unreal Engine animation: AnimInstance, montage playback, blend space, state machine, anim notify, IK, AnimGraph, skeletal mesh, or linked anim graphs. See references/anim-notify-reference.md for notify patterns and references/locomotion-setup.md for locomotion setup. For montage.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "9bd1df23286e9c1d880bbb0fcd2e148ad703e3753cb3850660bcebf0d8d10320",
+          "bytes": 17036
+        },
+        {
+          "path": "references/anim-notify-reference.md",
+          "sha256": "23484dc71da1e36e22b0d79e1cbe879382086cbaab8ae18d1273cff7de3159bc",
+          "bytes": 13774
+        },
+        {
+          "path": "references/locomotion-setup.md",
+          "sha256": "235e69502888cfb3b4f3624b6292828c71e6cdf7ed943a3d00b3d12cdf54d322",
+          "bytes": 17411
+        }
+      ],
+      "total_bytes": 48221
+    },
+    {
+      "name": "ue-async-threading",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Unreal Engine async operations, threading, parallel execution, or concurrency. Also use when the user mentions 'FRunnable', 'FAsyncTask', 'TaskGraph', 'UE::Tasks', 'ParallelFor', 'TFuture', 'TPromise', 'Async()', 'thread safety', 'FCriticalSection', 'FRWLock', 'background thread'.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ad1df897f016af98eacd68e4a1f0f10e14675ae8d239403bddff5839c37cf544",
+          "bytes": 14243
+        },
+        {
+          "path": "references/thread-safety-guide.md",
+          "sha256": "517140f79f8a201f8eb50340452f3aedae456e8323999c4cc6838fe6438e7c0a",
+          "bytes": 7878
+        },
+        {
+          "path": "references/threading-patterns.md",
+          "sha256": "849f3c3f7d2a4d92fb3761b8513205f135eff53c6e90a2c8682ca77884db81b1",
+          "bytes": 8948
+        }
+      ],
+      "total_bytes": 31069
+    },
+    {
+      "name": "ue-audio-system",
+      "version": "1.0.0",
+      "description": "Use this skill when working with audio, sound, music, UAudioComponent, PlaySoundAtLocation, SoundCue, MetaSound, attenuation, submix, concurrency, SFX, or spatial audio in Unreal Engine. See references/audio-setup-patterns.md for music system and ambient soundscape architectures. For VFX audio synchronization, see.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "8f523d2ce3cb7dced080d2880e7dbd550d71280b69ba235c7efe41d563b1ba25",
+          "bytes": 19723
+        },
+        {
+          "path": "references/audio-setup-patterns.md",
+          "sha256": "daf827434906bde99aeb49a8daa87e34987ef3a4af9ec10b2d737866bc51c6a4",
+          "bytes": 19607
+        }
+      ],
+      "total_bytes": 39330
+    },
+    {
+      "name": "ue-character-movement",
+      "version": "1.0.0",
+      "description": "Use this skill when working with character movement, CharacterMovementComponent, CMC, movement modes, walking, falling, swimming, flying, custom movement, network prediction, FSavedMove, root motion, floor detection, step-up, or character physics. Also use for 'PhysWalking', 'PhysCustom', 'LaunchCharacter'.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b84f54e4a57f85faab55116771f3c31dc732e54ebc04f10d0aecb98bfcbe4ea3",
+          "bytes": 19299
+        },
+        {
+          "path": "references/cmc-extension-patterns.md",
+          "sha256": "41e50abbd712a9ffeda9b22c7e6445d9ca2072363005f5635728675d8e1a92de",
+          "bytes": 8575
+        },
+        {
+          "path": "references/movement-pipeline.md",
+          "sha256": "5ba9fa031757daa0093d5760e85aaaa6546c057766a8427dfcb0fade675eaa95",
+          "bytes": 6633
+        }
+      ],
+      "total_bytes": 34507
+    },
+    {
+      "name": "ue-cpp-foundations",
+      "version": "1.0.0",
+      "description": "Use when writing Unreal Engine C++ code involving UPROPERTY, UFUNCTION, UCLASS, TArray, TMap, delegates, FString, garbage collection, or smart pointers. Also use when the user asks about \\\"UE C++\\\", USTRUCT, UENUM, FName, FText, TObjectPtr, TWeakObjectPtr, UObject lifetime, UE_LOG, or UE subsystems. For module build.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "c3b9ebf1ab35680b2968bb4b373e6aa710304b6bb3dcc635cee0529630ba36e0",
+          "bytes": 16476
+        },
+        {
+          "path": "references/container-patterns.md",
+          "sha256": "5e5867da8769139b4b60427e4280233b2fd4a1c88461180d8b8d2ab1667e5633",
+          "bytes": 14033
+        },
+        {
+          "path": "references/delegate-patterns.md",
+          "sha256": "feb3ebda653750bbdef34327dea5ed0e0e6308d109c34b91ff27a35d6dc224e6",
+          "bytes": 14932
+        },
+        {
+          "path": "references/property-specifiers.md",
+          "sha256": "9948d2f09a7960a97f4f67dd9c5ba7f662f900a1927d276b0197956c5339a233",
+          "bytes": 11294
+        }
+      ],
+      "total_bytes": 56735
+    },
+    {
+      "name": "ue-data-assets-tables",
+      "version": "1.0.0",
+      "description": "Use when working with DataAsset, DataTable, soft reference, hard reference, TSoftObjectPtr, async loading, Asset Manager, StreamableManager, or game data structures in Unreal Engine. See references/asset-loading-patterns.md for async loading and StreamableManager patterns. See references/data-driven-design.md for.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "54c8eda5c613a8fa78e5adeb6ac42958e1a198e71e5340e3f5b008361f82fa55",
+          "bytes": 17219
+        },
+        {
+          "path": "references/asset-loading-patterns.md",
+          "sha256": "ea3db4e5b2415e7f20d885e29f0eb8f0da5fd3c8cd508be1fb8e180acff31112",
+          "bytes": 8379
+        },
+        {
+          "path": "references/data-driven-design.md",
+          "sha256": "3bdc66706208f3af231bd5c4aaec160e843aaf808ab6277ccd8c97f0bedca214",
+          "bytes": 11657
+        }
+      ],
+      "total_bytes": 37255
+    },
+    {
+      "name": "ue-editor-tools",
+      "version": "1.0.0",
+      "description": "Use when extending the Unreal Editor with editor tool, editor utility widget, Blutility, detail customization, property customization, editor mode, asset editor, editor subsystem, editor extension, UToolMenus, or scripted asset operations. For Slate fundamentals, see ue-ui-umg-slate. For module build config, see.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "49004fa456c785804d03fa790580ec1e5aea771274320c8e35bedba58d88681a",
+          "bytes": 18083
+        },
+        {
+          "path": "references/detail-customization-patterns.md",
+          "sha256": "bbd10eb5128830f2c7116408d4205b3724ae8a7f9aa902c41182d5784875d6ec",
+          "bytes": 11932
+        },
+        {
+          "path": "references/editor-module-setup.md",
+          "sha256": "84c52c62fce77abcb11f0a35765d76d92d9a36e021bd5e93d3d9c01bdae11a7a",
+          "bytes": 13204
+        }
+      ],
+      "total_bytes": 43219
+    },
+    {
+      "name": "ue-game-features",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Game Feature plugins, modular gameplay, GameFeatureAction, GameFeatureData, GameFrameworkComponentManager, init state system, experience system, modular components, UPawnComponent, UControllerComponent, UGameStateComponent, UPlayerStateComponent, or Lyra-style modular architecture. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6323bdc4ae9f28acda907dc70d6b6c0bc4d5058d06f162068c9eb1906dc39d42",
+          "bytes": 17203
+        },
+        {
+          "path": "references/experience-system.md",
+          "sha256": "e84b3fd3209eeec02f16d7d7f5b02cd7defc2e45ca02431b3a65c943cf20cad9",
+          "bytes": 7171
+        },
+        {
+          "path": "references/game-feature-patterns.md",
+          "sha256": "584ddbbb5cb41f30086bb6e5e1389271f0441cdbf6398f28084dbb799235e19d",
+          "bytes": 9338
+        }
+      ],
+      "total_bytes": 33712
+    },
+    {
+      "name": "ue-gameplay-abilities",
+      "version": "1.0.0",
+      "description": "Use this skill when working with GAS, Gameplay Ability System, GameplayAbility, GameplayEffect, AttributeSet, GameplayTags, ability system, buffs, debuffs, cooldowns, or attribute modification. See references/ for detailed setup patterns, effect configuration, and ability task usage.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "1bf6ebce91efd60c7b8f74a9519a11605732c33bb3c8a21a2f9d4d2c0b267a7c",
+          "bytes": 19167
+        },
+        {
+          "path": "references/ability-task-reference.md",
+          "sha256": "12f1e5aa0a82bc1ec89b2a0c48b222332d848074d1412a52abeaf3a699254ad1",
+          "bytes": 12937
+        },
+        {
+          "path": "references/gameplay-effect-reference.md",
+          "sha256": "5d5927d30ad02ab3441c519845a4c05a43c1dfe23d16d5cf36d25d82ddade414",
+          "bytes": 13677
+        },
+        {
+          "path": "references/gas-setup-patterns.md",
+          "sha256": "4427d7920aa82670ec09ef11afc565ace557ac5ca0cd58726678ad823c47d976",
+          "bytes": 10109
+        }
+      ],
+      "total_bytes": 55890
+    },
+    {
+      "name": "ue-gameplay-framework",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Unreal Engine's gameplay framework classes: GameMode, GameState, PlayerController, PlayerState, Pawn, Character, or GameInstance. Also use when the user mentions 'gameplay framework', 'game rules', 'player management', 'match flow', or 'player spawning'. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "13a194b11c398b3e3cb90a64aadf2f63c8b9305448da8562018cfd6ca987de2c",
+          "bytes": 18374
+        },
+        {
+          "path": "references/framework-class-map.md",
+          "sha256": "a0807db218d0d990a991d078318dde1ee47bbec1c7f90425a88664d4ca812d60",
+          "bytes": 9564
+        }
+      ],
+      "total_bytes": 27938
+    },
+    {
+      "name": "ue-input-system",
+      "version": "1.0.0",
+      "description": "Use this skill when implementing player input with Unreal Engine's Enhanced Input system. Also use when the user mentions 'Enhanced Input', 'input', 'input action', 'InputAction', 'mapping context', 'InputMappingContext', 'input binding', 'key binding', 'input trigger', 'input modifier', 'gamepad', or 'keyboard'..",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f07bbecf74b0bd1f0377c740a68a653de43fcf42ddca14d244ddfbba9d74ebd9",
+          "bytes": 16180
+        },
+        {
+          "path": "references/input-action-reference.md",
+          "sha256": "20956ecb2e7cc5b286ccb977c8ddc1230f29fc2c062d05d7abdaa3e591cec50e",
+          "bytes": 25996
+        }
+      ],
+      "total_bytes": 42176
+    },
+    {
+      "name": "ue-mass-entity",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Mass Entity, MassEntity, Mass AI, MassProcessor, MassFragment, MassTag, MassObserver, MassSpawner, MassCrowd, Mass ECS, entity archetype, ForEachEntityChunk, FMassEntityQuery, FMassEntityManager, ISM crowd, or large-scale entity simulation in Unreal Engine. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "70b2ee16dbe476af7c9abda3c45cb5f32a3702167a1839ba83e34dee0f39e382",
+          "bytes": 18808
+        },
+        {
+          "path": "references/mass-entity-patterns.md",
+          "sha256": "b3ba0fc44c1324c28d998fdbe0070a98e21598363461d852d1d331819a585c81",
+          "bytes": 9215
+        },
+        {
+          "path": "references/mass-fragment-reference.md",
+          "sha256": "f11bb932e6b4c541911ef316626e311c2d349948da1113a508d0e78ffc2b34ec",
+          "bytes": 6970
+        }
+      ],
+      "total_bytes": 34993
+    },
+    {
+      "name": "ue-materials-rendering",
+      "version": "1.0.0",
+      "description": "Use when the user is working with material, shader, MID, dynamic material, material instance, post-process, render target, parameter collection, decal, Nanite, Lumen, or rendering in Unreal Engine. See references/material-parameter-reference.md for parameter patterns and references/post-process-settings.md for.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d8a3b92516f51aab134f37d5333f053f07d2107f89e3d7ef66609b1b761de0f8",
+          "bytes": 19415
+        },
+        {
+          "path": "references/material-parameter-reference.md",
+          "sha256": "5b438eb6d5d393f0b400eaa7c1af4dd82156cfc4b344b49e6ff5224f5f273922",
+          "bytes": 11172
+        },
+        {
+          "path": "references/post-process-settings.md",
+          "sha256": "615c653808f327753d8a887fc5eb09496b59e321be616045cf34771e475bbbbf",
+          "bytes": 17329
+        }
+      ],
+      "total_bytes": 47916
+    },
+    {
+      "name": "ue-module-build-system",
+      "version": "1.0.0",
+      "description": "Use when working with Build.cs, Target.cs, module creation, plugin setup, or build errors in Unreal Engine — including \\\"unresolved external symbol,\\\" \\\"cannot open include file,\\\" IWYU violations, missing API macros, or dependency configuration. See also ue-cpp-foundations for UObject macro patterns.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "878c2659ad6ba62bb23834054e1fc87c98d51689e226d1fc7d8d839f0466a6d5",
+          "bytes": 15183
+        },
+        {
+          "path": "references/build-cs-reference.md",
+          "sha256": "dadc1af31e91924ce92d3ca6c81154f4b85e7dac1dfa48616874caee77603c80",
+          "bytes": 12550
+        },
+        {
+          "path": "references/common-build-errors.md",
+          "sha256": "345004dc8fb67d298de854d1ab47c9d0a8246409c76da4059fc6cb38c2f3c14d",
+          "bytes": 11004
+        }
+      ],
+      "total_bytes": 38737
+    },
+    {
+      "name": "ue-networking-replication",
+      "version": "1.0.0",
+      "description": "Use this skill when working on multiplayer networking, replication, RPC calls, net role logic, server/client authority, prediction, or synchronizing game state. Also use when the user mentions 'DOREPLIFETIME', 'dedicated server', 'replicated', or 'net role'. See references/replication-patterns.md for common patterns.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "d2841a364d4375e2d2a2b09810b44fba4d5b32a3829af9249312fde77073258d",
+          "bytes": 18717
+        },
+        {
+          "path": "references/replication-patterns.md",
+          "sha256": "2ad0da16405a429503faa8db5bb94080873ca8e082f57d36b0df2b7a993f1573",
+          "bytes": 13961
+        },
+        {
+          "path": "references/rpc-decision-guide.md",
+          "sha256": "518ad82f58e9a20b916e666f008a1b081ff871e98e10956a94b333b1628bcc49",
+          "bytes": 14591
+        }
+      ],
+      "total_bytes": 47269
+    },
+    {
+      "name": "ue-niagara-effects",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Niagara particle systems, VFX, effects, emitter, Niagara component, or Niagara parameter in Unreal Engine C++. Covers spawning systems, setting parameters, data interfaces (SkeletalMesh, StaticMesh, Curve, Array), OnSystemFinished delegate, and performance tuning. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "9e55036414f61de53de17c3255f360cb56a2634abfeeac86bc1bb48ebb6df70c",
+          "bytes": 19529
+        },
+        {
+          "path": "references/niagara-data-interfaces.md",
+          "sha256": "a309f1873efe4c8c6f7f1e02da9f679e45fb9817d53ca68fe18584f96df1a4b1",
+          "bytes": 16914
+        },
+        {
+          "path": "references/niagara-parameter-types.md",
+          "sha256": "694e49dc6f3112b90e9727ad9239c75e4b61539b14717bc6dbb0de25947edb3c",
+          "bytes": 8738
+        }
+      ],
+      "total_bytes": 45181
+    },
+    {
+      "name": "ue-physics-collision",
+      "version": "1.0.0",
+      "description": "Use when implementing collision detection, trace queries, physics simulation, or physical interactions in Unreal Engine. Triggers on: 'collision', 'trace', 'LineTrace', 'line trace', 'overlap', 'physics', 'hit result', 'sweep', 'collision channel', 'physics body', 'Chaos', 'raytrace', 'OnHit', 'OnBeginOverlap'. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ec2588c791e5a4aa1ca1772dbf8a8ade82fc0b6984682a8eb16acb20e749b7b1",
+          "bytes": 18318
+        },
+        {
+          "path": "references/collision-channel-setup.md",
+          "sha256": "e892c2105e80206c5d8a757a6b0d64121ea005503cca66c51040d6e0a494a225",
+          "bytes": 9406
+        },
+        {
+          "path": "references/trace-patterns.md",
+          "sha256": "22c4cb25ac20e89083e767fee38b8031ead167579ddfedc7ef99f2ec84fa4e92",
+          "bytes": 16480
+        }
+      ],
+      "total_bytes": 44204
+    },
+    {
+      "name": "ue-procedural-generation",
+      "version": "1.0.0",
+      "description": "Use this skill when working with procedural generation in Unreal Engine: PCG framework, ProceduralMesh, instanced mesh, HISM, spline, runtime mesh, noise, terrain generation, or dungeon generation. See references/pcg-node-reference.md for PCG node types and references/procedural-mesh-patterns.md for mesh generation.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3b77efc93113b9db3dcc2b48a9bfcda442cb389d0b3a820175ef1426a66c865a",
+          "bytes": 20091
+        },
+        {
+          "path": "references/pcg-node-reference.md",
+          "sha256": "46dd2fa57b9dc66d99d0943db70dd97d95f99ed14e5a922913d0bae8e9b660e6",
+          "bytes": 14759
+        },
+        {
+          "path": "references/procedural-mesh-patterns.md",
+          "sha256": "e42d027c788ba51b11392a44e8e4fcaf36bac55ea2f562524170e9ad913ecb05",
+          "bytes": 31600
+        }
+      ],
+      "total_bytes": 66450
+    },
+    {
+      "name": "ue-project-context",
+      "version": "1.0.0",
+      "description": "When the user wants to create or update their Unreal Engine project context document. Use when the user says 'project context,' 'set up context,' 'UE context,' 'configure project,' or wants to avoid repeating their project setup across UE development tasks. Creates `.agents/ue-project-context.md` that all other UE.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "73dfeb73793ccac4622eef4291279a5f3b9454b29bf033ab9508195fd4856873",
+          "bytes": 10865
+        }
+      ],
+      "total_bytes": 10865
+    },
+    {
+      "name": "ue-sequencer-cinematics",
+      "version": "1.0.0",
+      "description": "Use this skill when working with Sequencer, LevelSequence, cutscene, cinematic, camera, movie scene, sequencer event, or Movie Render Queue in Unreal Engine. See references/sequencer-patterns.md for dialogue cutscene, in-game camera, and scripted event patterns. For animation playback, see ue-animation-system.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "9320a20a466616e7c0d4e64a1e0bac826c5b450b159f81d4e1b48db67c66ffd7",
+          "bytes": 19448
+        },
+        {
+          "path": "references/sequencer-patterns.md",
+          "sha256": "7f4b1b19a4c687205254951bd900367be8e912d185b803e450b6800b1250712f",
+          "bytes": 20015
+        }
+      ],
+      "total_bytes": 39463
+    },
+    {
+      "name": "ue-serialization-savegames",
+      "version": "1.0.0",
+      "description": "Use when implementing save/load systems, player progress persistence, or data serialization in Unreal Engine. Triggers on: save game, USaveGame, FArchive, serialization, SaveGameToSlot, config, persist data, save file, load game. See references/save-system-architecture.md for full slot management and multi-user.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e5045d1618ed9f130d7ca75494f40b1e967c8fa061ac42ec58e9af132380d13a",
+          "bytes": 18246
+        },
+        {
+          "path": "references/save-system-architecture.md",
+          "sha256": "75bcee41a47a29b25ba218d4a6b2575c6af17808b643f9a9d770484e8e939e35",
+          "bytes": 20388
+        }
+      ],
+      "total_bytes": 38634
+    },
+    {
+      "name": "ue-state-trees",
+      "version": "1.0.0",
+      "description": "Use this skill when working with State Tree, StateTree, UStateTree, state machine, StateTreeTask, StateTreeCondition, StateTreeEvaluator, StateTreeSchema, AI State Tree, Mass StateTree, FStateTreeExecutionContext, or data-driven state logic in Unreal Engine. See references/state-tree-patterns.md for.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "bf19cac93c37fe57c9d386adcab83956e4fa19773c436c5ba42ce7622dd5b3e5",
+          "bytes": 19619
+        },
+        {
+          "path": "references/state-tree-mass-integration.md",
+          "sha256": "97dda8b7f71a6bed6e8e3fe37c4f0a449daabb5fd63d6d39b9606358401d447d",
+          "bytes": 7341
+        },
+        {
+          "path": "references/state-tree-patterns.md",
+          "sha256": "e4cbe5cd6c60f01d70990a6dbd8fa00ae2463c72599c99bf0078fa88fded1e62",
+          "bytes": 9821
+        }
+      ],
+      "total_bytes": 36781
+    },
+    {
+      "name": "ue-testing-debugging",
+      "version": "1.0.0",
+      "description": "Use when writing automation tests, functional tests, or any test in Unreal Engine. Also use when the user asks about \\\"UE_LOG\\\", logging, log categories, assertion, check, ensure, verify, DrawDebug, debug draw, console command, profiling, Unreal Insights, stat commands, or debugging techniques. See.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "4a7b332a491cfe8027825111dfd19b70a2ca6fc1dc060b207c18808acb6440ba",
+          "bytes": 18726
+        },
+        {
+          "path": "references/automation-test-patterns.md",
+          "sha256": "b27307ffaf6f5a9d190e0c08565ca49809abd3e72e32dd0ebe91ad02113038c6",
+          "bytes": 11090
+        },
+        {
+          "path": "references/profiling-commands.md",
+          "sha256": "5da0b004b82697583c71a619790a8bef069265cf180f5c16097c97c5ef495df6",
+          "bytes": 9678
+        }
+      ],
+      "total_bytes": 39494
+    },
+    {
+      "name": "ue-ui-umg-slate",
+      "version": "1.0.0",
+      "description": "Use this skill when working with UMG, UI, widget, UserWidget, Slate, HUD, BindWidget, Common UI, menu, or UMG binding in Unreal Engine. See references/widget-types.md for widget type reference and references/common-ui-setup.md for Common UI plugin setup. For Slate in editor tools, see ue-editor-tools. For input mode.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "f30fb96b811967f39a86faa5d06ab01c67325f91f146b3a8553ba187eaec8871",
+          "bytes": 16437
+        },
+        {
+          "path": "references/common-ui-setup.md",
+          "sha256": "8dfa5c04eadeb3807e9e5459dde12e74ee6164dab3a5284447220fc0482358bc",
+          "bytes": 15785
+        },
+        {
+          "path": "references/widget-types.md",
+          "sha256": "98dcfa8161f80ee8830e300a2c65c76cf6af83e5a61c6addd980ba0a17c07ae6",
+          "bytes": 15207
+        }
+      ],
+      "total_bytes": 47429
+    },
+    {
+      "name": "ue-world-level-streaming",
+      "version": "1.0.0",
+      "description": "Use this skill when working with World Partition, level streaming, level travel, OpenLevel, ServerTravel, data layer, world subsystem, level instance, sub-level, seamless travel, open world, or HLOD. See references/streaming-patterns.md for configuration patterns by game type.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "717395eeeb791ad47e018bbb6052941017aa40ea26e10127e96ebd3683687065",
+          "bytes": 20293
+        },
+        {
+          "path": "references/streaming-patterns.md",
+          "sha256": "79ba4c1dd1bb653d7e10de522cb0a116346c786301acaf320410e43ba7e3b8cb",
+          "bytes": 14006
+        }
+      ],
+      "total_bytes": 34299
+    },
+    {
+      "name": "unreal-best-practices",
+      "version": "1.0.0",
+      "description": "Comprehensive best practices guide for modern Unreal Engine 5.x development. Covers Epic's strategic direction toward modern systems (GAS, Enhanced Input, StateTree, MetaSounds, Niagara, PCG, CommonUI, World Partition, Game Feature Plugins, Gameplay Tags), the \\\"research first\\\" philosophy of always checking for newer.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "502e1299f466b038db6a8c62852596e9b2d5e3d9c2b320d828b1a78fcc743d83",
+          "bytes": 11212
+        },
+        {
+          "path": "references/blueprint-and-cpp.md",
+          "sha256": "d124c32013ed298dbb4a6e23d30383bf52465c5e7bb7d2d06ba104748ad60395",
+          "bytes": 10746
+        },
+        {
+          "path": "references/data-driven-design.md",
+          "sha256": "8485b6aaeece8800bb70d691ae68d0e3cfb7814eebf9c3e8000cea6b2c9b96d2",
+          "bytes": 9957
+        },
+        {
+          "path": "references/modern-systems.md",
+          "sha256": "923ad1f06f7dc7661690927e1ab40febbef0018b088936f7b333fe85ffd93e74",
+          "bytes": 19311
+        },
+        {
+          "path": "references/performance-and-debugging.md",
+          "sha256": "eb5ee20fdc394c1abbb8d1f570959f9f8b08a61b1c1dd951e57b7eebfea51026",
+          "bytes": 11623
+        },
+        {
+          "path": "references/project-organization.md",
+          "sha256": "9ec13818a4b0bde49ed27528954a0260b0863df6547fe0df40a5ab888a7c7d35",
+          "bytes": 10786
+        }
+      ],
+      "total_bytes": 73635
+    },
+    {
+      "name": "unreal-blueprint-codegen",
+      "version": "1.0.0",
+      "description": "Programmatically generate Unreal Engine 5.x Blueprint and Widget Blueprint .uasset files from C++. Use when building a content generator for Fab/Marketplace samples, Quick-Start kits, tutorial assets, or editor utilities that mass-produce Blueprints, Widget Blueprints with UMG animations, or domain assets (dialogue.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e16d46240e27c557e4ba45318cb5c5e909386825d25affb3003fa6a816c5fd3a",
+          "bytes": 12672
+        },
+        {
+          "path": "assets/experiment-module-template/Source/MyExperimentEditor/MyExperimentEditor.Build.cs",
+          "sha256": "e6c0964bfaf7cd22dbe5d1325bc7b2521720c257e442bb56eab21e57eff26ad7",
+          "bytes": 1082
+        },
+        {
+          "path": "assets/experiment-module-template/Source/MyExperimentEditor/Private/MyExperimentEditorModule.cpp",
+          "sha256": "72846bd286a3a66a4df0e027a40509eb681c88e74cf909b7cdaf01b30bb554b5",
+          "bytes": 139
+        },
+        {
+          "path": "assets/experiment-module-template/Source/MyExperimentEditor/Private/MyExperimentLibrary.cpp",
+          "sha256": "4ea1e405b8b66652561fa41a122cc67cfd3afc570a52188269f32a7d4cebc4b1",
+          "bytes": 7877
+        },
+        {
+          "path": "assets/experiment-module-template/Source/MyExperimentEditor/Public/MyExperimentEditorModule.h",
+          "sha256": "54fc1f653a1997aa69eff0a88ade62307b683c171483092f908770df53eebfd0",
+          "bytes": 237
+        },
+        {
+          "path": "assets/experiment-module-template/Source/MyExperimentEditor/Public/MyExperimentLibrary.h",
+          "sha256": "e7b5212a50c7596c43b809e5f51bdf1abe2f16227bfbccc6a58a4dcc7b08f280",
+          "bytes": 1229
+        },
+        {
+          "path": "assets/experiment-module-template/uplugin-snippet.json",
+          "sha256": "89804fdde950b42625c504bdf19e40ed24bcd3a2d3bfb3efb262cc3ee0f41921",
+          "bytes": 254
+        },
+        {
+          "path": "references/caveats.md",
+          "sha256": "18257ec2570f0fae6a7a515b8b33da586a5bd09b76f551a225e818630e0cfa66",
+          "bytes": 10423
+        },
+        {
+          "path": "references/k2node-cookbook.md",
+          "sha256": "1ec52c694c9dba89946e0c1d1297eef1ded34cbd56219f3b27566fd0c27730c5",
+          "bytes": 13721
+        },
+        {
+          "path": "references/two-pass-compile.md",
+          "sha256": "fcfe14b798832ba0335e67a74deb43f3a792ffbcd249278353fc260607416a3c",
+          "bytes": 7513
+        },
+        {
+          "path": "references/widget-blueprint-cookbook.md",
+          "sha256": "f56d9bb46fe3efc238e20cae73c2aacd8d89dac36ea8ff58a6463fd67e4a57c5",
+          "bytes": 13590
+        }
+      ],
+      "total_bytes": 68737
+    },
+    {
+      "name": "unreal-engine",
+      "version": "1.0.0",
+      "description": "Comprehensive Unreal Engine C++ and Blueprint development assistant with deep project structure understanding. Use when helping with Unreal Engine projects, including: C++ gameplay programming, Blueprint development, input system configuration (Enhanced Input), Gameplay Ability System (GAS), project structure.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "27cc46fcd9407179a1e41bf4e413d359d763fc1b7239c5224cfcd768fcf6ff11",
+          "bytes": 12368
+        },
+        {
+          "path": "references/common_pitfalls.md",
+          "sha256": "726c4f4c04b59b9e0b9f835cf2161d1c0c721c960d486dce1855ad7277c2dc4f",
+          "bytes": 13789
+        },
+        {
+          "path": "references/enhanced_input.md",
+          "sha256": "df2bdf5974a2730e684c8868e2bef4976a5336f8ded3263a21fc82d5204a4b76",
+          "bytes": 8293
+        },
+        {
+          "path": "references/gameplay_ability_system.md",
+          "sha256": "6eacde683b9ba6ae295f49ee9e6f5989d8327693ac90a9cf3d5e38ca3815f73c",
+          "bytes": 16042
+        }
+      ],
+      "total_bytes": 50492
+    },
+    {
+      "name": "unreal-gas",
+      "version": "1.0.0",
+      "description": "Expert guide for Unreal Engine 5.x Gameplay Ability System (GAS) C++ development. Covers AbilitySystemComponent, GameplayAbilities, GameplayEffects, Attributes/AttributeSets, GameplayTags, GameplayCues, AbilityTasks, prediction/replication, and common patterns. Use when the user asks about GAS, gameplay abilities.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "b2a3d40565c430a93dd7e03480e8a293a6e4dc2c32f702ecb3b0a3fee51d81b7",
+          "bytes": 6220
+        },
+        {
+          "path": "references/core-classes.md",
+          "sha256": "c19b1420c100d9c28cb13595f2467256931161363d9f0434668ac81e0343fe1c",
+          "bytes": 11972
+        },
+        {
+          "path": "references/effects-and-attributes.md",
+          "sha256": "2ed1bff8a180bcef596696e839ec878c247cd05ecdd0b124af5d03de34cc5e0e",
+          "bytes": 9761
+        },
+        {
+          "path": "references/networking.md",
+          "sha256": "7dc1482ee00f240bc3317796263018bafaa5c269e3eb2e680e77f6d8326b0aad",
+          "bytes": 5890
+        },
+        {
+          "path": "references/patterns-and-pitfalls.md",
+          "sha256": "6a9b4eba91641a9eb715ffd13c5f4da9129b8eea90da21a06782ec9981005253",
+          "bytes": 6839
+        }
+      ],
+      "total_bytes": 40682
+    },
+    {
+      "name": "unreal-pcg-python",
+      "version": "1.0.0",
+      "description": "Guide for Unreal Engine 5.x PCG (Procedural Content Generation) Python integration. Covers the PCGPythonInterop plugin, the Execute Python Script node, PCG Python API (PCGComponent, PCGBlueprintElement, PCGSpatialData, PCGPointData), editor automation, custom PCG nodes via Python, and known limitations. Use when the.",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ae0fdf2007ef7ecfa232f70d2e1e401b486a27ec8f53fa1543a8a3657669f1ab",
+          "bytes": 10128
+        }
+      ],
+      "total_bytes": 10128
+    },
+    {
+      "name": "unreal-thirdparty",
+      "version": "1.0.0",
+      "description": "Expert guide for integrating third-party C/C++ libraries into Unreal Engine 5.x projects and plugins. Covers static linking, dynamic linking (DLL/SO/dylib), Build.cs configuration, ModuleType.External, delay loading, runtime dependency staging, wrapping patterns, cross-platform considerations (Windows/macOS/Linux).",
+      "tags": [
+        "unreal-engine",
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "63a0a00108071c1a75cd80e53511039f758d72647fbc8eae951b8a19faf70ce4",
+          "bytes": 13967
+        },
+        {
+          "path": "references/build-system.md",
+          "sha256": "a5e8c7748cad98fe0d518abb308edfed7b24d0f9bbac6102830a33c44841348b",
+          "bytes": 20660
+        },
+        {
+          "path": "references/linking-patterns.md",
+          "sha256": "496edae28088d8dc69c8ef3a2fd442a7880df6a66ffa0a495b611c6bb5a684c0",
+          "bytes": 11313
+        },
+        {
+          "path": "references/patterns-and-pitfalls.md",
+          "sha256": "6d63c276b8e0f99a671e16a4bce867689d9af0afc361412e8828540d4dc4c881",
+          "bytes": 19372
+        },
+        {
+          "path": "references/platform-specifics.md",
+          "sha256": "2bface3ee0099caadbb30c0f765c9e986a4bce0828aed012a5da48a0086aa7d9",
+          "bytes": 15527
+        }
+      ],
+      "total_bytes": 80839
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "version": "1.0.0",
+      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. Use when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns.",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "25adf42eb694d8f693ce45e1f3ab405869f77100e2154b19c2fee80266d35047",
+          "bytes": 3715
+        }
+      ],
+      "total_bytes": 3715
+    },
+    {
+      "name": "verify-authoritative-surface",
+      "version": "1.0.0",
+      "description": "Verify status claims against the authoritative surface, including fresh money and subscription billing channel checks, before reporting them as fact.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-verify-authoritative-surface"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".write-lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "c3f7a5b103107fe0b23f9418db770aec7a1df63fadd3746bc45f56abc603c9f5",
+          "bytes": 4184
+        }
+      ],
+      "total_bytes": 4184
+    },
+    {
+      "name": "video-editor",
+      "version": "1.0.0",
+      "description": "Editing and post-production for self-generated video: stitching clips together, laying music underneath, and finishing renders to delivery spec. Every recipe below was run for real on this VM (see Worked Examples) — if a recipe and reality disagree, reality wins and this file gets corrected.",
+      "tags": [
+        "quantum"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-video-editor"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "66d0ea8669a6e03b22b5e0167b406d91c3561e9aaa9e2b9aeca21e4e0fbae51d",
+          "bytes": 9027
+        }
+      ],
+      "total_bytes": 9027
+    },
+    {
+      "name": "write-redaction-manifest-and-architecture-doc",
+      "version": "1.0.0",
+      "description": "Write redaction manifest and architecture doc",
+      "tags": [
+        "imported"
+      ],
+      "status": "active",
+      "provenance": "imported",
+      "aliases": [],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": "ROUTINE.json",
+          "sha256": "ff161dade3e8c01587dc887147837efbe62aaafedcdd8a3623570cff5e360ce0",
+          "bytes": 7993
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "00c3ad8b0cd5216f0bc12ea977a259f3abfa6ed3dd07bd45c691f417f47c01fa",
+          "bytes": 6466
+        }
+      ],
+      "total_bytes": 14459
+    },
+    {
+      "name": "wroc",
+      "version": "1.0.0",
+      "description": "Build Scotty''s weekly WROC paperwork: from Paycom punches to a validated, supervisor-ready PDF. Triggers on WROC, weekly notes, timesheet paperwork, Living Innovations documentation.",
+      "tags": [
+        "quantum",
+        "fleet"
+      ],
+      "status": "active",
+      "provenance": "quantum",
+      "aliases": [
+        "local-wroc"
+      ],
+      "dependencies": {
+        "tools": [],
+        "repos": [],
+        "urls": []
+      },
+      "files": [
+        {
+          "path": ".gitignore",
+          "sha256": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+          "bytes": 19
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "7d91befe6a3ff398415bde1362e77ee894e65e7bcdd181a822c0efbced6acf36",
+          "bytes": 3246
+        },
+        {
+          "path": "assets/c36.png",
+          "sha256": "f22427b31b8376d5cd57252d6601e73a25cdf64857e3b061093dd6b738f3172f",
+          "bytes": 914173
+        },
+        {
+          "path": "assets/fonts/EBGaramond-Regular.ttf",
+          "sha256": "2ed37a4bd6c913b2f14983c883e487a44c3ba03782429e957d3acd1e463cad25",
+          "bytes": 518872
+        },
+        {
+          "path": "assets/hs33.png",
+          "sha256": "b7438055d33616d13ab950fe2f46a41d3211b56698a0ce450d43ea2476dcb75c",
+          "bytes": 879471
+        },
+        {
+          "path": "assets/week-template.yaml",
+          "sha256": "a58ab13d0a4fa62b6411b4117dad9fc3b6cf63fb549d423ccfaadd580cb60860",
+          "bytes": 2528
+        },
+        {
+          "path": "bin/wroc.py",
+          "sha256": "42d862d0c4a11399570ef6d25aa6d17d6f31b203856c1f27508fb88ca8389808",
+          "bytes": 15232
+        },
+        {
+          "path": "references/adding-a-form.md",
+          "sha256": "fa7b330c60e70a1caff6e8c98546e915f9f8cc24e69eae382eab68e9cfb16d5b",
+          "bytes": 1734
+        },
+        {
+          "path": "references/conventions.md",
+          "sha256": "d2a54f46a4850beecebf77989fb0e2e2ce0655fef965dab3daede55f53aa7953",
+          "bytes": 3897
+        },
+        {
+          "path": "references/paycom.md",
+          "sha256": "17f997f2d50983ebd3033b7c9b1e2d079ac1a446ea6328bb6d885fdc0e6dc1b9",
+          "bytes": 1906
+        }
+      ],
+      "total_bytes": 2341078
+    }
+  ]
+}

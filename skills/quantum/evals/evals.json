@@ -1,0 +1,8 @@
+{
+  "skill": "quantum",
+  "test_cases": [
+    {"name": "slash_quantum_nebula", "input": "/quantum I would like to work on Nebula", "assertions": ["loads quantum", "search_memory before a plan", "does not treat FORGE as current", "routes Nebula work through the map"]},
+    {"name": "memory_close", "input": "/quantum we decided Sol stays the chat face", "assertions": ["writes a signed fleet durable memory", "does not write a secret"]},
+    {"name": "stale_draft", "input": "/quantum use the August holographic sqlite paths", "assertions": ["flags the August prompt as historical", "follows memory_doctrine.md"]}
+  ]
+}

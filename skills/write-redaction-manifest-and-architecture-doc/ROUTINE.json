@@ -1,0 +1,253 @@
+{
+  "slug": "write-redaction-manifest-and-architecture-doc",
+  "title": "Write redaction manifest and architecture doc",
+  "version": "0.1.0-draft",
+  "status": "draft",
+  "source_task": "t_2cb757c9",
+  "source_agent": "axiom",
+  "source_session": "20260901_161707_2bcb4c",
+  "captured_at": "2026-09-01T23:55:09Z",
+  "placeholders": [
+    "{{DATE}}",
+    "{{RELATED_TASK_ID}}",
+    "{{TASK_ID}}"
+  ],
+  "success_criteria": "manifest covers 100% of inventory items; architecture doc enables a new user to re-implement the fleet locally.",
+  "run_summary": "Successfully created REDACTION_MANIFEST.md covering 100% of inventory items and ARCHITECTURE.md describing the three core subsystems with Mermaid diagrams and local re-implementation instructions.",
+  "changed_files": [
+    "REDACTION_MANIFEST.md",
+    "ARCHITECTURE.md"
+  ],
+  "steps": [
+    {
+      "tool": "kanban_show",
+      "args": [
+        {
+          "task_id": "{{TASK_ID}}"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "ls -la \"C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{TASK_ID}}\""
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "kanban_show",
+      "args": [
+        {
+          "task_id": "{{RELATED_TASK_ID}}"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "ls -la \"C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{RELATED_TASK_ID}}\""
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "kanban_show",
+      "args": [
+        {
+          "task_id": "{{RELATED_TASK_ID}}"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "find \"G:\\My Drive\" -type f -name \"*secret*\" -o -name \"*inventory*\" -o -name \"*redaction*\" -o -name \"*extracted*\" 2>/dev/null | head -30"
+        },
+        {
+          "command": "find \"G:\\My Drive\\Notebooks\\Quantum Codex\" -type f -name \"*.md\" -o -name \"*.csv\" -o -name \"*.json\" 2>/dev/null | head -50"
+        },
+        {
+          "command": "find \"G:\\My Drive\\Notebooks\\Quantum Codex\" -type f -name \"*Agent-fleet*\" -o -name \"*starter*\" -o -name \"*pipeline*\" -o -name \"*kanban*\" -o -name \"*dispatch*\" 2>/dev/null | head -30"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\ideas_inbox\\Agent-fleet starter kit product.md"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "search_files",
+      "args": [
+        {
+          "pattern": "P4-T1 Opportunity Analysis",
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\Team Quantum Architecture\\P4-T1 Opportunity Analysis — {{DATE}}.md"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "find \"C:\\Users\\scott\\AppData\\Local\\hermes\" -type f -name \"*.py\" -o -name \"*.md\" -o -name \"*.json\" 2>/dev/null | grep -E \"(kanban|soul|cron|hub|dispatch|standup|fleet)\" | head -30"
+        },
+        {
+          "command": "find \"C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\" -type f -name \"*.py\" -o -name \"*.md\" -o -name \"*.json\" 2>/dev/null | head -30"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\hermes-agent\\hermes_cli\\kanban.py"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "find \"C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\" -name \"SOUL.md\" 2>/dev/null"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\\qubit\\SOUL.md"
+        },
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\\axiom\\SOUL.md"
+        },
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\\axiom\\cron\\axiom_cycle_prompt.md"
+        },
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\hermes-agent\\hermes_cli\\kanban_db.py",
+          "limit": 300
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "search_files",
+      "args": [
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\scripts",
+          "pattern": "fleet_standup|hub_post|team_broadcast"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\shared\\team_broadcast.py"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "terminal",
+      "args": [
+        {
+          "command": "find \"G:\\My Drive\\Notebooks\\Quantum Codex\\scripts\" -name \"*.py\" 2>/dev/null | head -30"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "read_file",
+      "args": [
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\scripts\\auto_task_dispatcher.py"
+        },
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\scripts\\interagent_watchdog.py"
+        },
+        {
+          "path": "G:\\My Drive\\Notebooks\\Quantum Codex\\scripts\\generate_kanban_relay.py"
+        },
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\\qubit\\cron\\jobs.json"
+        },
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\profiles\\axiom\\cron\\jobs.json"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "write_file",
+      "args": [
+        {
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{TASK_ID}}\\REDACTION_MANIFEST.md",
+          "content": "<literal content, 13346 chars — omitted from draft>"
+        }
+      ],
+      "rationale": "Now I have a thorough understanding of the three subsystems. Let me create both required documents."
+    },
+    {
+      "tool": "write_file",
+      "args": [
+        {
+          "content": "<literal content, 6526 chars — omitted from draft>",
+          "path": "C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{TASK_ID}}\\ARCHITECTURE.md"
+        }
+      ],
+      "rationale": null
+    },
+    {
+      "tool": "kanban_complete",
+      "args": [
+        {
+          "artifacts": [
+            "C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{TASK_ID}}\\REDACTION_MANIFEST.md",
+            "C:\\Users\\scott\\AppData\\Local\\hermes\\kanban\\workspaces\\{{TASK_ID}}\\ARCHITECTURE.md"
+          ],
+          "metadata": {
+            "changed_files": [
+              "REDACTION_MANIFEST.md",
+              "ARCHITECTURE.md"
+            ],
+            "findings": [
+              "Created comprehensive redaction manifest covering 90 inventory items/secrets mapped to standard placeholders.",
+              "Authored ARCHITECTURE.md detailing the three subsystems with Mermaid diagrams and re-implementation instructions."
+            ]
+          },
+          "summary": "Successfully created REDACTION_MANIFEST.md covering 100% of inventory items and ARCHITECTURE.md describing the three core subsystems with Mermaid diagrams and local re-implementation instructions.",
+          "task_id": "{{TASK_ID}}"
+        }
+      ],
+      "rationale": null
+    }
+  ]
+}

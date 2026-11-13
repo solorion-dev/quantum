@@ -1,0 +1,8 @@
+{
+  "skill": "quantum-doctor",
+  "test_cases": [
+    {"name": "nebula_login", "input": "Nebula login looks broken, doctor it", "assertions": ["recalls the nebula#27 deploy gate", "does not deploy main"]},
+    {"name": "empty_memory", "input": "Quantum memory came back empty", "assertions": ["runs memory health", "does not claim the store is empty if embedder is down"]},
+    {"name": "known_down", "input": "doctor the fleet, claude-rc is down", "assertions": ["marks known downs as not new"]}
+  ]
+}

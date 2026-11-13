@@ -1,0 +1,9 @@
+{
+  "skill": "quantum-mail",
+  "test_cases": [
+    {"input": "check dsect mail", "should_trigger": true},
+    {"input": "send a fleet email about the hub", "should_trigger": true},
+    {"input": "what's in the @dsect.net inbox", "should_trigger": true},
+    {"input": "read my Gmail receipts", "should_trigger": false}
+  ]
+}
