@@ -96,15 +96,16 @@ decision (profile milestones M4/M5).
   `ledger-map.json` (`taskId -> { trkId, hiveId }`). If a task has no Tracker
   mirror, look there first.
 - **MCP access paths:** the facade is served by the gateway itself
-  (`POST {gateway}/mcp`). The hub MCP (`mcp.dsect.net`) does **not** proxy the
-  `a2a_*` tools yet — an MCP-native agent adds the gateway as its own MCP
-  server (tailnet) with a dsect-auth token, or drives it from Tritium with
-  `bin/a2a.js`. Hub-side proxying is a proposal, not a shipped feature.
+  (`POST {gateway}/mcp`), and the hub MCP (`mcp.dsect.net`) also proxies
+  the `a2a_*` tools (hub-api PR #126, shipped) — an MCP-native agent can
+  use either, add the gateway as its own MCP server (tailnet) with a
+  dsect-auth token, or drive it from Tritium with `bin/a2a.js`.
 
 ## Status
 
 Profile v0.1 / M3 reference implementation. Enrolled agents: **qubit**
-(live, via the Hermes adapter) and **cooper** (hosted inbox). First
+(live, via the Hermes adapter), **cooper** (hosted inbox), **bookkeeper**
+(hosted inbox) and **grok-tessa** (hosted inbox). First
 verified cross-agent handoff: Cooper → Qubit, `fleet-brief` and the
 approval-gated `gated-file-read` skills (evidence in the goal workspace,
 `hidden_files/m3-evidence/`).
