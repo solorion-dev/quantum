@@ -1,13 +1,13 @@
 ---
 name: quantum-systems
-version: 1.0.0
+version: 1.0.1
 description: "Quantum systems skill. Use for Tritium service status, known downs, or adding a new system. Includes the new-system checklist. Read-only on host services unless an operator was handed the restart."
 tags: [quantum, fleet]
 status: active
 provenance: quantum
 aliases: [local-quantum-systems]
 dependencies:
-  tools: [dsect_services_status]
+  tools: [quantum_services_status]
   repos: []
   urls: []
 maintainers: [cooper]
@@ -19,7 +19,7 @@ New system is a mode here, not a second skill. One checklist, one status tool.
 ## Status
 
 1. Memory open on the service name.
-2. `dsect_services_status`. Pass `only_problems=true` when he asked what is down.
+2. `quantum_services_status`. Pass `only_problems=true` when he asked what is down.
 3. Known downs are not new incidents: claude-rc, ws-axiom archived, mcp-oauth-funnel, quantum-memory-funnel. Say that if they appear.
 4. Do not restart, edit a unit, or deploy from this skill. Hand the host command to an operator and say so.
 
