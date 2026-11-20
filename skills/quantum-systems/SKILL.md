@@ -1,6 +1,6 @@
 ---
 name: quantum-systems
-version: 1.0.1
+version: 1.0.2
 description: "Quantum systems skill. Use for Tritium service status, known downs, or adding a new system. Includes the new-system checklist. Read-only on host services unless an operator was handed the restart."
 tags: [quantum, fleet]
 status: active

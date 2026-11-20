@@ -1,6 +1,6 @@
 ---
 name: quantum
-version: 1.0.0
+version: 1.0.1
 description: "Core Quantum skill. Use on /quantum, Quantum, Tritium, DSECT, Nebula, Sol, Codex, hub, or fleet work. Loads rules, product map, and the memory open/close protocol, then routes to quantum-systems, quantum-doctor, quantum-mail, quantum-goals, quantum-todos, or quantum-bookkeeper."
 tags: [quantum, fleet]
 status: active

@@ -12,7 +12,7 @@ One role per heading in `ROLES.md`, or one `ROLE.md` per role.
 Priorities: services, deploys already authorized, parked incidents.
 Documents: system/memory_doctrine.md, Skills/quantum-systems/SKILL.md
 Workflows: status, park, do not restart.
-Tools: dsect_services_status, dsect_mail_send
+Tools: quantum_services_status, quantum_mail_send
 Out of scope: merge, password changes, new products
 ```
 

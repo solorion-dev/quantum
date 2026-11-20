@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-20T20:34:22.342Z",
-  "bundle_commit": "48e777f6d82ec1cd176993feafff8acde8b7fec1",
+  "generated_at": "2026-11-20T20:37:04.569Z",
+  "bundle_commit": "c5eed3cb7762f0819139399d3656b141314a893f",
   "bundle_version": "v2026.11.0",
   "bundle_tag": "v2026.11.0",
   "skills": [
@@ -1097,7 +1097,7 @@
     },
     {
       "name": "quantum",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Core Quantum skill. Use on /quantum, Quantum, Tritium, DSECT, Nebula, Sol, Codex, hub, or fleet work. Loads rules, product map, and the memory open/close protocol, then routes to quantum-systems, quantum-doctor, quantum-mail, quantum-goals, quantum-todos, or quantum-bookkeeper.",
       "tags": [
         "quantum",
@@ -1129,7 +1129,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "e7addb5eb230daf04a5d53b0a2045438aeef278f3d09630982704b513fe227ce",
+          "sha256": "82a60f99e29f659660d2f246e32672527ac720620b00899d547d12acf543cba3",
           "bytes": 2911
         },
         {
@@ -1149,11 +1149,11 @@
         },
         {
           "path": "references/map.md",
-          "sha256": "56743d1646a47b9e209cec40c96b61f7c76cd247eaebd5c1a6336b614846208a",
-          "bytes": 2352
+          "sha256": "74759cc9fc3cf6520d85791d31f3f3a23b7d9df34da944f3edf35b9a01d923f7",
+          "bytes": 2370
         }
       ],
-      "total_bytes": 9316
+      "total_bytes": 9334
     },
     {
       "name": "quantum-auth",
@@ -1287,7 +1287,7 @@
     },
     {
       "name": "quantum-doctor",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Quantum doctor skill. Use when a Quantum service, login, memory recall, or site looks broken. Diagnose with status, memory health, and the last signed note. Do not restart or deploy.",
       "tags": [
         "quantum",
@@ -1313,7 +1313,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "0a69935ea3b3cc4e9a934e59911a5cc249a9b57b0a99fb44849a071ef192c8e7",
+          "sha256": "f5ceab0bc0aa55fa04578e6ff4ee248fecfb31d43f2cf9e4e858b81bb7833a22",
           "bytes": 1308
         },
         {
@@ -1328,11 +1328,11 @@
         },
         {
           "path": "references/cooper-local-twin.md",
-          "sha256": "286964aaa521c3db88470979ed7f06ec4925e9dd7679e1d07fb6f00049a7d7d6",
-          "bytes": 1229
+          "sha256": "9ef5a05f87bb4a0c34e41f9dcb3a628a55c3717dfba69d6e57731cae2341255f",
+          "bytes": 1231
         }
       ],
-      "total_bytes": 3435
+      "total_bytes": 3437
     },
     {
       "name": "quantum-github",
@@ -1472,7 +1472,7 @@
     },
     {
       "name": "quantum-mail",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "DSECT mail skill. Use for @dsect.net inbox, triage, read, or send. Sends only from the agent's own mailbox. Refuses secrets. Not Gmail.",
       "tags": [
         "quantum",
@@ -1500,7 +1500,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "ade2b7b01921db5db72b3470a559d679128963b08a5448960644caa84aafef52",
+          "sha256": "4bb0ff52a7e4d7da49c7e9ff1bd28a0dfec5b8e7099e63431697f9d259889624",
           "bytes": 1240
         },
         {
@@ -1515,11 +1515,11 @@
         },
         {
           "path": "references/cooper-local-twin.md",
-          "sha256": "60392779b39700e1535069628e42ccbd96245e50ba547cd528f03c6afa013137",
-          "bytes": 1346
+          "sha256": "ab7c7398c43ce464e263471ae40549cc3a08fc56bb4590aaf59fc02f9ff64ced",
+          "bytes": 1352
         }
       ],
-      "total_bytes": 3421
+      "total_bytes": 3427
     },
     {
       "name": "quantum-nebula",
@@ -1599,7 +1599,7 @@
     },
     {
       "name": "quantum-shift",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Quantum shift skill. Use when an agent is on duty until a set time, assigned a role from ROLES.md, and must keep working, email progress, park blockers, and send a shift overview at the end.",
       "tags": [
         "quantum",
@@ -1623,7 +1623,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "e161a9054f94af441b8d3e866cb9e38143eb9721a497b90ac703bcc850fa8b24",
+          "sha256": "b9568cd52661957d60461e6ae4c22dd0b0185cd59dbbfddd5e5fc397f49ee5d8",
           "bytes": 2434
         },
         {
@@ -1638,15 +1638,15 @@
         },
         {
           "path": "references/roles.md",
-          "sha256": "1fc68ecece84e0a5b0f179dfac61e9101efd4711f612650e954a15c6aa5f0fde",
-          "bytes": 682
+          "sha256": "a1c100d1729cb162189f679960bc057fae85a786ec75f91d7a0297230188d1cb",
+          "bytes": 686
         }
       ],
-      "total_bytes": 4174
+      "total_bytes": 4178
     },
     {
       "name": "quantum-systems",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Quantum systems skill. Use for Tritium service status, known downs, or adding a new system. Includes the new-system checklist. Read-only on host services unless an operator was handed the restart.",
       "tags": [
         "quantum",
@@ -1677,7 +1677,7 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "123493f3fe70091bcb93a456a56621b053fb2a693b3a2c3641709ad49067a70b",
+          "sha256": "1b85448db18a3067acd8080781e9597d0c0e5f89a6e2a66753e93448355a217e",
           "bytes": 1475
         },
         {
@@ -1692,11 +1692,11 @@
         },
         {
           "path": "references/cooper-local-twin.md",
-          "sha256": "f05cbdde7b666a01fb1621f95288d8b15cb62c1f5dbab7bad6bb064e0baca9ba",
-          "bytes": 3224
+          "sha256": "c349d58d4dbf9834a48d0eadcddcffdd6ddbda474d8d9e46dcb820be489c3456",
+          "bytes": 3226
         }
       ],
-      "total_bytes": 5638
+      "total_bytes": 5640
     },
     {
       "name": "quantum-todos",

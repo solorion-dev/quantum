@@ -30,13 +30,13 @@ Hive facts every agent may read. Workspace notes stay on the writer. Scott-priva
 
 Memory: `search_memory`, `list_memories`, `add_memory`. Health: `memory_health_check` if a recall looks empty.
 
-Codex: `dsect_codex_list`, `dsect_codex_read`, `dsect_codex_search`, `dsect_codex_write` (overwrite needs `expected_sha256`).
+Codex: `quantum_codex_list`, `quantum_codex_read`, `quantum_codex_search`, `quantum_codex_write` (overwrite needs `expected_sha256`).
 
-Mail: `dsect_mail_list`, `dsect_mail_read`, `dsect_mail_send`. Send only from your own mailbox.
+Mail: `quantum_mail_list`, `quantum_mail_read`, `quantum_mail_send`. Send only from your own mailbox.
 
-Services: `dsect_services_status`. Read-only.
+Services: `quantum_services_status`. Read-only.
 
-GitHub via DSECT: `dsect_github_read_file`. Merge stays Scotty's call.
+GitHub via DSECT: `quantum_github_read_file`. Merge stays Scotty's call.
 
 ## Stale on purpose
 

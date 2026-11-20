@@ -10,7 +10,7 @@ New system is a mode here, not a second skill. One checklist, one status tool.
 
 - Open memory on the service name before probing, so a known down is not reported as a new incident.
 
-- Run `dsect_services_status` for the status check and pass `only_problems=true` when the user asked what is down.
+- Run `quantum_services_status` for the status check and pass `only_problems=true` when the user asked what is down.
 
 - Treat claude-rc, ws-axiom archived, mcp-oauth-funnel and quantum-memory-funnel as known downs, not new incidents, and say so if they appear.
 

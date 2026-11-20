@@ -1,6 +1,6 @@
 ---
 name: quantum-shift
-version: 1.0.0
+version: 1.0.1
 description: "Quantum shift skill. Use when an agent is on duty until a set time, assigned a role from ROLES.md, and must keep working, email progress, park blockers, and send a shift overview at the end."
 tags: [quantum, fleet]
 status: active

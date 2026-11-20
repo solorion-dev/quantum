@@ -1,6 +1,6 @@
 ---
 name: quantum-doctor
-version: 1.0.1
+version: 1.0.2
 description: "Quantum doctor skill. Use when a Quantum service, login, memory recall, or site looks broken. Diagnose with status, memory health, and the last signed note. Do not restart or deploy."
 tags: [quantum, fleet]
 status: active
