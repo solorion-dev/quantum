@@ -47,14 +47,40 @@ python3 src/evolution_check.py \
    PR shapes counted: `PR #NNN`, `PR repo#NNN`, and bare `#NNN`
    inside a PR list. A bare `repo#NNN` alone is an issue or
    cross-reference, not a PR (e.g. `hub-api#102` is an issue).
-1b. **CITED (WARN)** — same shared id, but the bullet itself
-   acknowledges the earlier build: a `built YYYY-MM-DD` /
-   `shipped YYYY-MM-DD` clause, an `after PR #N merges` /
-   `once ... merges` condition, or a `vN:` extension lead-in after
-   the title. Those bullets are adoption/extension follow-ups, not
+1b. **CITED (WARN)** — same shared id, but the bullet acknowledges
+   that build. Those bullets are adoption/extension follow-ups, not
    un-struck shipped items — they are surfaced for a human and
    never fail the run. (Added 2026-11-11: the literal rule
    false-flagged 16 adoption bullets in the real backlog.)
+
+   **v2 acknowledgment is per shared id, not per bullet** (v1
+   decided once per bullet: one marker anywhere cited every shared
+   id in it). Each open bullet's text is split into **segments** on
+   semicolons, sentence-ending periods (a `.` followed by a space
+   or end-of-text), and newlines only — never on commas, colons,
+   parentheses, or em-dashes. A segment is acknowledged when it
+   contains any of three markers (case-insensitive):
+
+   - `built <ISO date>` or `shipped <ISO date>`;
+   - a merges condition — `after PR #?N merges`, or one of
+     `once` / `after` / `as` / `when` / `until` followed within 60
+     characters (with no segment boundary in between) by the word
+     `merges` — covering both "once … merges" and list-governing
+     shapes like "(#86, #293, …) as each merges";
+   - the completion assertion `is now done`.
+
+   A shared id is CITED when **any occurrence** of that id lies
+   inside an acknowledged segment; otherwise it is STALE — so a
+   bullet acknowledging build A but silently re-listing shipped
+   build B now STALEs on B only, while A stays CITED. One
+   bullet-level exception is kept from v1, documented as such: the
+   version-extension lead-in (`**Title** — vN:`) acknowledges **all**
+   shared ids in the bullet, because the bullet is by definition
+   the next version of the named shipped tool.
+
+   The Nov 15, 2026 lesson is preserved: a bare
+   `DONE <date> (… TRK-…)` progress label is still **not** an
+   acknowledgment — it matches none of the segment markers.
 2. **GAP (WARN)** — calendar gaps between consecutive distinct log
    dates larger than `--max-gap-days` (missed runs, e.g. 2026-10-23
    and 2026-11-10 had no builds). WARN only — never fails the run.
@@ -79,14 +105,18 @@ line. `--json` emits:
   "stale": [{"backlog_line": 3, "id": "TRK-0614", "kind": "trk",
              "log_date": "2026-11-07", "log_line": 3, "bullet": "..."}],
   "cited": [{"backlog_line": 9, "id": "PR #311", "kind": "pr",
-             "log_date": "2026-10-27", "log_line": 20, "bullet": "..."}],
+             "log_date": "2026-10-27", "log_line": 20, "bullet": "...",
+             "acknowledged_via": "segment"}],
   "gaps": [{"from": "2026-11-01", "to": "2026-11-06",
             "gap_days": 5, "max_gap_days": 4}],
   "counts": {"log_entries": 2, "backlog_open": 1, "backlog_struck": 1}
 }
 ```
 
-(INCOMPLETE results add an `errors` list explaining what failed.)
+(INCOMPLETE results add an `errors` list explaining what failed.
+The JSON contract is additive only over v1: `cited` findings gained
+the `acknowledged_via` field — `"segment"` or `"lead-in"` — in v2;
+`stale` findings and the human output wording are unchanged.)
 
 The tool is **read-only**: it never modifies the input files.
 
@@ -96,15 +126,24 @@ The tool is **read-only**: it never modifies the input files.
 python3 -m pytest tests/ -q
 ```
 
-The suite (20 tests) drives the real CLI in subprocesses and covers
-the 2026-11-09 incident as a fixture (open → STALE naming TRK-0614;
-struck → CLEAN), stale-by-PR-number-only, `PR repo#NNN` references,
-bare `repo#NNN` NOT counting as a PR, the CITED class (built-date
+The suite (29 tests: the 20 v1 tests unchanged, plus 9 v2 tests)
+drives the real CLI in subprocesses and covers the 2026-11-09
+incident as a fixture (open → STALE naming TRK-0614; struck →
+CLEAN), stale-by-PR-number-only, `PR repo#NNN` references, bare
+`repo#NNN` NOT counting as a PR, the CITED class (built-date
 clause, after-merges condition, vN extension lead-in), unrelated
 open items staying CLEAN, GAP warnings that never fail, both
 log-date separator forms, missing/empty/unparseable inputs exiting
-2, and the read-only guarantee. First real-files run (2026-11-11):
-CLEAN, 15 CITED warnings, 0 STALE.
+2, and the read-only guarantee. The v2 tests add: mixed bullets
+splitting CITED/STALE per id (TRK and PR forms), citation via a
+second occurrence in an acknowledged segment, the merges-list
+segment, the `is now done` NOTE segment (id after an em-dash),
+segment isolation, the lead-in exception citing all ids, the
+`DONE <date>` label staying STALE, and `acknowledged_via` in the
+JSON. First real-files run (2026-11-11): CLEAN, 15 CITED warnings,
+0 STALE. v2 calibration run (2026-11-20) against the real files:
+CLEAN, exit 0, 0 STALE, with a CITED set identical to v1's on the
+same files (every cited finding via `"segment"`).
 
 ## Layout
 
