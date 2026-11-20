@@ -329,3 +329,174 @@ def test_inputs_are_never_modified(tmp_path):
     run_cli(log, backlog)
     run_cli(log, backlog, "--json")
     assert (log.read_bytes(), backlog.read_bytes()) == before
+
+
+# --- v2: per-id acknowledgment (segments) ----------------------------------
+# v1 judged acknowledgment per bullet: one marker anywhere cited every
+# shared id in the bullet.  v2 judges per shared id: an id is CITED
+# only when an occurrence of that id lies inside an acknowledged
+# segment (or the bullet carries the vN lead-in exception).
+
+V2_LOG = """\
+# Evolution build log
+
+- 2026-11-07 — Alpha tool (TRK-1001, PR #501, merged aaa1111).
+- 2026-11-08 — Beta tool (TRK-1002, PR #502, merged bbb2222).
+"""
+
+
+def test_v2_mixed_bullet_trk_cited_and_stale(tmp_path):
+    # (1) The built clause cites TRK-1001 in its own segment; TRK-1002
+    # sits in a later plain segment and must STALE on its own.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Adoption notes** — Alpha built 2026-11-07 (TRK-1001). "
+        "Beta is also listed here (TRK-1002) with no acknowledgment.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 1
+    assert data["verdict"] == "STALE"
+    assert [c["id"] for c in data["cited"]] == ["TRK-1001"]
+    assert [s["id"] for s in data["stale"]] == ["TRK-1002"]
+
+
+def test_v2_mixed_bullet_pr_cited_and_stale(tmp_path):
+    # (2) Same per-id split for PR numbers.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Adoption notes** — Alpha built 2026-11-07 (PR #501). "
+        "Beta is re-listed here (PR #502) plainly.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 1
+    assert data["verdict"] == "STALE"
+    assert [c["id"] for c in data["cited"]] == ["PR #501"]
+    assert [s["id"] for s in data["stale"]] == ["PR #502"]
+
+
+def test_v2_second_occurrence_in_acknowledged_segment_cites(tmp_path):
+    # (3) The first occurrence is plain; a second occurrence inside an
+    # acknowledged segment still cites the id.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Notes** — Beta (TRK-1002) is listed here. "
+        "It was built 2026-11-08 (TRK-1002) as the Beta tool.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 0
+    assert data["verdict"] == "CLEAN"
+    assert data["stale"] == []
+    assert [c["id"] for c in data["cited"]] == ["TRK-1002"]
+
+
+def test_v2_merges_list_segment_cites_each_listed_pr(tmp_path):
+    # (4) The list-governing shape from the real backlog: PRs listed
+    # in one segment governed by "as each merges" are all cited.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Wire the tools into the workflow** — pending PR queue "
+        "(#501, #502) as each merges; ad-hoc checks until then.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 0
+    assert data["stale"] == []
+    assert {c["id"] for c in data["cited"]} == {"PR #501", "PR #502"}
+
+
+def test_v2_is_now_done_note_segment_cites_id_after_emdash(tmp_path):
+    # (5) A NOTE sentence asserting "is now done" cites its id, even
+    # when the id sits after an em-dash in the same sentence (an
+    # em-dash is not a segment boundary).
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Wire the audit tool** — follow-ups still pending. "
+        "NOTE 2026-11-16: the discoverability half of this adoption "
+        "is now done — use the skill (TRK-1001) for the procedure.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 0
+    assert data["stale"] == []
+    assert [c["id"] for c in data["cited"]] == ["TRK-1001"]
+
+
+def test_v2_segment_isolation_built_clause_does_not_leak(tmp_path):
+    # (6) A built clause in sentence 1 (carrying no id) does NOT cite
+    # an id that only appears in sentence 2.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Notes** — Alpha built 2026-11-07. "
+        "Beta (TRK-1002) is re-listed here.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 1
+    assert data["verdict"] == "STALE"
+    assert data["cited"] == []
+    assert [s["id"] for s in data["stale"]] == ["TRK-1002"]
+
+
+def test_v2_leadin_cites_all_ids_in_bullet(tmp_path):
+    # (7) The one bullet-level exception kept from v1: a vN lead-in
+    # cites every shared id in the bullet, across all segments.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Alpha tool: remote claims** — v2: extend the manifest "
+        "(TRK-1001, PR #501). Also re-check Beta (TRK-1002, PR #502) "
+        "later with no acknowledgment clause.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 0
+    assert data["stale"] == []
+    assert {c["id"] for c in data["cited"]} == {
+        "TRK-1001",
+        "TRK-1002",
+        "PR #501",
+        "PR #502",
+    }
+    assert all(c["acknowledged_via"] == "lead-in" for c in data["cited"])
+
+
+def test_v2_done_date_label_alone_is_stale(tmp_path):
+    # (8) Nov 15, 2026 regression pin: a bare "DONE <date> (… TRK-…)"
+    # progress label matches no acknowledgment marker — still STALE.
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Backfill progress** — DONE 2026-11-07 (Alpha build, TRK-1001).\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 1
+    assert data["verdict"] == "STALE"
+    assert data["cited"] == []
+    assert [s["id"] for s in data["stale"]] == ["TRK-1001"]
+
+
+def test_v2_json_cited_findings_carry_acknowledged_via(tmp_path):
+    # (9) JSON contract is additive only: cited findings gain
+    # acknowledged_via ("segment" here); stale findings are unchanged
+    # (no acknowledged_via key).
+    backlog_text = (
+        "# Backlog\n\n"
+        "- **Adoption notes** — Alpha built 2026-11-07 (TRK-1001). "
+        "Beta is also listed here (TRK-1002) with no acknowledgment.\n"
+    )
+    log = write(tmp_path, "log.md", V2_LOG)
+    backlog = write(tmp_path, "backlog.md", backlog_text)
+    proc, data = run_json(log, backlog)
+    assert proc.returncode == 1
+    assert data["cited"][0]["acknowledged_via"] == "segment"
+    assert "acknowledged_via" not in data["stale"][0]
