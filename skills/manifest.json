@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-13T04:35:40.487Z",
-  "bundle_commit": "30afdfc8ce0611ffbcb4367092d732ab8b6ac6b2",
+  "generated_at": "2026-11-20T20:32:41.844Z",
+  "bundle_commit": "8d42813d830557213552403d06f8a2bdcd705bbe",
   "bundle_version": "v2026.11.0",
   "bundle_tag": "v2026.11.0",
   "skills": [
@@ -1287,7 +1287,7 @@
     },
     {
       "name": "quantum-doctor",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Quantum doctor skill. Use when a Quantum service, login, memory recall, or site looks broken. Diagnose with status, memory health, and the last signed note. Do not restart or deploy.",
       "tags": [
         "quantum",
@@ -1300,7 +1300,7 @@
       ],
       "dependencies": {
         "tools": [
-          "dsect_services_status"
+          "quantum_services_status"
         ],
         "repos": [],
         "urls": []
@@ -1313,8 +1313,8 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "df9535ad3ceaed8ad3a31fa40482f14969af9dffba97adc1ba44305031e30f64",
-          "bytes": 1304
+          "sha256": "0a69935ea3b3cc4e9a934e59911a5cc249a9b57b0a99fb44849a071ef192c8e7",
+          "bytes": 1308
         },
         {
           "path": "evals/evals.json",
@@ -1332,7 +1332,7 @@
           "bytes": 1229
         }
       ],
-      "total_bytes": 3431
+      "total_bytes": 3435
     },
     {
       "name": "quantum-github",
@@ -1472,7 +1472,7 @@
     },
     {
       "name": "quantum-mail",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "DSECT mail skill. Use for @dsect.net inbox, triage, read, or send. Sends only from the agent's own mailbox. Refuses secrets. Not Gmail.",
       "tags": [
         "quantum",
@@ -1485,9 +1485,9 @@
       ],
       "dependencies": {
         "tools": [
-          "dsect_mail_list",
-          "dsect_mail_read",
-          "dsect_mail_send"
+          "quantum_mail_list",
+          "quantum_mail_read",
+          "quantum_mail_send"
         ],
         "repos": [],
         "urls": []
@@ -1500,8 +1500,8 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "e4d9af042fd75e424dff9ea5e234a0a3ade4cb99445c717f0c4f918e2076da33",
-          "bytes": 1228
+          "sha256": "ade2b7b01921db5db72b3470a559d679128963b08a5448960644caa84aafef52",
+          "bytes": 1240
         },
         {
           "path": "evals/evals.json",
@@ -1519,7 +1519,7 @@
           "bytes": 1346
         }
       ],
-      "total_bytes": 3409
+      "total_bytes": 3421
     },
     {
       "name": "quantum-nebula",
@@ -1646,7 +1646,7 @@
     },
     {
       "name": "quantum-systems",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Quantum systems skill. Use for Tritium service status, known downs, or adding a new system. Includes the new-system checklist. Read-only on host services unless an operator was handed the restart.",
       "tags": [
         "quantum",
@@ -1659,7 +1659,7 @@
       ],
       "dependencies": {
         "tools": [
-          "dsect_services_status"
+          "quantum_services_status"
         ],
         "repos": [],
         "urls": []
@@ -1677,8 +1677,8 @@
         },
         {
           "path": "SKILL.md",
-          "sha256": "5371ea72cb571d1a9597c735ef63d5d6c7fb3442e7aaa083d5cf000e7de6ac13",
-          "bytes": 1471
+          "sha256": "123493f3fe70091bcb93a456a56621b053fb2a693b3a2c3641709ad49067a70b",
+          "bytes": 1475
         },
         {
           "path": "evals/evals.json",
@@ -1696,7 +1696,7 @@
           "bytes": 3224
         }
       ],
-      "total_bytes": 5634
+      "total_bytes": 5638
     },
     {
       "name": "quantum-todos",
