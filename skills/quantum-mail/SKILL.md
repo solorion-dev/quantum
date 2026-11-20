@@ -1,6 +1,6 @@
 ---
 name: quantum-mail
-version: 1.0.1
+version: 1.0.2
 description: "DSECT mail skill. Use for @dsect.net inbox, triage, read, or send. Sends only from the agent's own mailbox. Refuses secrets. Not Gmail."
 tags: [quantum, fleet]
 status: active
