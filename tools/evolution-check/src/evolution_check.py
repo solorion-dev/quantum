@@ -18,15 +18,42 @@ error before a run starts:
 1. STALE (FAIL, exit 1) — an OPEN backlog bullet references a TRK id
    or PR number that appears in any build-log entry, without
    acknowledging that build.
-1b. CITED (WARN only) — same shared id, but the bullet itself
-   acknowledges the earlier build (a ``built YYYY-MM-DD`` /
-   ``shipped YYYY-MM-DD`` clause, an ``after PR #N merges`` /
-   ``once ... merges`` condition, or a ``vN:`` extension lead-in
-   after the title).  Those are adoption/extension follow-ups, not
+1b. CITED (WARN only) — same shared id, but the bullet acknowledges
+   that build.  Those are adoption/extension follow-ups, not
    un-struck shipped items — surfaced for a human, never a FAIL.
    (Refinement added 2026-11-11: the literal rule false-flagged 16
    adoption bullets in the real backlog, e.g. "Wire proof-check into
    verdict recording — built 2026-10-27 (TRK-0475, PR #311)".)
+
+   v2 (2026-11-20) judges acknowledgment PER SHARED ID, not per
+   bullet (v1 decided once per bullet: one acknowledgment marker
+   anywhere cited every shared id in the bullet).  Each open
+   bullet's text is split into SEGMENTS on semicolons, sentence-
+   ending periods (a ``.`` followed by a space or end-of-text),
+   and newlines only — never on commas, colons, parentheses, or
+   em-dashes.  A segment is ACKNOWLEDGED when it contains any of:
+
+   * ``built <ISO date>`` or ``shipped <ISO date>``;
+   * a merges condition — ``after PR #?N merges``, or one of
+     ``once`` / ``after`` / ``as`` / ``when`` / ``until`` followed
+     within 60 characters (with no segment boundary in between) by
+     the word ``merges`` (this covers both "once ... merges" and
+     list-governing shapes like "(#86, #293, ...) as each merges");
+   * the completion assertion ``is now done``.
+
+   A shared id is CITED when ANY occurrence of that id in the bullet
+   lies inside an acknowledged segment; otherwise it is STALE.  A
+   bullet acknowledging build A but silently re-listing shipped
+   build B therefore STALEs on B only, while A stays CITED.
+
+   ONE bullet-level exception, kept from v1 and documented as such:
+   the version-extension lead-in (``**Title** — vN:``) acknowledges
+   ALL shared ids in the bullet — the bullet is by definition the
+   next version of the named shipped tool.
+
+   The 2026-11-15 lesson is preserved: a bare ``DONE <date>
+   (… TRK-…)`` progress label is NOT an acknowledgment — it matches
+   none of the segment markers above.
 2. GAP (WARN only) — calendar gaps between consecutive distinct log
    dates larger than ``--max-gap-days`` (missed runs).
 3. INCOMPLETE (exit 2, no verdict) — either file missing/unreadable,
@@ -75,10 +102,13 @@ PR_REPO_HASH_RE = re.compile(
 BARE_HASH_RE = re.compile(r"(?<![\w#])#(\d+)\b")
 
 # A bullet acknowledges an earlier build when it cites that build as
-# already done or as the precondition for new work.  Markers:
+# already done or as the precondition for new work.  v1 markers:
 #   "built 2026-10-27 (TRK-0475, PR #311)" / "Tool shipped 2026-10-17"
 #   "after PR #293 merges:" / "once the PR merges"
 #   "**Title** — v2: ..." (an extension of a shipped tool)
+# v2 keeps these shapes but applies them PER SEGMENT / PER ID (see
+# SEGMENT_ACK_RES and LEADIN_RE below); ACK_RE itself is retained as
+# the v1 bullet-level predicate for compatibility.
 ACK_RE = re.compile(
     r"(?:\bbuilt\s+\d{4}-\d{2}-\d{2}"
     r"|\bshipped\s+\d{4}-\d{2}-\d{2}"
@@ -87,6 +117,31 @@ ACK_RE = re.compile(
     r"|\*\*\s+—\s+v\d+\s*:)",
     re.IGNORECASE,
 )
+
+# v2 segment markers (case-insensitive).  A segment is acknowledged
+# when any of these matches inside the segment's own text:
+#   1. built/shipped <ISO date> (same as v1)
+#   2. a merges condition: "after PR #?N merges", or a trigger word
+#      (once/after/as/when/until) followed within 60 chars by the
+#      word "merges" — searching within one segment guarantees no
+#      segment boundary falls between the trigger and "merges"
+#   3. the completion assertion "is now done"
+SEGMENT_ACK_RES = (
+    re.compile(r"\bbuilt\s+\d{4}-\d{2}-\d{2}", re.IGNORECASE),
+    re.compile(r"\bshipped\s+\d{4}-\d{2}-\d{2}", re.IGNORECASE),
+    re.compile(r"\bafter\s+PR\s*#?\d+\s+merges\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:once|after|as|when|until)\b.{0,60}?\bmerges\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bis\s+now\s+done\b", re.IGNORECASE),
+)
+
+# The one bullet-level exception kept from v1: a version-extension
+# lead-in ("**Title** — vN:") acknowledges ALL shared ids in the
+# bullet — the bullet is by definition the next version of the named
+# shipped tool.
+LEADIN_RE = re.compile(r"\*\*\s+—\s+v\d+\s*:", re.IGNORECASE)
 
 # A bullet is struck when its title portion is wrapped in ~~...~~.
 # Real bullets look like:  - ~~**Title**~~ — DONE ...
@@ -123,6 +178,11 @@ class BacklogBullet:
     struck: bool
     trk_ids: list[str] = field(default_factory=list)
     pr_numbers: list[int] = field(default_factory=list)
+    # v2: character offsets of every occurrence of each id, so
+    # acknowledgment can be judged per id against segment spans.
+    # The deduped lists above remain the source for everything else.
+    trk_positions: dict[str, list[int]] = field(default_factory=dict)
+    pr_positions: dict[int, list[int]] = field(default_factory=dict)
 
     @property
     def is_open(self) -> bool:
@@ -137,9 +197,13 @@ class StaleFinding:
     log_date: str  # ISO date of the log entry that shipped it
     log_line: int
     bullet: str  # bullet excerpt
+    # v2 additive field: CITED findings record how the id was
+    # acknowledged — "segment" or "lead-in".  STALE findings leave
+    # it None and their JSON shape is unchanged from v1.
+    acknowledged_via: str | None = None
 
     def to_dict(self) -> dict:
-        return {
+        out = {
             "backlog_line": self.backlog_line,
             "id": self.shared_id,
             "kind": self.kind,
@@ -147,6 +211,9 @@ class StaleFinding:
             "log_line": self.log_line,
             "bullet": self.bullet,
         }
+        if self.acknowledged_via is not None:
+            out["acknowledged_via"] = self.acknowledged_via
+        return out
 
 
 @dataclass
@@ -208,6 +275,31 @@ def extract_pr_numbers(text: str) -> list[int]:
     return out
 
 
+def extract_trk_positions(text: str) -> dict[str, list[int]]:
+    """Map each TRK id in *text* to the offsets of all its occurrences."""
+    positions: dict[str, list[int]] = {}
+    for m in TRK_RE.finditer(text):
+        positions.setdefault(f"TRK-{m.group(1)}", []).append(m.start())
+    return positions
+
+
+def extract_pr_positions(text: str) -> dict[int, list[int]]:
+    """Map each PR number in *text* to the offsets of all occurrences.
+
+    Uses exactly the shapes and PR-context rule of
+    ``extract_pr_numbers`` — a bare ``repo#NNN`` never counts, and
+    bare ``#NNN`` counts only when the text mentions PR.
+    """
+    positions: dict[int, list[int]] = {}
+    for regex in (PR_HASH_RE, PR_REPO_HASH_RE):
+        for m in regex.finditer(text):
+            positions.setdefault(int(m.group(1)), []).append(m.start())
+    if PR_HASH_RE.search(text) or re.search(r"\bPRs?\b", text, re.IGNORECASE):
+        for m in BARE_HASH_RE.finditer(text):
+            positions.setdefault(int(m.group(1)), []).append(m.start())
+    return positions
+
+
 def is_struck(bullet_text: str) -> bool:
     """True if the bullet's title portion is wrapped in ~~...~~."""
     return bool(STRUCK_RE.match(bullet_text.strip()))
@@ -220,8 +312,61 @@ def acknowledges_prior_build(bullet_text: str) -> bool:
     not an un-struck shipped item (STALE, FAIL).  Merely *referencing*
     a PR ("follow-up to PR #358") does not acknowledge it — the
     requested work may still be the shipped work itself.
+
+    This is the v1 bullet-level predicate, retained for
+    compatibility; ``find_stale`` judges acknowledgment per id via
+    segments (v2) instead.
     """
     return bool(ACK_RE.search(bullet_text))
+
+
+# ---------------------------------------------------------------------------
+# v2 per-id acknowledgment: segments
+# ---------------------------------------------------------------------------
+
+
+def split_segments(text: str) -> list[tuple[int, int]]:
+    """Split *text* into (start, end) segment spans.
+
+    Boundaries are ONLY: semicolons, sentence-ending periods (a ``.``
+    followed by a space or end-of-text), and newlines.  Commas,
+    colons, parentheses, and em-dashes never split.  The boundary
+    characters themselves belong to neither segment.
+    """
+    spans: list[tuple[int, int]] = []
+    start = 0
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch in ";\n":
+            spans.append((start, i))
+            i += 1
+            start = i
+        elif ch == "." and (i + 1 == len(text) or text[i + 1] == " "):
+            spans.append((start, i))
+            i += 2 if i + 1 < len(text) else 1  # skip ". " or final "."
+            start = i
+        else:
+            i += 1
+    if start < len(text) or not spans:
+        spans.append((start, len(text)))
+    return spans
+
+
+def segment_is_acknowledged(segment_text: str) -> bool:
+    """True if one segment contains any v2 acknowledgment marker."""
+    return any(rx.search(segment_text) for rx in SEGMENT_ACK_RES)
+
+
+def acknowledged_segments(text: str) -> list[tuple[int, int]]:
+    """The (start, end) spans of *text*'s acknowledged segments."""
+    return [
+        (s, e) for (s, e) in split_segments(text) if segment_is_acknowledged(text[s:e])
+    ]
+
+
+def _in_acknowledged_segment(pos: int, ack_spans: list[tuple[int, int]]) -> bool:
+    return any(s <= pos < e for (s, e) in ack_spans)
 
 
 # ---------------------------------------------------------------------------
@@ -269,6 +414,8 @@ def parse_backlog_text(text: str) -> list[BacklogBullet]:
                 struck=is_struck(body),
                 trk_ids=extract_trk_ids(body),
                 pr_numbers=extract_pr_numbers(body),
+                trk_positions=extract_trk_positions(body),
+                pr_positions=extract_pr_positions(body),
             )
         )
     return bullets
@@ -284,9 +431,13 @@ def find_stale(
 ) -> tuple[list[StaleFinding], list[StaleFinding]]:
     """(stale, cited): OPEN bullets sharing a TRK/PR with a log entry.
 
-    A bullet that acknowledges the earlier build (see
-    ``acknowledges_prior_build``) lands in *cited* — WARN only; all
-    other shared-id bullets land in *stale* — FAIL.
+    v2 judges acknowledgment PER SHARED ID: an id is CITED (WARN
+    only) when any occurrence of that id lies inside an acknowledged
+    segment of the bullet, or when the bullet carries the
+    version-extension lead-in (the one bullet-level exception, which
+    cites every shared id in the bullet).  A shared id with no
+    occurrence in an acknowledged segment is STALE (FAIL) — even
+    when a sibling id in the same bullet is CITED.
     """
     # First log entry (in file order) that shipped each id.
     trk_owner: dict[str, LogEntry] = {}
@@ -302,33 +453,64 @@ def find_stale(
     for bullet in bullets:
         if not bullet.is_open:
             continue  # struck = already handled, never stale
-        target = cited if acknowledges_prior_build(bullet.text) else stale
         excerpt = bullet.text if len(bullet.text) <= 140 else bullet.text[:137] + "..."
-        for trk in bullet.trk_ids:
-            owner = trk_owner.get(trk)
-            if owner is not None:
-                target.append(
+        via_leadin = bool(LEADIN_RE.search(bullet.text))
+        ack_spans = [] if via_leadin else acknowledged_segments(bullet.text)
+
+        def route(
+            shared_id: str,
+            kind: str,
+            owner: LogEntry,
+            positions: list[int],
+        ) -> None:
+            if via_leadin:
+                cited.append(
                     StaleFinding(
                         backlog_line=bullet.line_number,
-                        shared_id=trk,
-                        kind="trk",
+                        shared_id=shared_id,
+                        kind=kind,
+                        log_date=owner.day.isoformat(),
+                        log_line=owner.line_number,
+                        bullet=excerpt,
+                        acknowledged_via="lead-in",
+                    )
+                )
+            elif any(_in_acknowledged_segment(p, ack_spans) for p in positions):
+                cited.append(
+                    StaleFinding(
+                        backlog_line=bullet.line_number,
+                        shared_id=shared_id,
+                        kind=kind,
+                        log_date=owner.day.isoformat(),
+                        log_line=owner.line_number,
+                        bullet=excerpt,
+                        acknowledged_via="segment",
+                    )
+                )
+            else:
+                stale.append(
+                    StaleFinding(
+                        backlog_line=bullet.line_number,
+                        shared_id=shared_id,
+                        kind=kind,
                         log_date=owner.day.isoformat(),
                         log_line=owner.line_number,
                         bullet=excerpt,
                     )
                 )
+
+        for trk in bullet.trk_ids:
+            owner = trk_owner.get(trk)
+            if owner is not None:
+                route(trk, "trk", owner, bullet.trk_positions.get(trk, []))
         for pr in bullet.pr_numbers:
             owner = pr_owner.get(pr)
             if owner is not None:
-                target.append(
-                    StaleFinding(
-                        backlog_line=bullet.line_number,
-                        shared_id=f"PR #{pr}",
-                        kind="pr",
-                        log_date=owner.day.isoformat(),
-                        log_line=owner.line_number,
-                        bullet=excerpt,
-                    )
+                route(
+                    f"PR #{pr}",
+                    "pr",
+                    owner,
+                    bullet.pr_positions.get(pr, []),
                 )
     return stale, cited
 
