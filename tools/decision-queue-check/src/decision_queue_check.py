@@ -69,7 +69,7 @@ DATE_LONG_RE = re.compile(
     r"(\d{1,2}),\s*(\d{4})",
     re.IGNORECASE,
 )
-TIME_AFTER_RE = re.compile(r"~?\s*(\d{1,2}):(\d{2})(?:\s+([A-Za-z]{2,5}))?")
+TIME_AFTER_RE = re.compile(r"\s*~?\s*(\d{1,2}):(\d{2})(?:\s+([A-Za-z]{2,5}))?")
 ISO_DATE_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 REL_DEADLINE_RE = re.compile(r"window-start\s*\+\s*(\d+)\s*h", re.IGNORECASE)
 OUTCOME_RE = re.compile(r"Outcome\s+\d{4}-\d{2}-\d{2}")
