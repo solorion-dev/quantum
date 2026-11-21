@@ -311,7 +311,32 @@ def test_invalid_calendar_date_incomplete(tmp_path):
     assert [u["item"] for u in data["unparseable"]] == [1]
 
 
-# 25 — an outcome line for #14 does not satisfy item #1 (exact-number match)
+# 25 — the ~HH:MM suffix parses to the stated instant, not end-of-day
+# (regression: the shipped v1 pattern required the tilde before any
+# whitespace, so "2026 ~09:00 EST" silently fell back to 23:59:59)
+def test_tilde_time_parses_to_stated_instant(tmp_path):
+    q = queue(tmp_path,
+              row(1, "Reorder the render queue?", "Mon Nov 2, 2026 ~09:00 EST (24h)", "awaiting"))
+    proc, data = run_json(q)
+    assert proc.returncode == 1
+    assert data["findings"]["overdue"][0]["deadline"] == "2026-11-02T09:00:00-05:00"
+
+
+# 26 — same-day boundary: due 09:00, audited at noon -> overdue
+# (with the end-of-day fallback this read as not-yet-due)
+def test_same_day_time_boundary(tmp_path):
+    q = queue(tmp_path,
+              row(1, "Reorder the render queue?", "Sat Nov 21, 2026 ~09:00 EST (24h)", "awaiting"))
+    proc = subprocess.run(
+        [sys.executable, str(SRC), "--queue", str(q),
+         "--now", "2026-11-21T12:00:00", "--json"],
+        capture_output=True, text=True, timeout=60)
+    data = json.loads(proc.stdout)
+    assert proc.returncode == 1
+    assert [f["item"] for f in data["findings"]["overdue"]] == [1]
+
+
+# 27 — an outcome line for #14 does not satisfy item #1 (exact-number match)
 def test_outcome_number_boundary(tmp_path):
     extra = ("\n## Outcome lines — 14-day reviews\n\n"
              "- **#14 (auto-decided 2026-10-16) — Outcome 2026-11-01: HELD UP.** Fine.\n")

@@ -115,7 +115,7 @@ python3 src/decision_queue_check.py \
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -q   # 25 tests, subprocess-driven
+python3 -m pytest tests/ -q   # 27 tests, subprocess-driven
 ```
 
 The suite covers every deadline form (none / relative-with-anchor /
