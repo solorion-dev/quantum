@@ -1,0 +1,1 @@
+{"1":{"class_type":"UNETLoader","inputs":{"unet_name":"wan2.1-t2v-14b.safetensors","weight_dtype":"default"}},"2":{"class_type":"EmptyLatentImage","inputs":{"batch_size":1,"height":720,"width":1280}},"3":{"class_type":"KSampler","inputs":{"cfg":5.0,"denoise":1.0,"latent_image":["2",0],"model":["1",0],"sampler_name":"euler","scheduler":"normal","seed":7,"steps":30}}}
