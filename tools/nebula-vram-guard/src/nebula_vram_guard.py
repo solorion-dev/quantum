@@ -1,1 +1,214 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiJuZWJ1bGEtdnJhbS1ndWFyZDogcHJlLWZsaWdodCBWUkFNIHJlZnVzYWwgZm9yIE5lYnVsYSAvIENvbWZ5VUkgam9icy4KClJlYWQtb25seSwgc3RkbGliLW9ubHksIG5vIG5ldHdvcmsgY2FsbHMgKG9wZXJhdG9yLXNuYXBzaG90IHN0eWxlLCBsaWtlCnNldHRsZS1jaGVjayBhbmQgY29kZXgtbGludC1kcmlmdCkuIEdpdmVuIGEgam9iIGRlc2NyaXB0aW9uIGFzIGEgbG9jYWwKSlNPTiBmaWxlLCBpdCBlc3RpbWF0ZXMgdGhlIGpvYidzIFZSQU0gcmVxdWlyZW1lbnQgYW5kIGFuc3dlcnMgb25lCnF1ZXN0aW9uOiBkb2VzIHRoaXMgam9iIGZpdCB0aGUgR1BVIGJ1ZGdldCwgb3IgbXVzdCBpdCBiZSBSRUZVU0VECmJlZm9yZSBzdWJtaXQ/CgpWZXJkaWN0czoKICBBTExPVyAgICAgZXhpdCAwICByZXF1aXJlZCA8PSBidWRnZXQKICBSRUZVU0UgICAgZXhpdCAxICByZXF1aXJlZCA+IGJ1ZGdldAogIElOQ09NUExFVEUgZXhpdCAyICB0aGUgam9iIGNvdWxkIG5vdCBiZSBqdWRnZWQgKG1pc3NpbmcvdW5wYXJzZWFibGUKICAgICAgICAgICAgICAgICAgICBqb2IgZmlsZSwgemVybyBtb2RlbHMsIGEgbW9kZWwgd2l0aCBubyBzaXplIGFuZCBubwogICAgICAgICAgICAgICAgICAgIGtub3duLXNpemUtdGFibGUgaGl0LCBub24tcG9zaXRpdmUgZGltZW5zaW9ucykKCkVzdGltYXRlOgogIG1vZGVsc19taWIgICAgPSBzdW0gb2YgbW9kZWwgc2l6ZXMgKGV4cGxpY2l0IHNpemVfbWliLCBvciB0aGUKICAgICAgICAgICAgICAgICAgYnVpbHQtaW4ga25vd24tc2l6ZSB0YWJsZSBieSBmaWxlbmFtZSBwYXR0ZXJuKQogIGxhdGVudF9taWIgICAgPSAod2lkdGgvOCkqKGhlaWdodC84KSo0IGNoYW5uZWxzKjQgYnl0ZXMqYmF0Y2ggLyBNaUIKICBhY3RpdmF0aW9uX21pYiA9IG1heCgyNTYsIGxhdGVudF9taWIgKiA4KSAgIChjb25zZXJ2YXRpdmUgb3ZlcmhlYWQpCiAgZXN0aW1hdGVfbWliICA9IG1vZGVsc19taWIgKyBhY3RpdmF0aW9uX21pYiArIGV4dHJhX21pYgogIHJlcXVpcmVkX21pYiAgPSBlc3RpbWF0ZV9taWIgKyByZXNlcnZlX21pYiAoZGVmYXVsdCAxMDI0KQogIGJ1ZGdldF9taWIgICAgPSBmcmVlX21pYiBpZiBnaXZlbiBlbHNlIGdwdV9taWIgKGRlZmF1bHQgODE5MikKClRoaXMgaXMgYSBjb25zZXJ2YXRpdmUgcHJlLWZsaWdodCBlc3RpbWF0ZSwgbm90IGEgcHJvZmlsZXIuCiIiIgppbXBvcnQgYXJncGFyc2UKaW1wb3J0IGpzb24KaW1wb3J0IG1hdGgKaW1wb3J0IHN5cwoKIyBCdWlsdC1pbiBrbm93bi1zaXplIHRhYmxlOiAoZmlsZW5hbWUgc3Vic3RyaW5nIHBhdHRlcm4sIHNpemUgTWlCKS4KIyBFU1RJTUFURVMgZm9yIGNvbW1vbiBjaGVja3BvaW50IHNpemUgY2xhc3NlcywgbGFiZWxsZWQgYXMgc3VjaCBpbiB0aGUKIyBSRUFETUUuIEZpcnN0IG1hdGNoIHdpbnM7IG1hdGNoaW5nIGlzIGNhc2UtaW5zZW5zaXRpdmUgb24gdGhlIG5hbWUuCktOT1dOX1NJWkVTID0gWwogICAgKCJmbHV4MS1kZXYtZnA4IiwgMTE5MDMpLAogICAgKCJmbHV4MS1zY2huZWxsLWZwOCIsIDExOTAzKSwKICAgICgiZmx1eC1mcDgiLCAxMTkwMyksCiAgICAoImZsdXgxLWRldiIsIDIzODAyKSwKICAgICgiZmx1eDEtc2NobmVsbCIsIDIzODAyKSwKICAgICgiZmx1eCIsIDIzODAyKSwKICAgICgid2FuMi4xLXQydi0xNGIiLCAyODAwMCksCiAgICAoIndhbjIuMSIsIDE2MDAwKSwKICAgICgid2FuIiwgMTYwMDApLAogICAgKCJzZHhsIiwgNjkzOCksCiAgICAoInNkX3hsIiwgNjkzOCksCiAgICAoInNkMTUiLCAyMTM1KSwKICAgICgic2QxLjUiLCAyMTM1KSwKICAgICgidjEtNS1wcnVuZWQiLCAyMTM1KSwKXQoKREVGQVVMVF9HUFVfTUlCID0gODE5MgpERUZBVUxUX1JFU0VSVkVfTUlCID0gMTAyNApNSU5fQUNUSVZBVElPTl9NSUIgPSAyNTYKQUNUSVZBVElPTl9GQUNUT1IgPSA4CgoKZGVmIGtub3duX3NpemUobmFtZSk6CiAgICBsb3cgPSBuYW1lLmxvd2VyKCkKICAgIGZvciBwYXR0ZXJuLCBzaXplIGluIEtOT1dOX1NJWkVTOgogICAgICAgIGlmIHBhdHRlcm4gaW4gbG93OgogICAgICAgICAgICByZXR1cm4gc2l6ZQogICAgcmV0dXJuIE5vbmUKCgpkZWYgaXNfbnVtYmVyKHYpOgogICAgcmV0dXJuIGlzaW5zdGFuY2UodiwgKGludCwgZmxvYXQpKSBhbmQgbm90IGlzaW5zdGFuY2UodiwgYm9vbCkgYW5kIG1hdGguaXNmaW5pdGUodikKCgpkZWYgZXZhbHVhdGUoam9iLCBncHVfbWliLCByZXNlcnZlX21pYiwgZnJlZV9taWIpOgogICAgIiIiUmV0dXJuIGEgcmVwb3J0IGRpY3Q7IHZlcmRpY3QgSU5DT01QTEVURSBjYXJyaWVzIGVycm9ycy4iIiIKICAgIHJlcG9ydCA9IHsKICAgICAgICAidmVyZGljdCI6IE5vbmUsCiAgICAgICAgIm1vZGVscyI6IFtdLAogICAgICAgICJtb2RlbHNfbWliIjogTm9uZSwKICAgICAgICAiYWN0aXZhdGlvbl9taWIiOiBOb25lLAogICAgICAgICJleHRyYV9taWIiOiBOb25lLAogICAgICAgICJlc3RpbWF0ZV9taWIiOiBOb25lLAogICAgICAgICJyZXNlcnZlX21pYiI6IHJlc2VydmVfbWliLAogICAgICAgICJidWRnZXRfbWliIjogZnJlZV9taWIgaWYgZnJlZV9taWIgaXMgbm90IE5vbmUgZWxzZSBncHVfbWliLAogICAgICAgICJidWRnZXRfc291cmNlIjogImZyZWUiIGlmIGZyZWVfbWliIGlzIG5vdCBOb25lIGVsc2UgImdwdSIsCiAgICAgICAgInJlcXVpcmVkX21pYiI6IE5vbmUsCiAgICAgICAgImVycm9ycyI6IFtdLAogICAgfQogICAgZXJyb3JzID0gcmVwb3J0WyJlcnJvcnMiXQogICAgaWYgbm90IGlzaW5zdGFuY2Uoam9iLCBkaWN0KToKICAgICAgICBlcnJvcnMuYXBwZW5kKCJqb2IgZmlsZSBtdXN0IGNvbnRhaW4gYSBKU09OIG9iamVjdCIpCiAgICAgICAgcmVwb3J0WyJ2ZXJkaWN0Il0gPSAiSU5DT01QTEVURSIKICAgICAgICByZXR1cm4gcmVwb3J0CiAgICBtb2RlbHMgPSBqb2IuZ2V0KCJtb2RlbHMiKQogICAgaWYgbm90IGlzaW5zdGFuY2UobW9kZWxzLCBsaXN0KSBvciBsZW4obW9kZWxzKSA9PSAwOgogICAgICAgIGVycm9ycy5hcHBlbmQoImpvYiBtdXN0IGxpc3QgYXQgbGVhc3Qgb25lIG1vZGVsIikKICAgICAgICByZXBvcnRbInZlcmRpY3QiXSA9ICJJTkNPTVBMRVRFIgogICAgICAgIHJldHVybiByZXBvcnQKICAgIHdpZHRoLCBoZWlnaHQgPSBqb2IuZ2V0KCJ3aWR0aCIpLCBqb2IuZ2V0KCJoZWlnaHQiKQogICAgaWYgbm90IGlzX251bWJlcih3aWR0aCkgb3Igd2lkdGggPD0gMDoKICAgICAgICBlcnJvcnMuYXBwZW5kKCJ3aWR0aCBtdXN0IGJlIGEgcG9zaXRpdmUgbnVtYmVyIikKICAgIGlmIG5vdCBpc19udW1iZXIoaGVpZ2h0KSBvciBoZWlnaHQgPD0gMDoKICAgICAgICBlcnJvcnMuYXBwZW5kKCJoZWlnaHQgbXVzdCBiZSBhIHBvc2l0aXZlIG51bWJlciIpCiAgICBiYXRjaCA9IGpvYi5nZXQoImJhdGNoIiwgMSkKICAgIGlmIG5vdCBpc19udW1iZXIoYmF0Y2gpIG9yIGJhdGNoIDw9IDA6CiAgICAgICAgZXJyb3JzLmFwcGVuZCgiYmF0Y2ggbXVzdCBiZSBhIHBvc2l0aXZlIG51bWJlciIpCiAgICBleHRyYSA9IGpvYi5nZXQoImV4dHJhX21pYiIsIDApCiAgICBpZiBub3QgaXNfbnVtYmVyKGV4dHJhKSBvciBleHRyYSA8IDA6CiAgICAgICAgZXJyb3JzLmFwcGVuZCgiZXh0cmFfbWliIG11c3QgYmUgYSBub24tbmVnYXRpdmUgbnVtYmVyIikKICAgIHRvdGFsID0gMC4wCiAgICBmb3IgaSwgbSBpbiBlbnVtZXJhdGUobW9kZWxzKToKICAgICAgICBpZiBub3QgaXNpbnN0YW5jZShtLCBkaWN0KSBvciBub3QgaXNpbnN0YW5jZShtLmdldCgibmFtZSIpLCBzdHIpIG9yIG5vdCBtWyJuYW1lIl06CiAgICAgICAgICAgIGVycm9ycy5hcHBlbmQoZiJtb2RlbHNbe2l9XSBtdXN0IGhhdmUgYSBub24tZW1wdHkgc3RyaW5nIG5hbWUiKQogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGVudHJ5ID0geyJuYW1lIjogbVsibmFtZSJdLCAic2l6ZV9taWIiOiBOb25lLCAic2l6ZV9zb3VyY2UiOiBOb25lfQogICAgICAgIGlmICJzaXplX21pYiIgaW4gbSBhbmQgbVsic2l6ZV9taWIiXSBpcyBub3QgTm9uZToKICAgICAgICAgICAgaWYgbm90IGlzX251bWJlcihtWyJzaXplX21pYiJdKSBvciBtWyJzaXplX21pYiJdIDw9IDA6CiAgICAgICAgICAgICAgICBlcnJvcnMuYXBwZW5kKGYibW9kZWxzW3tpfV0gc2l6ZV9taWIgbXVzdCBiZSBhIHBvc2l0aXZlIG51bWJlciIpCiAgICAgICAgICAgIGVsc2U6CiAgICAgICAgICAgICAgICBlbnRyeVsic2l6ZV9taWIiXSA9IGZsb2F0KG1bInNpemVfbWliIl0pCiAgICAgICAgICAgICAgICBlbnRyeVsic2l6ZV9zb3VyY2UiXSA9ICJleHBsaWNpdCIKICAgICAgICBlbHNlOgogICAgICAgICAgICBoaXQgPSBrbm93bl9zaXplKG1bIm5hbWUiXSkKICAgICAgICAgICAgaWYgaGl0IGlzIE5vbmU6CiAgICAgICAgICAgICAgICBlcnJvcnMuYXBwZW5kKAogICAgICAgICAgICAgICAgICAgIGYibW9kZWxzW3tpfV0gJ3ttWyduYW1lJ119Jzogbm8gc2l6ZV9taWIgYW5kIG5vIGtub3duLXNpemUtdGFibGUgbWF0Y2giCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgIGVsc2U6CiAgICAgICAgICAgICAgICBlbnRyeVsic2l6ZV9taWIiXSA9IGZsb2F0KGhpdCkKICAgICAgICAgICAgICAgIGVudHJ5WyJzaXplX3NvdXJjZSJdID0gImtub3duLXRhYmxlIChlc3RpbWF0ZSkiCiAgICAgICAgaWYgZW50cnlbInNpemVfbWliIl0gaXMgbm90IE5vbmU6CiAgICAgICAgICAgIHRvdGFsICs9IGVudHJ5WyJzaXplX21pYiJdCiAgICAgICAgcmVwb3J0WyJtb2RlbHMiXS5hcHBlbmQoZW50cnkpCiAgICBpZiBlcnJvcnM6CiAgICAgICAgcmVwb3J0WyJ2ZXJkaWN0Il0gPSAiSU5DT01QTEVURSIKICAgICAgICByZXR1cm4gcmVwb3J0CiAgICBsYXRlbnRfYnl0ZXMgPSAod2lkdGggLyA4KSAqIChoZWlnaHQgLyA4KSAqIDQgKiA0ICogYmF0Y2gKICAgIGxhdGVudF9taWIgPSBsYXRlbnRfYnl0ZXMgLyAoMTAyNCAqIDEwMjQpCiAgICBhY3RpdmF0aW9uID0gbWF4KE1JTl9BQ1RJVkFUSU9OX01JQiwgbGF0ZW50X21pYiAqIEFDVElWQVRJT05fRkFDVE9SKQogICAgcmVwb3J0WyJtb2RlbHNfbWliIl0gPSByb3VuZCh0b3RhbCwgMikKICAgIHJlcG9ydFsiYWN0aXZhdGlvbl9taWIiXSA9IHJvdW5kKGFjdGl2YXRpb24sIDIpCiAgICByZXBvcnRbImV4dHJhX21pYiJdID0gZmxvYXQoZXh0cmEpCiAgICBlc3RpbWF0ZSA9IHRvdGFsICsgYWN0aXZhdGlvbiArIGZsb2F0KGV4dHJhKQogICAgcmVwb3J0WyJlc3RpbWF0ZV9taWIiXSA9IHJvdW5kKGVzdGltYXRlLCAyKQogICAgcmVwb3J0WyJyZXF1aXJlZF9taWIiXSA9IHJvdW5kKGVzdGltYXRlICsgcmVzZXJ2ZV9taWIsIDIpCiAgICByZXBvcnRbInZlcmRpY3QiXSA9ICJBTExPVyIgaWYgcmVwb3J0WyJyZXF1aXJlZF9taWIiXSA8PSByZXBvcnRbImJ1ZGdldF9taWIiXSBlbHNlICJSRUZVU0UiCiAgICByZXR1cm4gcmVwb3J0CgoKZGVmIGZtdCh2KToKICAgIHJldHVybiBmInt2OiwuMGZ9IiBpZiBmbG9hdCh2KSA9PSBpbnQodikgZWxzZSBmInt2OiwuMmZ9IgoKCmRlZiBwcmludF9odW1hbihyKToKICAgIHByaW50KGYidmVyZGljdDoge3JbJ3ZlcmRpY3QnXX0iKQogICAgZm9yIG0gaW4gclsibW9kZWxzIl06CiAgICAgICAgaWYgbVsic2l6ZV9taWIiXSBpcyBub3QgTm9uZToKICAgICAgICAgICAgcHJpbnQoZiJtb2RlbDoge21bJ25hbWUnXX0gPSB7Zm10KG1bJ3NpemVfbWliJ10pfSBNaUIgKHttWydzaXplX3NvdXJjZSddfSkiKQogICAgaWYgclsiZXN0aW1hdGVfbWliIl0gaXMgbm90IE5vbmU6CiAgICAgICAgcHJpbnQoZiJtb2RlbHMgdG90YWw6IHtmbXQoclsnbW9kZWxzX21pYiddKX0gTWlCIikKICAgICAgICBwcmludChmImFjdGl2YXRpb24gZXN0aW1hdGU6IHtmbXQoclsnYWN0aXZhdGlvbl9taWInXSl9IE1pQiIpCiAgICAgICAgcHJpbnQoZiJleHRyYToge2ZtdChyWydleHRyYV9taWInXSl9IE1pQiIpCiAgICAgICAgcHJpbnQoZiJlc3RpbWF0ZToge2ZtdChyWydlc3RpbWF0ZV9taWInXSl9IE1pQiIpCiAgICAgICAgcHJpbnQoZiJyZXNlcnZlOiB7Zm10KHJbJ3Jlc2VydmVfbWliJ10pfSBNaUIiKQogICAgICAgIHByaW50KGYicmVxdWlyZWQ6IHtmbXQoclsncmVxdWlyZWRfbWliJ10pfSBNaUIiKQogICAgICAgIHByaW50KGYiYnVkZ2V0ICh7clsnYnVkZ2V0X3NvdXJjZSddfSk6IHtmbXQoclsnYnVkZ2V0X21pYiddKX0gTWlCIikKICAgIGZvciBlIGluIHJbImVycm9ycyJdOgogICAgICAgIHByaW50KGYiZXJyb3I6IHtlfSIpCgoKZGVmIG1haW4oYXJndj1Ob25lKToKICAgIHAgPSBhcmdwYXJzZS5Bcmd1bWVudFBhcnNlcigKICAgICAgICBwcm9nPSJuZWJ1bGFfdnJhbV9ndWFyZC5weSIsCiAgICAgICAgZGVzY3JpcHRpb249IlByZS1mbGlnaHQgVlJBTSBndWFyZCBmb3IgTmVidWxhL0NvbWZ5VUkgam9icyAocmVhZC1vbmx5KS4iLAogICAgKQogICAgcC5hZGRfYXJndW1lbnQoIi0tam9iIiwgcmVxdWlyZWQ9VHJ1ZSwgaGVscD0icGF0aCB0byB0aGUgam9iIEpTT04gZmlsZSIpCiAgICBwLmFkZF9hcmd1bWVudCgiLS1ncHUtbWliIiwgdHlwZT1mbG9hdCwgZGVmYXVsdD1ERUZBVUxUX0dQVV9NSUIpCiAgICBwLmFkZF9hcmd1bWVudCgiLS1yZXNlcnZlLW1pYiIsIHR5cGU9ZmxvYXQsIGRlZmF1bHQ9REVGQVVMVF9SRVNFUlZFX01JQikKICAgIHAuYWRkX2FyZ3VtZW50KCItLWZyZWUtbWliIiwgdHlwZT1mbG9hdCwgZGVmYXVsdD1Ob25lLAogICAgICAgICAgICAgICAgICAgaGVscD0iY3VycmVudGx5IGZyZWUgVlJBTSBpbiBNaUI7IG92ZXJyaWRlcyAtLWdwdS1taWIgYXMgdGhlIGJ1ZGdldCIpCiAgICBwLmFkZF9hcmd1bWVudCgiLS1qc29uIiwgYWN0aW9uPSJzdG9yZV90cnVlIiwgaGVscD0iZW1pdCBhIHN0cnVjdHVyZWQgSlNPTiByZXBvcnQiKQogICAgYXJncyA9IHAucGFyc2VfYXJncyhhcmd2KQogICAgaWYgYXJncy5ncHVfbWliIDw9IDAgb3IgYXJncy5yZXNlcnZlX21pYiA8IDAgb3IgKGFyZ3MuZnJlZV9taWIgaXMgbm90IE5vbmUgYW5kIGFyZ3MuZnJlZV9taWIgPD0gMCk6CiAgICAgICAgcC5lcnJvcigiLS1ncHUtbWliIG11c3QgYmUgcG9zaXRpdmUsIC0tcmVzZXJ2ZS1taWIgbm9uLW5lZ2F0aXZlLCAtLWZyZWUtbWliIHBvc2l0aXZlIikKICAgIHRyeToKICAgICAgICB3aXRoIG9wZW4oYXJncy5qb2IsICJyIiwgZW5jb2Rpbmc9InV0Zi04IikgYXMgZmg6CiAgICAgICAgICAgIGpvYiA9IGpzb24ubG9hZChmaCkKICAgIGV4Y2VwdCBGaWxlTm90Rm91bmRFcnJvcjoKICAgICAgICByZXBvcnQgPSB7InZlcmRpY3QiOiAiSU5DT01QTEVURSIsICJtb2RlbHMiOiBbXSwgIm1vZGVsc19taWIiOiBOb25lLAogICAgICAgICAgICAgICAgICAiYWN0aXZhdGlvbl9taWIiOiBOb25lLCAiZXh0cmFfbWliIjogTm9uZSwgImVzdGltYXRlX21pYiI6IE5vbmUsCiAgICAgICAgICAgICAgICAgICJyZXNlcnZlX21pYiI6IGFyZ3MucmVzZXJ2ZV9taWIsCiAgICAgICAgICAgICAgICAgICJidWRnZXRfbWliIjogYXJncy5mcmVlX21pYiBpZiBhcmdzLmZyZWVfbWliIGlzIG5vdCBOb25lIGVsc2UgYXJncy5ncHVfbWliLAogICAgICAgICAgICAgICAgICAiYnVkZ2V0X3NvdXJjZSI6ICJmcmVlIiBpZiBhcmdzLmZyZWVfbWliIGlzIG5vdCBOb25lIGVsc2UgImdwdSIsCiAgICAgICAgICAgICAgICAgICJyZXF1aXJlZF9taWIiOiBOb25lLAogICAgICAgICAgICAgICAgICAiZXJyb3JzIjogW2Yiam9iIGZpbGUgbm90IGZvdW5kOiB7YXJncy5qb2J9Il19CiAgICAgICAgcHJpbnQoanNvbi5kdW1wcyhyZXBvcnQsIGluZGVudD0yKSkgaWYgYXJncy5qc29uIGVsc2UgcHJpbnRfaHVtYW4ocmVwb3J0KQogICAgICAgIHJldHVybiAyCiAgICBleGNlcHQgKE9TRXJyb3IsIGpzb24uSlNPTkRlY29kZUVycm9yKSBhcyBleGM6CiAgICAgICAgcmVwb3J0ID0geyJ2ZXJkaWN0IjogIklOQ09NUExFVEUiLCAibW9kZWxzIjogW10sICJtb2RlbHNfbWliIjogTm9uZSwKICAgICAgICAgICAgICAgICAgImFjdGl2YXRpb25fbWliIjogTm9uZSwgImV4dHJhX21pYiI6IE5vbmUsICJlc3RpbWF0ZV9taWIiOiBOb25lLAogICAgICAgICAgICAgICAgICAicmVzZXJ2ZV9taWIiOiBhcmdzLnJlc2VydmVfbWliLAogICAgICAgICAgICAgICAgICAiYnVkZ2V0X21pYiI6IGFyZ3MuZnJlZV9taWIgaWYgYXJncy5mcmVlX21pYiBpcyBub3QgTm9uZSBlbHNlIGFyZ3MuZ3B1X21pYiwKICAgICAgICAgICAgICAgICAgImJ1ZGdldF9zb3VyY2UiOiAiZnJlZSIgaWYgYXJncy5mcmVlX21pYiBpcyBub3QgTm9uZSBlbHNlICJncHUiLAogICAgICAgICAgICAgICAgICAicmVxdWlyZWRfbWliIjogTm9uZSwKICAgICAgICAgICAgICAgICAgImVycm9ycyI6IFtmImpvYiBmaWxlIHVucmVhZGFibGUgb3IgdW5wYXJzZWFibGU6IHtleGN9Il19CiAgICAgICAgcHJpbnQoanNvbi5kdW1wcyhyZXBvcnQsIGluZGVudD0yKSkgaWYgYXJncy5qc29uIGVsc2UgcHJpbnRfaHVtYW4ocmVwb3J0KQogICAgICAgIHJldHVybiAyCiAgICByZXBvcnQgPSBldmFsdWF0ZShqb2IsIGFyZ3MuZ3B1X21pYiwgYXJncy5yZXNlcnZlX21pYiwgYXJncy5mcmVlX21pYikKICAgIGlmIGFyZ3MuanNvbjoKICAgICAgICBwcmludChqc29uLmR1bXBzKHJlcG9ydCwgaW5kZW50PTIpKQogICAgZWxzZToKICAgICAgICBwcmludF9odW1hbihyZXBvcnQpCiAgICByZXR1cm4geyJBTExPVyI6IDAsICJSRUZVU0UiOiAxLCAiSU5DT01QTEVURSI6IDJ9W3JlcG9ydFsidmVyZGljdCJdXQoKCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg==
+#!/usr/bin/env python3
+"""nebula-vram-guard: pre-flight VRAM refusal for Nebula / ComfyUI jobs.
+
+Read-only, stdlib-only, no network calls (operator-snapshot style, like
+settle-check and codex-lint-drift). Given a job description as a local
+JSON file, it estimates the job's VRAM requirement and answers one
+question: does this job fit the GPU budget, or must it be REFUSED
+before submit?
+
+Verdicts:
+  ALLOW     exit 0  required <= budget
+  REFUSE    exit 1  required > budget
+  INCOMPLETE exit 2  the job could not be judged (missing/unparseable
+                    job file, zero models, a model with no size and no
+                    known-size-table hit, non-positive dimensions)
+
+Estimate:
+  models_mib    = sum of model sizes (explicit size_mib, or the
+                  built-in known-size table by filename pattern)
+  latent_mib    = (width/8)*(height/8)*4 channels*4 bytes*batch / MiB
+  activation_mib = max(256, latent_mib * 8)   (conservative overhead)
+  estimate_mib  = models_mib + activation_mib + extra_mib
+  required_mib  = estimate_mib + reserve_mib (default 1024)
+  budget_mib    = free_mib if given else gpu_mib (default 8192)
+
+This is a conservative pre-flight estimate, not a profiler.
+"""
+import argparse
+import json
+import math
+import sys
+
+# Built-in known-size table: (filename substring pattern, size MiB).
+# ESTIMATES for common checkpoint size classes, labelled as such in the
+# README. First match wins; matching is case-insensitive on the name.
+KNOWN_SIZES = [
+    ("flux1-dev-fp8", 11903),
+    ("flux1-schnell-fp8", 11903),
+    ("flux-fp8", 11903),
+    ("flux1-dev", 23802),
+    ("flux1-schnell", 23802),
+    ("flux", 23802),
+    ("wan2.1-t2v-14b", 28000),
+    ("wan2.1", 16000),
+    ("wan", 16000),
+    ("sdxl", 6938),
+    ("sd_xl", 6938),
+    ("sd15", 2135),
+    ("sd1.5", 2135),
+    ("v1-5-pruned", 2135),
+]
+
+DEFAULT_GPU_MIB = 8192
+DEFAULT_RESERVE_MIB = 1024
+MIN_ACTIVATION_MIB = 256
+ACTIVATION_FACTOR = 8
+
+
+def known_size(name):
+    low = name.lower()
+    for pattern, size in KNOWN_SIZES:
+        if pattern in low:
+            return size
+    return None
+
+
+def is_number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def evaluate(job, gpu_mib, reserve_mib, free_mib):
+    """Return a report dict; verdict INCOMPLETE carries errors."""
+    report = {
+        "verdict": None,
+        "models": [],
+        "models_mib": None,
+        "activation_mib": None,
+        "extra_mib": None,
+        "estimate_mib": None,
+        "reserve_mib": reserve_mib,
+        "budget_mib": free_mib if free_mib is not None else gpu_mib,
+        "budget_source": "free" if free_mib is not None else "gpu",
+        "required_mib": None,
+        "errors": [],
+    }
+    errors = report["errors"]
+    if not isinstance(job, dict):
+        errors.append("job file must contain a JSON object")
+        report["verdict"] = "INCOMPLETE"
+        return report
+    models = job.get("models")
+    if not isinstance(models, list) or len(models) == 0:
+        errors.append("job must list at least one model")
+        report["verdict"] = "INCOMPLETE"
+        return report
+    width, height = job.get("width"), job.get("height")
+    if not is_number(width) or width <= 0:
+        errors.append("width must be a positive number")
+    if not is_number(height) or height <= 0:
+        errors.append("height must be a positive number")
+    batch = job.get("batch", 1)
+    if not is_number(batch) or batch <= 0:
+        errors.append("batch must be a positive number")
+    extra = job.get("extra_mib", 0)
+    if not is_number(extra) or extra < 0:
+        errors.append("extra_mib must be a non-negative number")
+    total = 0.0
+    for i, m in enumerate(models):
+        if not isinstance(m, dict) or not isinstance(m.get("name"), str) or not m["name"]:
+            errors.append(f"models[{i}] must have a non-empty string name")
+            continue
+        entry = {"name": m["name"], "size_mib": None, "size_source": None}
+        if "size_mib" in m and m["size_mib"] is not None:
+            if not is_number(m["size_mib"]) or m["size_mib"] <= 0:
+                errors.append(f"models[{i}] size_mib must be a positive number")
+            else:
+                entry["size_mib"] = float(m["size_mib"])
+                entry["size_source"] = "explicit"
+        else:
+            hit = known_size(m["name"])
+            if hit is None:
+                errors.append(
+                    f"models[{i}] '{m['name']}': no size_mib and no known-size-table match"
+                )
+            else:
+                entry["size_mib"] = float(hit)
+                entry["size_source"] = "known-table (estimate)"
+        if entry["size_mib"] is not None:
+            total += entry["size_mib"]
+        report["models"].append(entry)
+    if errors:
+        report["verdict"] = "INCOMPLETE"
+        return report
+    latent_bytes = (width / 8) * (height / 8) * 4 * 4 * batch
+    latent_mib = latent_bytes / (1024 * 1024)
+    activation = max(MIN_ACTIVATION_MIB, latent_mib * ACTIVATION_FACTOR)
+    report["models_mib"] = round(total, 2)
+    report["activation_mib"] = round(activation, 2)
+    report["extra_mib"] = float(extra)
+    estimate = total + activation + float(extra)
+    report["estimate_mib"] = round(estimate, 2)
+    report["required_mib"] = round(estimate + reserve_mib, 2)
+    report["verdict"] = "ALLOW" if report["required_mib"] <= report["budget_mib"] else "REFUSE"
+    return report
+
+
+def fmt(v):
+    return f"{v:,.0f}" if float(v) == int(v) else f"{v:,.2f}"
+
+
+def print_human(r):
+    print(f"verdict: {r['verdict']}")
+    for m in r["models"]:
+        if m["size_mib"] is not None:
+            print(f"model: {m['name']} = {fmt(m['size_mib'])} MiB ({m['size_source']})")
+    if r["estimate_mib"] is not None:
+        print(f"models total: {fmt(r['models_mib'])} MiB")
+        print(f"activation estimate: {fmt(r['activation_mib'])} MiB")
+        print(f"extra: {fmt(r['extra_mib'])} MiB")
+        print(f"estimate: {fmt(r['estimate_mib'])} MiB")
+        print(f"reserve: {fmt(r['reserve_mib'])} MiB")
+        print(f"required: {fmt(r['required_mib'])} MiB")
+        print(f"budget ({r['budget_source']}): {fmt(r['budget_mib'])} MiB")
+    for e in r["errors"]:
+        print(f"error: {e}")
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(
+        prog="nebula_vram_guard.py",
+        description="Pre-flight VRAM guard for Nebula/ComfyUI jobs (read-only).",
+    )
+    p.add_argument("--job", required=True, help="path to the job JSON file")
+    p.add_argument("--gpu-mib", type=float, default=DEFAULT_GPU_MIB)
+    p.add_argument("--reserve-mib", type=float, default=DEFAULT_RESERVE_MIB)
+    p.add_argument("--free-mib", type=float, default=None,
+                   help="currently free VRAM in MiB; overrides --gpu-mib as the budget")
+    p.add_argument("--json", action="store_true", help="emit a structured JSON report")
+    args = p.parse_args(argv)
+    if args.gpu_mib <= 0 or args.reserve_mib < 0 or (args.free_mib is not None and args.free_mib <= 0):
+        p.error("--gpu-mib must be positive, --reserve-mib non-negative, --free-mib positive")
+    try:
+        with open(args.job, "r", encoding="utf-8") as fh:
+            job = json.load(fh)
+    except FileNotFoundError:
+        report = {"verdict": "INCOMPLETE", "models": [], "models_mib": None,
+                  "activation_mib": None, "extra_mib": None, "estimate_mib": None,
+                  "reserve_mib": args.reserve_mib,
+                  "budget_mib": args.free_mib if args.free_mib is not None else args.gpu_mib,
+                  "budget_source": "free" if args.free_mib is not None else "gpu",
+                  "required_mib": None,
+                  "errors": [f"job file not found: {args.job}"]}
+        print(json.dumps(report, indent=2)) if args.json else print_human(report)
+        return 2
+    except (OSError, json.JSONDecodeError) as exc:
+        report = {"verdict": "INCOMPLETE", "models": [], "models_mib": None,
+                  "activation_mib": None, "extra_mib": None, "estimate_mib": None,
+                  "reserve_mib": args.reserve_mib,
+                  "budget_mib": args.free_mib if args.free_mib is not None else args.gpu_mib,
+                  "budget_source": "free" if args.free_mib is not None else "gpu",
+                  "required_mib": None,
+                  "errors": [f"job file unreadable or unparseable: {exc}"]}
+        print(json.dumps(report, indent=2)) if args.json else print_human(report)
+        return 2
+    report = evaluate(job, args.gpu_mib, args.reserve_mib, args.free_mib)
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print_human(report)
+    return {"ALLOW": 0, "REFUSE": 1, "INCOMPLETE": 2}[report["verdict"]]
+
+
+if __name__ == "__main__":
+    sys.exit(main())
