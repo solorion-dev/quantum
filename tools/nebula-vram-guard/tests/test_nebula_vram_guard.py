@@ -1,1 +1,179 @@
-IiIiVGVzdHMgZm9yIG5lYnVsYV92cmFtX2d1YXJkLnB5IOKAlCBkcml2ZXMgdGhlIHJlYWwgQ0xJIGluIHN1YnByb2Nlc3Nlcy4iIiIKaW1wb3J0IGhhc2hsaWIKaW1wb3J0IGpzb24KaW1wb3J0IG9zCmltcG9ydCBzdWJwcm9jZXNzCmltcG9ydCBzeXMKaW1wb3J0IHRlbXBmaWxlCmltcG9ydCB1bml0dGVzdAoKSEVSRSA9IG9zLnBhdGguZGlybmFtZShvcy5wYXRoLmFic3BhdGgoX19maWxlX18pKQpTUkMgPSBvcy5wYXRoLmpvaW4oSEVSRSwgIi4uIiwgInNyYyIsICJuZWJ1bGFfdnJhbV9ndWFyZC5weSIpCkVYQU1QTEVTID0gb3MucGF0aC5qb2luKEhFUkUsICIuLiIsICJleGFtcGxlcyIpCgoKZGVmIHJ1bl9jbGkoam9iX29iaj1Ob25lLCBqb2JfcGF0aD1Ob25lLCBleHRyYV9hcmdzPSgpLCByYXc9Tm9uZSk6CiAgICB3aXRoIHRlbXBmaWxlLlRlbXBvcmFyeURpcmVjdG9yeSgpIGFzIHRkOgogICAgICAgIGlmIGpvYl9wYXRoIGlzIE5vbmU6CiAgICAgICAgICAgIGpvYl9wYXRoID0gb3MucGF0aC5qb2luKHRkLCAiam9iLmpzb24iKQogICAgICAgICAgICB3aXRoIG9wZW4oam9iX3BhdGgsICJ3IiwgZW5jb2Rpbmc9InV0Zi04IikgYXMgZmg6CiAgICAgICAgICAgICAgICBmaC53cml0ZShyYXcgaWYgcmF3IGlzIG5vdCBOb25lIGVsc2UganNvbi5kdW1wcyhqb2Jfb2JqKSkKICAgICAgICByZXR1cm4gc3VicHJvY2Vzcy5ydW4oCiAgICAgICAgICAgIFtzeXMuZXhlY3V0YWJsZSwgU1JDLCAiLS1qb2IiLCBqb2JfcGF0aCwgKmV4dHJhX2FyZ3NdLAogICAgICAgICAgICBjYXB0dXJlX291dHB1dD1UcnVlLCB0ZXh0PVRydWUpCgoKZGVmIGFsbG93X2pvYigpOgogICAgcmV0dXJuIHsibW9kZWxzIjogW3sibmFtZSI6ICJzZDE1LnNhZmV0ZW5zb3JzIiwgInNpemVfbWliIjogMjEzNX1dLAogICAgICAgICAgICAid2lkdGgiOiA1MTIsICJoZWlnaHQiOiA1MTIsICJiYXRjaCI6IDF9CgoKY2xhc3MgVGVzdFZlcmRpY3RzKHVuaXR0ZXN0LlRlc3RDYXNlKToKICAgIGRlZiB0ZXN0X2FsbG93KHNlbGYpOgogICAgICAgIHIgPSBydW5fY2xpKGFsbG93X2pvYigpKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoci5yZXR1cm5jb2RlLCAwLCByLnN0ZG91dCArIHIuc3RkZXJyKQogICAgICAgIHNlbGYuYXNzZXJ0SW4oInZlcmRpY3Q6IEFMTE9XIiwgci5zdGRvdXQpCgogICAgZGVmIHRlc3RfcmVmdXNlX292ZXJzaXplZChzZWxmKToKICAgICAgICBqb2IgPSB7Im1vZGVscyI6IFt7Im5hbWUiOiAiYmlnLnNhZmV0ZW5zb3JzIiwgInNpemVfbWliIjogMTQwMDB9XSwKICAgICAgICAgICAgICAgIndpZHRoIjogMTAyNCwgImhlaWdodCI6IDEwMjQsICJiYXRjaCI6IDEsICJleHRyYV9taWIiOiAxMjB9CiAgICAgICAgciA9IHJ1bl9jbGkoam9iKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoci5yZXR1cm5jb2RlLCAxLCByLnN0ZG91dCArIHIuc3RkZXJyKQogICAgICAgIHNlbGYuYXNzZXJ0SW4oInZlcmRpY3Q6IFJFRlVTRSIsIHIuc3Rkb3V0KQoKICAgIGRlZiB0ZXN0X3JlZnVzZV9ub3YyMl9zaGFwZShzZWxmKToKICAgICAgICAjIH4xNSw0MDAgTWlCIHJlcXVpcmVkIHZzIHRoZSA4LDE5MiBNaUIgY2FyZCAoMjAyNi0xMS0yMiBzdGFsbCkuCiAgICAgICAgam9iID0geyJtb2RlbHMiOiBbeyJuYW1lIjogIndhbi1odWdlLnNhZmV0ZW5zb3JzIiwgInNpemVfbWliIjogMTQxMjB9XSwKICAgICAgICAgICAgICAgIndpZHRoIjogNTEyLCAiaGVpZ2h0IjogNTEyLCAiYmF0Y2giOiAxfQogICAgICAgIHIgPSBydW5fY2xpKGpvYiwgZXh0cmFfYXJncz0oIi0tanNvbiIsKSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHIucmV0dXJuY29kZSwgMSkKICAgICAgICByZXAgPSBqc29uLmxvYWRzKHIuc3Rkb3V0KQogICAgICAgIHNlbGYuYXNzZXJ0QWxtb3N0RXF1YWwocmVwWyJyZXF1aXJlZF9taWIiXSwgMTU0MDAsIGRlbHRhPTEpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyZXBbImJ1ZGdldF9taWIiXSwgODE5MikKCiAgICBkZWYgdGVzdF9mcmVlX21pYl9vdmVycmlkZV9yZWZ1c2VzKHNlbGYpOgogICAgICAgIHIgPSBydW5fY2xpKGFsbG93X2pvYigpLCBleHRyYV9hcmdzPSgiLS1mcmVlLW1pYiIsICIyMDAwIikpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyLnJldHVybmNvZGUsIDEpCiAgICAgICAgc2VsZi5hc3NlcnRJbigidmVyZGljdDogUkVGVVNFIiwgci5zdGRvdXQpCgogICAgZGVmIHRlc3RfZnJlZV9taWJfb3ZlcnJpZGVfYWxsb3dzKHNlbGYpOgogICAgICAgIGpvYiA9IHsibW9kZWxzIjogW3sibmFtZSI6ICJtLnNhZmV0ZW5zb3JzIiwgInNpemVfbWliIjogOTAwMH1dLAogICAgICAgICAgICAgICAid2lkdGgiOiA1MTIsICJoZWlnaHQiOiA1MTJ9CiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChydW5fY2xpKGpvYikucmV0dXJuY29kZSwgMSkKICAgICAgICByID0gcnVuX2NsaShqb2IsIGV4dHJhX2FyZ3M9KCItLWZyZWUtbWliIiwgIjEyMDAwIikpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyLnJldHVybmNvZGUsIDAsIHIuc3Rkb3V0KQoKICAgIGRlZiB0ZXN0X3Jlc2VydmVfb3ZlcnJpZGUoc2VsZik6CiAgICAgICAgciA9IHJ1bl9jbGkoYWxsb3dfam9iKCksIGV4dHJhX2FyZ3M9KCItLXJlc2VydmUtbWliIiwgIjkwMDAiKSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHIucmV0dXJuY29kZSwgMSkKCgpjbGFzcyBUZXN0SW5jb21wbGV0ZSh1bml0dGVzdC5UZXN0Q2FzZSk6CiAgICBkZWYgdGVzdF9taXNzaW5nX2ZpbGUoc2VsZik6CiAgICAgICAgciA9IHJ1bl9jbGkoam9iX3BhdGg9Ii9ub25leGlzdGVudC9qb2IuanNvbiIpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyLnJldHVybmNvZGUsIDIpCiAgICAgICAgc2VsZi5hc3NlcnRJbigidmVyZGljdDogSU5DT01QTEVURSIsIHIuc3Rkb3V0KQoKICAgIGRlZiB0ZXN0X3VucGFyc2VhYmxlKHNlbGYpOgogICAgICAgIHIgPSBydW5fY2xpKHJhdz0ie25vdCBqc29uIikKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHIucmV0dXJuY29kZSwgMikKICAgICAgICBzZWxmLmFzc2VydEluKCJ2ZXJkaWN0OiBJTkNPTVBMRVRFIiwgci5zdGRvdXQpCgogICAgZGVmIHRlc3RfemVyb19tb2RlbHMoc2VsZik6CiAgICAgICAgciA9IHJ1bl9jbGkoeyJtb2RlbHMiOiBbXSwgIndpZHRoIjogNTEyLCAiaGVpZ2h0IjogNTEyfSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHIucmV0dXJuY29kZSwgMikKCiAgICBkZWYgdGVzdF91bmtub3duX21vZGVsX25vX3NpemUoc2VsZik6CiAgICAgICAgciA9IHJ1bl9jbGkoeyJtb2RlbHMiOiBbeyJuYW1lIjogIm15c3RlcnktY2twdC5iaW4ifV0sCiAgICAgICAgICAgICAgICAgICAgICJ3aWR0aCI6IDUxMiwgImhlaWdodCI6IDUxMn0pCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyLnJldHVybmNvZGUsIDIpCiAgICAgICAgc2VsZi5hc3NlcnRJbigiSU5DT01QTEVURSIsIHIuc3Rkb3V0KQoKICAgIGRlZiB0ZXN0X25vbnBvc2l0aXZlX2RpbWVuc2lvbnMoc2VsZik6CiAgICAgICAgZm9yIGJhZCBpbiAoeyJ3aWR0aCI6IDAsICJoZWlnaHQiOiA1MTJ9LCB7IndpZHRoIjogNTEyLCAiaGVpZ2h0IjogLTh9KToKICAgICAgICAgICAgam9iID0geyJtb2RlbHMiOiBbeyJuYW1lIjogIm0iLCAic2l6ZV9taWIiOiAxMDB9XSwgKipiYWR9CiAgICAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocnVuX2NsaShqb2IpLnJldHVybmNvZGUsIDIsIGJhZCkKCiAgICBkZWYgdGVzdF91c2FnZV9lcnJvcl9ub192ZXJkaWN0X2xpbmUoc2VsZik6CiAgICAgICAgciA9IHN1YnByb2Nlc3MucnVuKFtzeXMuZXhlY3V0YWJsZSwgU1JDXSwgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwgdGV4dD1UcnVlKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoci5yZXR1cm5jb2RlLCAyKQogICAgICAgIHNlbGYuYXNzZXJ0Tm90SW4oInZlcmRpY3Q6Iiwgci5zdGRvdXQgKyByLnN0ZGVycikKCgpjbGFzcyBUZXN0S25vd25UYWJsZSh1bml0dGVzdC5UZXN0Q2FzZSk6CiAgICBkZWYgdGVzdF9rbm93bl9oaXRfc2R4bChzZWxmKToKICAgICAgICBqb2IgPSB7Im1vZGVscyI6IFt7Im5hbWUiOiAic2RfeGxfYmFzZV8xLjAuc2FmZXRlbnNvcnMifV0sCiAgICAgICAgICAgICAgICJ3aWR0aCI6IDUxMiwgImhlaWdodCI6IDUxMn0KICAgICAgICAjIFNEWEwgZnAxNiAoNiw5MzgpICsgZmxvb3IgYWN0aXZhdGlvbiArIGRlZmF1bHQgcmVzZXJ2ZSBidXN0cwogICAgICAgICMgOCwxOTI7IHdpdGggYSA1MTIgTWlCIHJlc2VydmUgaXQgZml0cyDigJQgZWl0aGVyIHdheSB0aGUgdGFibGUgaGl0CiAgICAgICAgIyBtdXN0IHJlc29sdmUgdGhlIHNpemUuCiAgICAgICAgciA9IHJ1bl9jbGkoam9iLCBleHRyYV9hcmdzPSgiLS1qc29uIiwgIi0tcmVzZXJ2ZS1taWIiLCAiNTEyIikpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyLnJldHVybmNvZGUsIDAsIHIuc3Rkb3V0KQogICAgICAgIHJlcCA9IGpzb24ubG9hZHMoci5zdGRvdXQpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyZXBbIm1vZGVscyJdWzBdWyJzaXplX21pYiJdLCA2OTM4KQogICAgICAgIHNlbGYuYXNzZXJ0SW4oImtub3duLXRhYmxlIiwgcmVwWyJtb2RlbHMiXVswXVsic2l6ZV9zb3VyY2UiXSkKCiAgICBkZWYgdGVzdF9rbm93bl9oaXRfZmx1eF9mcDgoc2VsZik6CiAgICAgICAgam9iID0geyJtb2RlbHMiOiBbeyJuYW1lIjogImZsdXgxLWRldi1mcDguc2FmZXRlbnNvcnMifV0sCiAgICAgICAgICAgICAgICJ3aWR0aCI6IDUxMiwgImhlaWdodCI6IDUxMn0KICAgICAgICByID0gcnVuX2NsaShqb2IsIGV4dHJhX2FyZ3M9KCItLWpzb24iLCkpCiAgICAgICAgcmVwID0ganNvbi5sb2FkcyhyLnN0ZG91dCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHJlcFsibW9kZWxzIl1bMF1bInNpemVfbWliIl0sIDExOTAzKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoci5yZXR1cm5jb2RlLCAxKSAgIyBmcDggZmx1eCBhbG9uZSBidXN0cyA4IEdCCgogICAgZGVmIHRlc3RfZXhwbGljaXRfc2l6ZV9iZWF0c190YWJsZShzZWxmKToKICAgICAgICBqb2IgPSB7Im1vZGVscyI6IFt7Im5hbWUiOiAic2R4bC1jdXN0b20uc2FmZXRlbnNvcnMiLCAic2l6ZV9taWIiOiAxMDB9XSwKICAgICAgICAgICAgICAgIndpZHRoIjogNTEyLCAiaGVpZ2h0IjogNTEyfQogICAgICAgIHIgPSBydW5fY2xpKGpvYiwgZXh0cmFfYXJncz0oIi0tanNvbiIsKSkKICAgICAgICByZXAgPSBqc29uLmxvYWRzKHIuc3Rkb3V0KQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVwWyJtb2RlbHMiXVswXVsic2l6ZV9taWIiXSwgMTAwKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVwWyJtb2RlbHMiXVswXVsic2l6ZV9zb3VyY2UiXSwgImV4cGxpY2l0IikKCgpjbGFzcyBUZXN0RXN0aW1hdGUodW5pdHRlc3QuVGVzdENhc2UpOgogICAgZGVmIHRlc3RfYmF0Y2hfc2NhbGluZyhzZWxmKToKICAgICAgICAjIEFib3ZlIHRoZSAyNTYgTWlCIGZsb29yLCBhY3RpdmF0aW9uIHNjYWxlcyBsaW5lYXJseSB3aXRoIGJhdGNoLgogICAgICAgIGJhc2UgPSB7Im1vZGVscyI6IFt7Im5hbWUiOiAibSIsICJzaXplX21pYiI6IDEwMDB9XSwKICAgICAgICAgICAgICAgICJ3aWR0aCI6IDgxOTIsICJoZWlnaHQiOiA4MTkyLCAiYmF0Y2giOiA0fQogICAgICAgIGE0ID0ganNvbi5sb2FkcyhydW5fY2xpKGJhc2UsIGV4dHJhX2FyZ3M9KCItLWpzb24iLCkpLnN0ZG91dCkKICAgICAgICBhMTYgPSBqc29uLmxvYWRzKHJ1bl9jbGkoZGljdChiYXNlLCBiYXRjaD0xNiksCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGV4dHJhX2FyZ3M9KCItLWpzb24iLCkpLnN0ZG91dCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGE0WyJhY3RpdmF0aW9uX21pYiJdLCA1MTIpCiAgICAgICAgc2VsZi5hc3NlcnRBbG1vc3RFcXVhbChhMTZbImFjdGl2YXRpb25fbWliIl0sIGE0WyJhY3RpdmF0aW9uX21pYiJdICogNCkKCiAgICBkZWYgdGVzdF9hY3RpdmF0aW9uX2Zsb29yKHNlbGYpOgogICAgICAgIHJlcCA9IGpzb24ubG9hZHMocnVuX2NsaShhbGxvd19qb2IoKSwgZXh0cmFfYXJncz0oIi0tanNvbiIsKSkuc3Rkb3V0KQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVwWyJhY3RpdmF0aW9uX21pYiJdLCAyNTYpCgogICAgZGVmIHRlc3RfanNvbl9zaGFwZShzZWxmKToKICAgICAgICByZXAgPSBqc29uLmxvYWRzKHJ1bl9jbGkoYWxsb3dfam9iKCksIGV4dHJhX2FyZ3M9KCItLWpzb24iLCkpLnN0ZG91dCkKICAgICAgICBmb3Iga2V5IGluICgidmVyZGljdCIsICJtb2RlbHMiLCAibW9kZWxzX21pYiIsICJhY3RpdmF0aW9uX21pYiIsCiAgICAgICAgICAgICAgICAgICAgImVzdGltYXRlX21pYiIsICJyZXNlcnZlX21pYiIsICJidWRnZXRfbWliIiwKICAgICAgICAgICAgICAgICAgICAicmVxdWlyZWRfbWliIiwgImVycm9ycyIpOgogICAgICAgICAgICBzZWxmLmFzc2VydEluKGtleSwgcmVwKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVwWyJ2ZXJkaWN0Il0sICJBTExPVyIpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChyZXBbImVycm9ycyJdLCBbXSkKCgpjbGFzcyBUZXN0R3VhcmFudGVlcyh1bml0dGVzdC5UZXN0Q2FzZSk6CiAgICBkZWYgdGVzdF9pbnB1dF91bm1vZGlmaWVkKHNlbGYpOgogICAgICAgIHdpdGggdGVtcGZpbGUuVGVtcG9yYXJ5RGlyZWN0b3J5KCkgYXMgdGQ6CiAgICAgICAgICAgIHAgPSBvcy5wYXRoLmpvaW4odGQsICJqb2IuanNvbiIpCiAgICAgICAgICAgIHdpdGggb3BlbihwLCAidyIsIGVuY29kaW5nPSJ1dGYtOCIpIGFzIGZoOgogICAgICAgICAgICAgICAganNvbi5kdW1wKGFsbG93X2pvYigpLCBmaCkKICAgICAgICAgICAgYmVmb3JlID0gKG9wZW4ocCwgInJiIikucmVhZCgpLCBvcy5zdGF0KHApLnN0X210aW1lX25zKQogICAgICAgICAgICBydW5fY2xpKGpvYl9wYXRoPXApCiAgICAgICAgICAgIGFmdGVyID0gKG9wZW4ocCwgInJiIikucmVhZCgpLCBvcy5zdGF0KHApLnN0X210aW1lX25zKQogICAgICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGJlZm9yZSwgYWZ0ZXIpCgogICAgZGVmIHRlc3Rfc2hpcHBlZF9leGFtcGxlcyhzZWxmKToKICAgICAgICBhbGxvdyA9IG9zLnBhdGguam9pbihFWEFNUExFUywgImpvYi1hbGxvdy5qc29uIikKICAgICAgICByZWZ1c2UgPSBvcy5wYXRoLmpvaW4oRVhBTVBMRVMsICJqb2ItcmVmdXNlLmpzb24iKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocnVuX2NsaShqb2JfcGF0aD1hbGxvdykucmV0dXJuY29kZSwgMCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHJ1bl9jbGkoam9iX3BhdGg9cmVmdXNlKS5yZXR1cm5jb2RlLCAxKQogICAgICAgIHJlcCA9IGpzb24ubG9hZHMocnVuX2NsaShqb2JfcGF0aD1yZWZ1c2UsIGV4dHJhX2FyZ3M9KCItLWpzb24iLCkpLnN0ZG91dCkKICAgICAgICBzZWxmLmFzc2VydEFsbW9zdEVxdWFsKHJlcFsicmVxdWlyZWRfbWliIl0sIDE1NDAwLCBkZWx0YT0xKQoKCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICB1bml0dGVzdC5tYWluKCkK
+"""Tests for nebula_vram_guard.py — drives the real CLI in subprocesses."""
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(HERE, "..", "src", "nebula_vram_guard.py")
+EXAMPLES = os.path.join(HERE, "..", "examples")
+
+
+def run_cli(job_obj=None, job_path=None, extra_args=(), raw=None):
+    with tempfile.TemporaryDirectory() as td:
+        if job_path is None:
+            job_path = os.path.join(td, "job.json")
+            with open(job_path, "w", encoding="utf-8") as fh:
+                fh.write(raw if raw is not None else json.dumps(job_obj))
+        return subprocess.run(
+            [sys.executable, SRC, "--job", job_path, *extra_args],
+            capture_output=True, text=True)
+
+
+def allow_job():
+    return {"models": [{"name": "sd15.safetensors", "size_mib": 2135}],
+            "width": 512, "height": 512, "batch": 1}
+
+
+class TestVerdicts(unittest.TestCase):
+    def test_allow(self):
+        r = run_cli(allow_job())
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("verdict: ALLOW", r.stdout)
+
+    def test_refuse_oversized(self):
+        job = {"models": [{"name": "big.safetensors", "size_mib": 14000}],
+               "width": 1024, "height": 1024, "batch": 1, "extra_mib": 120}
+        r = run_cli(job)
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("verdict: REFUSE", r.stdout)
+
+    def test_refuse_nov22_shape(self):
+        # ~15,400 MiB required vs the 8,192 MiB card (2026-11-22 stall).
+        job = {"models": [{"name": "wan-huge.safetensors", "size_mib": 14120}],
+               "width": 512, "height": 512, "batch": 1}
+        r = run_cli(job, extra_args=("--json",))
+        self.assertEqual(r.returncode, 1)
+        rep = json.loads(r.stdout)
+        self.assertAlmostEqual(rep["required_mib"], 15400, delta=1)
+        self.assertEqual(rep["budget_mib"], 8192)
+
+    def test_free_mib_override_refuses(self):
+        r = run_cli(allow_job(), extra_args=("--free-mib", "2000"))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("verdict: REFUSE", r.stdout)
+
+    def test_free_mib_override_allows(self):
+        job = {"models": [{"name": "m.safetensors", "size_mib": 9000}],
+               "width": 512, "height": 512}
+        self.assertEqual(run_cli(job).returncode, 1)
+        r = run_cli(job, extra_args=("--free-mib", "12000"))
+        self.assertEqual(r.returncode, 0, r.stdout)
+
+    def test_reserve_override(self):
+        r = run_cli(allow_job(), extra_args=("--reserve-mib", "9000"))
+        self.assertEqual(r.returncode, 1)
+
+
+class TestIncomplete(unittest.TestCase):
+    def test_missing_file(self):
+        r = run_cli(job_path="/nonexistent/job.json")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("verdict: INCOMPLETE", r.stdout)
+
+    def test_unparseable(self):
+        r = run_cli(raw="{not json")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("verdict: INCOMPLETE", r.stdout)
+
+    def test_zero_models(self):
+        r = run_cli({"models": [], "width": 512, "height": 512})
+        self.assertEqual(r.returncode, 2)
+
+    def test_unknown_model_no_size(self):
+        r = run_cli({"models": [{"name": "mystery-ckpt.bin"}],
+                     "width": 512, "height": 512})
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("INCOMPLETE", r.stdout)
+
+    def test_nonpositive_dimensions(self):
+        for bad in ({"width": 0, "height": 512}, {"width": 512, "height": -8}):
+            job = {"models": [{"name": "m", "size_mib": 100}], **bad}
+            self.assertEqual(run_cli(job).returncode, 2, bad)
+
+    def test_usage_error_no_verdict_line(self):
+        r = subprocess.run([sys.executable, SRC], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2)
+        self.assertNotIn("verdict:", r.stdout + r.stderr)
+
+
+class TestKnownTable(unittest.TestCase):
+    def test_known_hit_sdxl(self):
+        job = {"models": [{"name": "sd_xl_base_1.0.safetensors"}],
+               "width": 512, "height": 512}
+        # SDXL fp16 (6,938) + floor activation + default reserve busts
+        # 8,192; with a 512 MiB reserve it fits — either way the table hit
+        # must resolve the size.
+        r = run_cli(job, extra_args=("--json", "--reserve-mib", "512"))
+        self.assertEqual(r.returncode, 0, r.stdout)
+        rep = json.loads(r.stdout)
+        self.assertEqual(rep["models"][0]["size_mib"], 6938)
+        self.assertIn("known-table", rep["models"][0]["size_source"])
+
+    def test_known_hit_flux_fp8(self):
+        job = {"models": [{"name": "flux1-dev-fp8.safetensors"}],
+               "width": 512, "height": 512}
+        r = run_cli(job, extra_args=("--json",))
+        rep = json.loads(r.stdout)
+        self.assertEqual(rep["models"][0]["size_mib"], 11903)
+        self.assertEqual(r.returncode, 1)  # fp8 flux alone busts 8 GB
+
+    def test_explicit_size_beats_table(self):
+        job = {"models": [{"name": "sdxl-custom.safetensors", "size_mib": 100}],
+               "width": 512, "height": 512}
+        r = run_cli(job, extra_args=("--json",))
+        rep = json.loads(r.stdout)
+        self.assertEqual(rep["models"][0]["size_mib"], 100)
+        self.assertEqual(rep["models"][0]["size_source"], "explicit")
+
+
+class TestEstimate(unittest.TestCase):
+    def test_batch_scaling(self):
+        # Above the 256 MiB floor, activation scales linearly with batch.
+        base = {"models": [{"name": "m", "size_mib": 1000}],
+                "width": 8192, "height": 8192, "batch": 4}
+        a4 = json.loads(run_cli(base, extra_args=("--json",)).stdout)
+        a16 = json.loads(run_cli(dict(base, batch=16),
+                                 extra_args=("--json",)).stdout)
+        self.assertEqual(a4["activation_mib"], 512)
+        self.assertAlmostEqual(a16["activation_mib"], a4["activation_mib"] * 4)
+
+    def test_activation_floor(self):
+        rep = json.loads(run_cli(allow_job(), extra_args=("--json",)).stdout)
+        self.assertEqual(rep["activation_mib"], 256)
+
+    def test_json_shape(self):
+        rep = json.loads(run_cli(allow_job(), extra_args=("--json",)).stdout)
+        for key in ("verdict", "models", "models_mib", "activation_mib",
+                    "estimate_mib", "reserve_mib", "budget_mib",
+                    "required_mib", "errors"):
+            self.assertIn(key, rep)
+        self.assertEqual(rep["verdict"], "ALLOW")
+        self.assertEqual(rep["errors"], [])
+
+
+class TestGuarantees(unittest.TestCase):
+    def test_input_unmodified(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = os.path.join(td, "job.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(allow_job(), fh)
+            before = (open(p, "rb").read(), os.stat(p).st_mtime_ns)
+            run_cli(job_path=p)
+            after = (open(p, "rb").read(), os.stat(p).st_mtime_ns)
+            self.assertEqual(before, after)
+
+    def test_shipped_examples(self):
+        allow = os.path.join(EXAMPLES, "job-allow.json")
+        refuse = os.path.join(EXAMPLES, "job-refuse.json")
+        self.assertEqual(run_cli(job_path=allow).returncode, 0)
+        self.assertEqual(run_cli(job_path=refuse).returncode, 1)
+        rep = json.loads(run_cli(job_path=refuse, extra_args=("--json",)).stdout)
+        self.assertAlmostEqual(rep["required_mib"], 15400, delta=1)
+
+
+if __name__ == "__main__":
+    unittest.main()
