@@ -168,3 +168,46 @@ python3 src/workflow_adapter.py --workflow examples/workflow-api-wan-refuse.json
 # UNETLoader wan2.1-t2v-14b + 1280x720 latent
 # -> REFUSE, required 29,280 MiB vs budget 8,192 MiB, exit 1
 ```
+
+## Live snapshot helper (`src/vram_snapshot.py`)
+
+The guard is host-free by design: it judges a job against a
+`--free-mib` number somebody hands it. `vram_snapshot.py` is the
+host-touching companion, kept clearly separate — it asks the local
+GPU how much VRAM is actually free right now and emits a snapshot
+suitable to feed the guard. Stdlib-only and read-only: it runs
+read-only vendor queries or reads a saved output file; it writes
+nothing and changes no GPU state.
+
+Sources, in order:
+
+1. `nvidia-smi --query-gpu=index,name,memory.free,memory.total
+   --format=csv,noheader,nounits` (primary)
+2. `rocm-smi --showmeminfo vram` (fallback; free = total − used
+   unless a free figure is reported directly)
+3. `--from-file <path>` — parse saved output of either tool
+   (operator-snapshot discipline: capture on the host, judge
+   anywhere). The snapshot's `source` is then `file`.
+
+The command runner is injectable (the `runner` parameter), so tests
+never need a real GPU.
+
+```bash
+python3 src/vram_snapshot.py                 # human line, GPU 0
+python3 src/vram_snapshot.py --gpu 1 --json  # snapshot object:
+# {"source": "nvidia-smi", "gpu_index": 0, "name": "...",
+#  "free_mib": 5200, "total_mib": 8192,
+#  "observed_at": "2026-11-25T...Z"}   (UTC ISO)
+
+python3 src/vram_snapshot.py --from-file examples/nvidia-smi-sample.txt
+python3 src/nebula_vram_guard.py --job job.json --free-mib 5200
+
+# Snapshot + guard in one step (mirrors workflow_adapter --check);
+# exit code is the guard's (0 ALLOW / 1 REFUSE / 2 INCOMPLETE):
+python3 src/vram_snapshot.py --check --job examples/job-allow.json
+```
+
+**INCOMPLETE discipline:** every failure — tool missing, command
+fails, unparseable output, zero GPUs, unknown `--gpu` index,
+missing/unreadable `--from-file` — is INCOMPLETE, exit 2, never a
+guessed number. Usage errors also exit 2 with no verdict line.
