@@ -6,9 +6,8 @@
  * (or unknown) is shown with a "Not run from mobile" badge and NO action
  * button — a destructive action must never be half-wired from a phone.
  *
- * `dsect_tailscale_status` (Tailscale device status) was drafted on the hub
- * side (hub-mcp-ops-tools) but is NOT published by the gateway yet — the
- * screen shows it as a labeled gap rather than pretending it exists.
+ * `quantum_tailscale_status` (Tailscale device status) is published by the hub
+ * gateway; the runner is ready to match it.
  */
 export interface RunnerField {
   key: string;
@@ -31,7 +30,7 @@ export interface RunnerConfig {
 
 const READ_ONLY_RUNNERS: RunnerConfig[] = [
   {
-    tool: 'dsect_services_status',
+    tool: 'quantum_services_status',
     title: 'Services status',
     description: 'Hub service registry health — which services are up, down, or degraded.',
     fields: [
@@ -48,7 +47,7 @@ const READ_ONLY_RUNNERS: RunnerConfig[] = [
     buildArgs: (values) => ({ only_problems: values['only_problems'] === 'true' }),
   },
   {
-    tool: 'dsect_service_logs',
+    tool: 'quantum_service_logs',
     title: 'Service logs',
     description: 'Tail docker logs for one service (allowlisted container names only).',
     fields: [
@@ -76,14 +75,14 @@ const READ_ONLY_RUNNERS: RunnerConfig[] = [
     },
   },
   {
-    tool: 'dsect_monitor_snapshot',
+    tool: 'quantum_monitor_snapshot',
     title: 'Monitor snapshot',
     description: 'Latest host monitor snapshot — CPU, memory, disk, and temperatures.',
     fields: [],
     buildArgs: () => ({}),
   },
   {
-    tool: 'dsect_whoami',
+    tool: 'quantum_whoami',
     title: 'Who am I',
     description: 'Show the role, key id, and audience behind this worker key.',
     fields: [],
@@ -96,16 +95,13 @@ export function runnerFor(toolName: string): RunnerConfig | null {
 }
 
 export const KNOWN_UNPUBLISHED_TOOLS: { tool: string; note: string }[] = [
-  {
-    tool: 'dsect_tailscale_status',
-    note: 'Tailscale device status — drafted server-side (hub-mcp-ops-tools) but not published by the hub MCP gateway yet. The runner is ready the moment it appears in tools/list.',
-  },
+  // quantum_tailscale_status is now published by the gateway; no gap entry needed.
 ];
 
 /** Friendly display title for a tool not in the curated catalog. */
 export function toolDisplayName(name: string): string {
   return name
-    .replace(/^dsect_/, '')
+    .replace(/^quantum_/, '')
     .split('_')
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(' ');
